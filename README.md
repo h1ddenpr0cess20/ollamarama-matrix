@@ -1,5 +1,7 @@
 # ollamarama-matrix
-Ollamarama is an AI chatbot for the [Matrix](https://matrix.org/) chat protocol using LiteLLM and Ollama. It can roleplay as almost anything you can think of. You can set any default personality you would like. It can be changed at any time, and each user has their own separate chat history with their chosen personality setting. Users can interact with each others chat histories for collaboration if they would like, but otherwise, conversations are separated, per channel, per user.  
+Ollamarama is an AI chatbot for the [Matrix](https://matrix.org/) chat protocol using LiteLLM and Ollama. It can roleplay as almost anything you can think of. You can set any default personality you would like. It can be changed at any time, and each user has their own separate chat history with their chosen personality setting. Users can interact with each others chat histories for collaboration if they would like, but otherwise, conversations are separated, per channel, per user.
+
+This is based on my earlier project, [infinigpt-matrix](https://github.com/h1ddenpr0cess20/infinigpt-matrix), which uses OpenAI and costs money to use.
 
 Coming soon for IRC 
 
