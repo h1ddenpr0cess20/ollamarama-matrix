@@ -47,7 +47,7 @@ python3 launcher.py
     Don't use a custom prompt here.
 
 **.custom _prompt_**
-    Allows use of a custom prompt instead of the built-in one
+    Allows use of a custom system prompt instead of the roleplaying prompt
 
 **.reset**
     Reset to preset personality

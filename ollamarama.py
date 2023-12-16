@@ -239,7 +239,7 @@ f'''{self.bot_id}, an AI chatbot.
     Changes the personality.  It can be a character, personality type, object, idea.
 
 .custom <custom prompt>
-    Allows use of a custom prompt instead of the built-in one
+    Allows use of a custom system prompt instead of the roleplaying prompt
 
 .reset
     Reset to preset personality
