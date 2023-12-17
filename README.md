@@ -14,9 +14,9 @@ You can install it with this command:
 curl https://ollama.ai/install.sh | sh
 ```
 
-Once it's all set up, you'll need to download the model.  You can play with the available ones and see what works best for you, but for this bot, zephyr:7b-beta-q8_0 seems to work best of the ones I've tested.  To install:
+Once it's all set up, you'll need to download the model.  You can play with the available ones and see what works best for you, but for this bot, zephyr:7b-beta-q6_K seems to work best of the ones I've tested.  To install:
 ```
-ollama pull zephyr:7b-beta-q8_0
+ollama pull zephyr:7b-beta-q6_K
 ```
 
 You'll also need to install matrix-nio and litellm
