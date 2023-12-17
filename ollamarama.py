@@ -30,7 +30,7 @@ class ollamarama:
         self.prompt = ("you are ", ". speak in the first person and never break character.")
 
         #set model, this one works best in my tests with the hardware i have, but you can try others
-        self.model = "ollama/zephyr:7b-beta-q6_K"
+        self.model = "ollama/zephyr:7b-beta-q8_0"
     
         
     # get the display name for a user
