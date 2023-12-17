@@ -51,7 +51,6 @@ class ollamarama:
 
     # add messages to the history dictionary
     async def add_history(self, role, channel, sender, message):
-        
         #check if channel is in the history yet
         if channel in self.messages:
             #check if user is in channel history
@@ -76,7 +75,6 @@ class ollamarama:
 
     # create GPT response
     async def respond(self, channel, sender, message, sender2=None):
-        
         try:
             #Generate response
             response = completion(
@@ -169,7 +167,7 @@ class ollamarama:
                     if len(m) > 1:
                         disp_name = m[0]
                         name_id = ""
-                        m = m[1]
+                        m = m[1] + " [your response must be one paragraph or less]"
                         if room_id in self.messages:
                             for user in self.messages[room_id]:
                                 try:
