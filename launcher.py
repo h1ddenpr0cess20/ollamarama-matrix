@@ -14,8 +14,11 @@ channels = ["#channel1:SERVER.TLD",
 
 personality = "a helpful and thorough AI assistant who provides accurate and detailed answers without being too verbose"
 
+#users authorized to use special commands
+admins = ['BOTOWNER',]
+
 # create bot instance
-bot = ollamarama(server, username, password, channels, personality)
+bot = ollamarama(server, username, password, channels, personality, admins)
 
 # run main function loop
 asyncio.get_event_loop().run_until_complete(bot.main())

@@ -11,7 +11,7 @@ import datetime
 from litellm import completion
 
 class ollamarama:
-    def __init__(self, server, username, password, channels, personality):
+    def __init__(self, server, username, password, channels, personality, admins):
         self.server = server
         self.username = username
         self.password = password
@@ -29,8 +29,34 @@ class ollamarama:
         #prompt parts
         self.prompt = ("you are ", ". speak in the first person and never break character.")
 
-        #set model, this one works best in my tests with the hardware i have, but you can try others
-        self.model = "ollama/zephyr:7b-beta-q8_0"
+        #put the models you want to use here, still testing various models
+        self.models = {
+            'zephyr': 'ollama/zephyr:7b-beta-q8_0',
+            'solar': 'ollama/solar',
+            'mistral': 'ollama/mistral',
+            'llama2': 'ollama/llama2',
+            'llama2-uncensored': 'ollama/llama2-uncensored',
+            'openchat': 'ollama/openchat',
+            'codellama': 'ollama/codellama:13b-instruct-q4_0',
+            'dolphin-mistral': 'ollama/dolphin2.2-mistral:7b-q8_0',
+            'deepseek-coder': 'ollama/deepseek-coder:6.7b',
+            'orca2': 'ollama/orca2',
+            'starling-lm': 'ollama/starling-lm',
+            'vicuna': 'ollama/vicuna:13b-q4_0',
+            'phi': 'ollama/phi',
+            'orca-mini': 'ollama/orca-mini',
+            'wizardcoder': 'ollama/wizardcoder:python',
+            'stablelm-zephyr': 'ollama/stablelm-zephyr',
+            'neural-chat': 'ollama/neural-chat',
+            'mistral-openorca': 'ollama/mistral-openorca',
+             
+        }
+        #set model
+        self.default_model = self.models['solar']
+        self.model = self.default_model
+
+        #authorized users for changing models
+        self.admins = admins
     
         
     # get the display name for a user
@@ -150,6 +176,47 @@ class ollamarama:
 
             #check if the message was sent after joining and not by the bot
             if message_time > self.join_time and sender != self.username:
+
+                #admin commands
+                if message == ".admins":
+                    await self.send_message(room_id, f"Bot admins: {', '.join(self.admins)}")
+                if sender_display in self.admins:
+                    #model switching 
+                    if message.startswith(".model"):
+                        if message == ".models":
+                            await self.send_message(room_id, f'''Current model: {self.model.removeprefix('ollama/')}
+Available models: {', '.join(sorted(list(self.models)))}''')
+                            
+                        if message.startswith(".model "):
+                            m = message.split(" ", 1)[1]
+                            if m != None:
+                                if m in self.models:
+                                    self.model = self.models[m]
+                                elif m == 'reset':
+                                    self.model = self.default_model
+                                await self.send_message(room_id, f"Model set to {self.model.removeprefix('ollama/')}")
+                    
+                    #reset history for all users                
+                    if message == ".clear":
+                        self.messages.clear()
+                        self.model = self.default_model
+                        await self.send_message(room_id, "Bot has been reset for everyone")
+                    
+                    if sender_display == self.admins[0]:
+                        #add admins
+                        if message.startswith(".auth "):
+                            nick = message.split(" ", 1)[1].strip()
+                            if nick != None:
+                                self.admins.append(nick)
+                                await self.send_message(room_id, f"{nick} added to admins")
+                        
+                        #remove admins
+                        if message.startswith(".deauth "):
+                            nick = message.split(" ", 1)[1].strip()
+                            if nick != None:
+                                self.admins.remove(nick)
+                                await self.send_message(room_id, f"{nick} removed from admins")                     
+
 
                 # main AI response functionality
                 if message.startswith(".ai ") or message.startswith(self.bot_id):
@@ -281,9 +348,12 @@ if __name__ == "__main__":
                 "!ExAmPleOfApRivAtErOoM:SERVER.TLD", ] #enter the channels you want it to join here
     
     personality = "a helpful and thorough AI assistant who provides accurate and detailed answers without being too verbose"
+    
+    #list of authorized users for admin commands
+    admins = ['admin_nick1', 'admin_nick2',]
 
     # create bot instance
-    bot = ollamarama(server, username, password, channels, personality)
+    bot = ollamarama(server, username, password, channels, personality, admins)
     
     # run main function loop
     asyncio.get_event_loop().run_until_complete(bot.main())
