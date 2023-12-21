@@ -14,10 +14,9 @@ You can install it with this command:
 curl https://ollama.ai/install.sh | sh
 ```
 
-Once it's all set up, you'll need to download the model.  You can play with the available ones and see what works best for you, but for this bot, zephyr:7b-beta-q8_0 seems to work best of the ones I've tested.  To install:
-```
-ollama pull zephyr:7b-beta-q8_0
-```
+
+Once it's all set up, you'll need to [download the models](https://ollama.ai/library) you want to use.  You can play with the available ones and see what works best for you.  Add those to the self.models dictionary.  If you want to use the ones I've included, just run the commands in the models.md file.  You can skip this part, and they should download when the model is switched, but the response will be delayed until it finishes downloading.
+
 
 You'll also need to install matrix-nio and litellm
 ```
@@ -58,3 +57,20 @@ python3 launcher.py
 **.help**
     Show the built-in help menu
 
+**.models**
+    Show current model and available models (admin only)
+
+**.model _name_**
+    Set a model (admin only)
+
+**.model _reset_**
+    Reset to default model (admin only)
+
+**.clear**
+    Resets all bot history and sets default model (admin only)
+
+**.auth _user_**
+    Add user to admins (main admin only)
+
+**.deauth _user_**
+    Remove user from admins (main admin only)
