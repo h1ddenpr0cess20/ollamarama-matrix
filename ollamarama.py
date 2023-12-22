@@ -345,9 +345,12 @@ Available at https://github.com/h1ddenpr0cess20/ollamarama-matrix
 .model <model>
     Change the model
 
-.gpersona
+.gpersona <personality>
     Change default global personality (bot owner only)
 
+.gpersona reset
+    Reset global personality
+                                            
 .auth
     Add an admin (bot owner only)
                                             

@@ -74,3 +74,9 @@ python3 launcher.py
 
 **.deauth _user_**
     Remove user from admins (main admin only)
+
+**.gpersona _persona_***
+    Change global personality
+
+**.gpersona reset**
+    Reset global personality
