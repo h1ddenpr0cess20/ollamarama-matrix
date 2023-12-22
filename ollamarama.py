@@ -16,6 +16,7 @@ class ollamarama:
         self.username = username
         self.password = password
         self.channels = channels
+        self.default_personality = personality
         self.personality = personality
         
         self.client = AsyncClient(server, username)
@@ -139,7 +140,7 @@ class ollamarama:
             except Exception as e: 
                 print(e)
             #Shrink history list for token size management 
-            if len(self.messages[channel][sender]) > 30:
+            if len(self.messages[channel][sender]) > 24:
                 del self.messages[channel][sender][1:3]  #delete the first set of question and answers 
 
     # change the personality of the bot
@@ -217,18 +218,32 @@ Available models: {', '.join(sorted(list(self.models)))}''')
                             nick = message.split(" ", 1)[1].strip()
                             if nick != None:
                                 self.admins.remove(nick)
-                                await self.send_message(room_id, f"{nick} removed from admins")                     
+                                await self.send_message(room_id, f"{nick} removed from admins")
 
+                        #set new global personality
+                        if message.startswith(".gpersona "):
+                            m = message.split(" ", 1)[1]
+                            if m != None:
+                                if m == 'reset':
+                                    self.personality = self.default_personality
+                                else:
+                                    self.personality = m.strip()
+                                await self.send_message(room_id, f"Global personality set to {self.personality}")
+                        
+                        #remove personality globally
+                        if message == ".gstock":
+                            pass #i'll figure this out later
 
                 # main AI response functionality
                 if message.startswith(".ai ") or message.startswith(self.bot_id):
-                    m = message.split(" ", 1)
-                    try:
-                        m = m[1]  + " [your response must be one paragraph or less]"
-                        await self.add_history("user", room_id, sender, m)
-                        await self.respond(room_id, sender, self.messages[room_id][sender])
-                    except:
-                        pass
+                    if message != ".ai reset":
+                        m = message.split(" ", 1)
+                        try:
+                            m = m[1]  + " [your response must be one paragraph or less]"
+                            await self.add_history("user", room_id, sender, m)
+                            await self.respond(room_id, sender, self.messages[room_id][sender])
+                        except:
+                            pass
                 # collaborative functionality
                 if message.startswith(".x "):
                     m = message.split(" ", 2)
@@ -265,7 +280,7 @@ Available models: {', '.join(sorted(list(self.models)))}''')
                     await self.respond(room_id, sender, self.messages[room_id][sender])
 
                 # reset bot to default personality
-                if message.startswith(".reset"):
+                if message.startswith(".reset") or message == ".ai reset": #some users keep forgetting the correct command
                     if room_id in self.messages:
                         if sender in self.messages[room_id]:
                             self.messages[room_id][sender].clear()
@@ -313,8 +328,34 @@ f'''{self.bot_id}, an AI chatbot.
     
 .stock
     Remove personality and reset to standard model settings
+
+    
+Available at https://github.com/h1ddenpr0cess20/ollamarama-matrix
  
 ''')
+                if sender_display in self.admins:
+                    await self.send_message(room_id, '''Admin commands:
+
+.admins
+    List of users authorized to use these commands
+                                            
+.models
+    List available models
+
+.model <model>
+    Change the model
+
+.gpersona
+    Change default global personality (bot owner only)
+
+.auth
+    Add an admin (bot owner only)
+                                            
+.deauth
+    Remove an admin (bot owner only)
+
+''')
+
 
     # main loop
     async def main(self):
