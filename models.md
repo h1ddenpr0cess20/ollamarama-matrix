@@ -33,3 +33,7 @@ ollama pull stablelm-zephyr
 ollama pull neural-chat
 
 ollama pull mistral-openorca
+
+ollama pull deepseek-llm:7b-chat
+
+ollama pull wizard-vicuna-uncensored
