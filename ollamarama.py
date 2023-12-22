@@ -333,8 +333,8 @@ f'''{self.bot_id}, an AI chatbot.
 Available at https://github.com/h1ddenpr0cess20/ollamarama-matrix
  
 ''')
-                if sender_display in self.admins:
-                    await self.send_message(room_id, '''Admin commands:
+                    if sender_display in self.admins:
+                        await self.send_message(room_id, '''Admin commands:
 
 .admins
     List of users authorized to use these commands
