@@ -70,13 +70,13 @@ python3 launcher.py
     Resets all bot history and sets default model (admin only)
 
 **.auth _user_**
-    Add user to admins (main admin only)
+    Add user to admins (bot owner only)
 
 **.deauth _user_**
-    Remove user from admins (main admin only)
+    Remove user from admins (bot owner only)
 
 **.gpersona _persona_***
-    Change global personality
+    Change global personality (bot owner only)
 
 **.gpersona reset**
-    Reset global personality
+    Reset global personality (bot owner only)
