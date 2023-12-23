@@ -3,7 +3,9 @@ Ollamarama is an AI chatbot for the [Matrix](https://matrix.org/) chat protocol 
 
 This is based on my earlier project, [infinigpt-matrix](https://github.com/h1ddenpr0cess20/infinigpt-matrix), which uses OpenAI and costs money to use.
 
-Coming soon for IRC 
+IRC version available at [ollamarama-irc](https://github.com/h1ddenpr0cess20/ollamarama-irc)
+
+Terminal-based version at [ollamarama](https://github.com/h1ddenpr0cess20/ollamarama)
 
 ## Setup
 
