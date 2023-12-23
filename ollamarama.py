@@ -420,10 +420,10 @@ Available at https://github.com/h1ddenpr0cess20/ollamarama-matrix
 .gpersona reset
     Reset global personality (bot owner only)
                                             
-.auth
+.auth <user>
     Add an admin (bot owner only)
                                             
-.deauth
+.deauth <user>
     Remove an admin (bot owner only)
 
 ''')
