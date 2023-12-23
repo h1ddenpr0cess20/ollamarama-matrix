@@ -84,7 +84,7 @@ python3 launcher.py
 **.deauth _user_**
     Remove user from admins (bot owner only)
 
-**.gpersona _persona_***
+**.gpersona _persona_**
     Change global personality (bot owner only)
 
 **.gpersona reset**
