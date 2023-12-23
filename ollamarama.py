@@ -55,7 +55,7 @@ class ollamarama:
              
         }
         #set model
-        self.default_model = self.models['solar']
+        self.default_model = self.models['zephyr']
         self.model = self.default_model
 
         #authorized users for changing models
