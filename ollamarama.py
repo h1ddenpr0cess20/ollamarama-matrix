@@ -55,8 +55,12 @@ class ollamarama:
              
         }
         #set model
-        self.default_model = self.models['solar']
+        self.default_model = self.models['zephyr']
         self.model = self.default_model
+
+        self.temperature = .9
+        self.top_p = .7
+        self.repeat_penalty = 1.5
 
         #authorized users for changing models
         self.admins = admins
@@ -109,11 +113,12 @@ class ollamarama:
             response = completion(
                 api_base="http://localhost:11434",
                 model=self.model,
-                temperature=.9,
-                top_p=.7,
-                repeat_penalty=1.5,
+                temperature=self.temperature,
+                top_p=self.top_p,
+                repeat_penalty=self.repeat_penalty,
                 messages=message,
-                timeout=60)    
+                timeout=60
+                ) 
         except Exception as e:
             await self.send_message(channel, "Something went wrong")
             print(e)
@@ -199,12 +204,7 @@ Available models: {', '.join(sorted(list(self.models)))}''')
                                     self.model = self.default_model
                                 await self.send_message(room_id, f"Model set to {self.model.removeprefix('ollama/')}")
                     
-                    #reset history for all users                
-                    if message == ".clear":
-                        self.messages.clear()
-                        self.model = self.default_model
-                        await self.send_message(room_id, "Bot has been reset for everyone")
-                    
+                    #bot owner commands
                     if sender_display == self.admins[0]:
                         #add admins
                         if message.startswith(".auth "):
@@ -233,6 +233,63 @@ Available models: {', '.join(sorted(list(self.models)))}''')
                         #remove personality globally
                         if message == ".gstock":
                             pass #i'll figure this out later
+
+                        #reset history for all users                
+                        if message == ".clear":
+                            self.messages.clear()
+                            self.model = self.default_model
+                            self.temperature = .9
+                            self.top_p = .7
+                            self.repeat_penalty = 1.5
+                            await self.send_message(room_id, "Bot has been reset for everyone")
+                        
+                        #temperature setting
+                        if message.startswith(".temperature "):
+                            if message == ".temperature reset":
+                                self.temperature = .9
+                                await self.send_message(room_id, f"Temperature set to {self.temperature}")
+                            else:
+                                try:
+                                    temp = float(message.split(" ", 1)[1])
+                                    if 0 <= temp <=1:
+                                        self.temperature = temp
+                                        await self.send_message(room_id, f"Temperature set to {self.temperature}")
+                                    else:
+                                        await self.send_message(room_id, f"Invalid input, temperature is still {self.temperature}")
+                                except:
+                                    await self.send_message(room_id, f"Invalid input, temperature is still {self.temperature}")
+
+                        #top_p setting
+                        if message.startswith(".top_p "):
+                            if message == ".top_p reset":
+                                self.top_p = .7
+                                await self.send_message(room_id, f"Top_p set to {self.top_p}")
+                            else:
+                                try:
+                                    top_p = float(message.split(" ", 1)[1])
+                                    if 0 <= top_p <=1:
+                                        self.top_p = top_p
+                                        await self.send_message(room_id, f"Top_p set to {self.top_p}")
+                                    else:
+                                        await self.send_message(room_id, f"Invalid input, top_p is still {self.top_p}")
+                                except:
+                                    await self.send_message(room_id, f"Invalid input, top_p is still {self.top_p}")                                                      
+
+                        #repeat_penalty setting
+                        if message.startswith(".repeat_penalty "):
+                            if message == ".repeat_penalty reset":
+                                self.repeat_penalty = 1.5
+                                await self.send_message(room_id, f"Repeat_penalty set to {self.repeat_penalty}")
+                            else:
+                                try:
+                                    repeat_penalty = float(message.split(" ", 1)[1])
+                                    if 0 <= repeat_penalty <=2:
+                                        self.repeat_penalty = repeat_penalty
+                                        await self.send_message(room_id, f"Repeat_penalty set to {self.repeat_penalty}")
+                                    else:
+                                        await self.send_message(room_id, f"Invalid input, repeat_penalty is still {self.repeat_penalty}")
+                                except:
+                                    await self.send_message(room_id, f"Invalid input, repeat_penalty is still {self.repeat_penalty}")
 
                 # main AI response functionality
                 if message.startswith(".ai ") or message.startswith(self.bot_id):
@@ -345,6 +402,18 @@ Available at https://github.com/h1ddenpr0cess20/ollamarama-matrix
 .model <model>
     Change the model
 
+.temperature <#>
+    Set temperature value between 0 and 1.  To reset to default, type reset instead of a number. (bot owner only)
+                                                
+.top_p <#>
+    Set top_p value between 0 and 1.  To reset to default, type reset instead of a number. (bot owner only)
+                                                
+.repeat_penalty <#>
+    Set repeat_penalty between 0 and 2.  To reset to default, type reset instead of a number. (bot owner only)
+                                                
+.clear
+    Reset bot for everyone (bot owner only)
+                                                
 .gpersona <personality>
     Change default global personality (bot owner only)
 
