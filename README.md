@@ -66,8 +66,17 @@ python3 launcher.py
 **.model _reset_**
     Reset to default model (admin only)
 
+**.temperature** 
+    Set temperature value between 0 and 1.  To reset to default, type reset instead of a number. (bot owner only)
+                                                
+**.top_p**
+    Set top_p value between 0 and 1.  To reset to default, type reset instead of a number. (bot owner only)
+                                                
+**.repeat_penalty**
+    Set repeat_penalty between 0 and 2.  To reset to default, type reset instead of a number. (bot owner only)
+                                                
 **.clear**
-    Resets all bot history and sets default model (admin only)
+    Resets all bot history and sets default model (bot owner only)
 
 **.auth _user_**
     Add user to admins (bot owner only)
