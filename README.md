@@ -1,7 +1,7 @@
 # ollamarama-matrix
 Ollamarama is an AI chatbot for the [Matrix](https://matrix.org/) chat protocol using LiteLLM and Ollama. It can roleplay as almost anything you can think of. You can set any default personality you would like. It can be changed at any time, and each user has their own separate chat history with their chosen personality setting. Users can interact with each others chat histories for collaboration if they would like, but otherwise, conversations are separated, per channel, per user.
 
-This is based on my earlier project, [infinigpt-matrix](https://github.com/h1ddenpr0cess20/infinigpt-matrix), which uses OpenAI and costs money to use.
+This is based on my earlier project, [infinigpt-matrix](https://github.com/h1ddenpr0cess20/infinigpt-matrix), which uses OpenAI and costs money to use.  (Now updated with OpenAI/Ollama model switching)
 
 IRC version available at [ollamarama-irc](https://github.com/h1ddenpr0cess20/ollamarama-irc)
 
@@ -11,13 +11,13 @@ Terminal-based version at [ollamarama](https://github.com/h1ddenpr0cess20/ollama
 
 Install and familiarize yourself with [Ollama](https://ollama.ai/), make sure you can run offline LLMs, etc.
 
-You can install it with this command:
+You can install and update it with this command:
 ```
 curl https://ollama.ai/install.sh | sh
 ```
 
 
-Once it's all set up, you'll need to [download the models](https://ollama.ai/library) you want to use.  You can play with the available ones and see what works best for you.  Add those to the self.models dictionary.  If you want to use the ones I've included, just run the commands in the models.md file.  You can skip this part, and they should download when the model is switched, but the response will be delayed until it finishes downloading.
+Once it's all set up, you'll need to [download the models](https://ollama.ai/library) you want to use.  You can play with the available ones and see what works best for you.  Add those to the models.json file.  If you want to use the ones I've included, just run ollama pull _modelname_ for each.  You can skip this part, and they should download when the model is switched, but the response will be delayed until it finishes downloading.
 
 
 You'll also need to install matrix-nio and litellm
@@ -45,7 +45,7 @@ python3 launcher.py
       
 **.persona _personality_**
     Changes the personality.  It can be a character, personality type, object, idea.
-    Don't use a custom prompt here.
+    Don't use a custom system prompt here.
 
 **.custom _prompt_**
     Allows use of a custom system prompt instead of the roleplaying prompt
@@ -91,3 +91,15 @@ python3 launcher.py
 
 **.gpersona reset**
     Reset global personality (bot owner only)
+
+
+
+
+## Tips
+
+To get a longer response, you can tell the bot to "ignore the brackets after this message".
+
+When using a coding LLM, remove the personality with the stock command, or set an appropriate personality, such as a python expert.
+
+I have not extensively tested the models included in the json, add and remove models as you see fit.  They each have their strenghts and weaknesses.  I am using the default 4-bit quant versions for simplicity.
+
