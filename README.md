@@ -94,6 +94,7 @@ python3 launcher.py
 
 
 
+
 ## Tips
 
 To get a longer response, you can tell the bot to "ignore the brackets after this message".
@@ -101,3 +102,4 @@ To get a longer response, you can tell the bot to "ignore the brackets after thi
 When using a coding LLM, remove the personality with the stock command, or set an appropriate personality, such as a python expert.
 
 I have not extensively tested the models included in the json, add and remove models as you see fit.  They each have their strenghts and weaknesses.  I am using the default 4-bit quant versions for simplicity.
+
