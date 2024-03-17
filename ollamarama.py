@@ -31,14 +31,16 @@ class ollamarama:
         #prompt parts
         self.prompt = ("you are ", ". speak in the first person and never break character.")
 
-        #put the models you want to use here, still testing various models
+        #open models.json
         with open("models.json", "r") as f:
             self.models = json.load(f)
+            f.close()
         
         #set model
-        self.default_model = self.models['zephyr']
+        self.default_model = self.models['mistral']
         self.model = self.default_model
 
+        #no idea if optimal, change if necessary
         self.temperature = .9
         self.top_p = .7
         self.repeat_penalty = 1.5
