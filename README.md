@@ -101,5 +101,4 @@ To get a longer response, you can tell the bot to "ignore the brackets after thi
 
 When using a coding LLM, remove the personality with the stock command, or set an appropriate personality, such as a python expert.
 
-I have not extensively tested the models included in the json, add and remove models as you see fit.  They each have their strenghts and weaknesses.  I am using the default 4-bit quant versions for simplicity.
-
+I have not extensively tested the models included in the json, add and remove models as you see fit.  They each have their strengths and weaknesses.  I am using the default 4-bit quant versions for simplicity, but the quality will be pretty poor.  To use a different size model than default, use the full name, for example llama2:7b-chat-q8_0 instead of just llama2.
