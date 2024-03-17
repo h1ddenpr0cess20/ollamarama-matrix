@@ -37,7 +37,7 @@ class ollamarama:
             f.close()
         
         #set model
-        self.default_model = self.models['mistral']
+        self.default_model = self.models['zephyr']
         self.model = self.default_model
 
         #no idea if optimal, change if necessary
