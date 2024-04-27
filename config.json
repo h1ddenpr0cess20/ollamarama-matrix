@@ -1,16 +1,22 @@
 [
     {
-        "llama3": "ollama/llama3",
-        "wizardlm2": "ollama/wizardlm2",
-        "phi3": "ollama/phi3",
-        "zephyr": "ollama/zephyr",
-        "solar": "ollama/solar",
-        "mistral": "ollama/mistral",
-        "codellama": "ollama/codellama",
-        "dolphin-mistral": "ollama/dolphin-mistral",
-        "dolphin-llama3": "ollama/dolphin-llama3",
-        "gemma": "ollama/gemma",
-        "codegemma": "ollama/codegemma"
+        "models":
+        {
+            "llama3": "ollama/llama3",
+            "wizardlm2": "ollama/wizardlm2",
+            "phi3": "ollama/phi3",
+            "zephyr": "ollama/zephyr",
+            "solar": "ollama/solar",
+            "mistral": "ollama/mistral",
+            "codellama": "ollama/codellama",
+            "dolphin-mistral": "ollama/dolphin-mistral",
+            "dolphin-llama3": "ollama/dolphin-llama3",
+            "gemma": "ollama/gemma",
+            "codegemma": "ollama/codegemma"
+        },
+        
+        "default_model": "llama3"
+
     },
     {
         "server": "https://matrix.org",

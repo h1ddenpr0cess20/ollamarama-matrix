@@ -12,16 +12,17 @@ import datetime
 import asyncio
 
 class ollamarama:
-    def __init__(self, server, username, password, channels, personality, admins):
-        self.server = server
-        self.username = username
-        self.password = password
-        self.channels = channels
-        self.default_personality = personality
-        self.personality = personality
-        
-        self.client = AsyncClient(server, username)
-                
+    def __init__(self):
+        #load config file
+        with open("config.json", "r") as f:
+            config = json.load(f)
+            f.close()
+
+        self.server, self.username, self.password, self.channels, self.default_personality, self.admins = config[1].values()        
+        self.personality = self.default_personality
+
+        self.client = AsyncClient(self.server, self.username)
+
         # time program started and joined channels
         self.join_time = datetime.datetime.now()
         
@@ -31,12 +32,9 @@ class ollamarama:
         #prompt parts
         self.prompt = ("you are ", ". roleplay and speak in the first person and never break character.")
 
-        #open config.json
-        with open("config.json", "r") as f:
-            self.models = json.load(f)[0]
-            f.close()
+        self.models = config[0]['models']
         #set model
-        self.default_model = self.models['llama3']
+        self.default_model = self.models[config[0]['default_model']]
         self.model = self.default_model
 
         #no idea if optimal, change if necessary
@@ -44,15 +42,11 @@ class ollamarama:
         self.top_p = .7
         self.repeat_penalty = 1.5
 
-        #authorized users for changing models
-        self.admins = admins
-
         #load help menu
         with open("help.txt", "r") as f:
             self.help, self.help_admin = f.read().split("~~~")
             f.close()
- 
-        
+
     # get the display name for a user
     async def display_name(self, user):
         try:
@@ -376,16 +370,6 @@ class ollamarama:
         await self.client.sync_forever(timeout=30000) 
 
 if __name__ == "__main__":
-    #load config file
-    with open("config.json", "r") as f:
-        config = json.load(f)
-        f.close()
-    
-    server, username, password, channels, personality, admins = config[1].values()
-
-    # create bot instance
-    bot = ollamarama(server, username, password, channels, personality, admins)
-    
-    # run main function loop
+    bot = ollamarama()
     asyncio.get_event_loop().run_until_complete(bot.main())
 

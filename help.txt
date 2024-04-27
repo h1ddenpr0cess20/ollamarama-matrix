@@ -20,9 +20,7 @@
 
     
 Available at https://github.com/h1ddenpr0cess20/ollamarama-matrix
-
 ~~~
-
 .admins
     List of users authorized to use these commands
                                             
