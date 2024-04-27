@@ -31,7 +31,7 @@ class ollamarama:
         #prompt parts
         self.prompt = ("you are ", ". roleplay and speak in the first person and never break character.")
 
-        #open models.json
+        #open config.json
         with open("config.json", "r") as f:
             self.models = json.load(f)[0]
             f.close()
@@ -93,7 +93,7 @@ class ollamarama:
                     {"role": "system", "content": self.prompt[0] + self.personality + self.prompt[1]},
                     {"role": role, "content": message}]
 
-    # create GPT response
+    #generate Ollama model response
     async def respond(self, channel, sender, message, sender2=None):
         try:
             #Generate response
