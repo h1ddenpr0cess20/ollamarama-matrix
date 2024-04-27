@@ -8,7 +8,7 @@
         "mistral": "ollama/mistral",
         "codellama": "ollama/codellama",
         "dolphin-mistral": "ollama/dolphin-mistral",
-        "dolphin-llama3": "dolphin-llama3",
+        "dolphin-llama3": "ollama/dolphin-llama3",
         "gemma": "ollama/gemma",
         "codegemma": "ollama/codegemma"
     },
