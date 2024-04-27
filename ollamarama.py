@@ -5,11 +5,11 @@ Author: Dustin Whyte
 Date: December 2023
 """
 
-import asyncio
 from nio import AsyncClient, MatrixRoom, RoomMessageText
-import datetime
 from litellm import completion
 import json
+import datetime
+import asyncio
 
 class ollamarama:
     def __init__(self, server, username, password, channels, personality, admins):
@@ -29,15 +29,14 @@ class ollamarama:
         self.messages = {}
 
         #prompt parts
-        self.prompt = ("you are ", ". speak in the first person and never break character.")
+        self.prompt = ("you are ", ". roleplay and speak in the first person and never break character.")
 
-        #open models.json
-        with open("models.json", "r") as f:
-            self.models = json.load(f)
+        #open config.json
+        with open("config.json", "r") as f:
+            self.models = json.load(f)[0]
             f.close()
-        
         #set model
-        self.default_model = self.models['zephyr']
+        self.default_model = self.models['llama3']
         self.model = self.default_model
 
         #no idea if optimal, change if necessary
@@ -47,7 +46,12 @@ class ollamarama:
 
         #authorized users for changing models
         self.admins = admins
-    
+
+        #load help menu
+        with open("help.txt", "r") as f:
+            self.help, self.help_admin = f.read().split("~~~")
+            f.close()
+ 
         
     # get the display name for a user
     async def display_name(self, user):
@@ -59,7 +63,7 @@ class ollamarama:
 
     # simplifies sending messages to the channel            
     async def send_message(self, channel, message):
-         await self.client.room_send(
+        await self.client.room_send(
             room_id=channel,
             message_type="m.room.message",
             content={"msgtype": "m.text", "body": message},
@@ -89,7 +93,7 @@ class ollamarama:
                     {"role": "system", "content": self.prompt[0] + self.personality + self.prompt[1]},
                     {"role": role, "content": message}]
 
-    # create GPT response
+    #generate Ollama model response
     async def respond(self, channel, sender, message, sender2=None):
         try:
             #Generate response
@@ -148,11 +152,10 @@ class ollamarama:
             await self.messages[channel][sender].clear()
         except:
             pass
-        await self.add_history("system", channel, sender, prompt) 
-      
+        await self.add_history("system", channel, sender, prompt)  
+
     # tracks the messages in channels
     async def message_callback(self, room: MatrixRoom, event: RoomMessageText):
-       
         # Main bot functionality
         if isinstance(event, RoomMessageText):
             # convert timestamp
@@ -175,8 +178,8 @@ class ollamarama:
                     #model switching 
                     if message.startswith(".model"):
                         if message == ".models":
-                            await self.send_message(room_id, f'''Current model: {self.model.removeprefix('ollama/')}
-Available models: {', '.join(sorted(list(self.models)))}''')
+                            current_model = f"Current model: {self.model.removeprefix('ollama/')}\nAvailable models: {', '.join(sorted(list(self.models)))}"
+                            await self.send_message(room_id, current_model)
                             
                         if message.startswith(".model "):
                             m = message.split(" ", 1)[1]
@@ -346,71 +349,9 @@ Available models: {', '.join(sorted(list(self.models)))}''')
                 
                 # help menu
                 if message.startswith(".help"):
-                    await self.send_message(room_id, 
-f'''{self.bot_id}, an AI chatbot.
-
-.ai <message> or {self.bot_id}: <message>
-    Basic usage.
-    Personality is preset by bot operator.
-    
-.x <user> <message>
-    This allows you to talk to another user's chat history.
-    <user> is the display name of the user whose history you want to use
-    
-.persona <personality type or character or inanimate object>
-    Changes the personality.  It can be a character, personality type, object, idea.
-
-.custom <custom prompt>
-    Allows use of a custom system prompt instead of the roleplaying prompt
-
-.reset
-    Reset to preset personality
-    
-.stock
-    Remove personality and reset to standard model settings
-
-    
-Available at https://github.com/h1ddenpr0cess20/ollamarama-matrix
- 
-''')
+                    await self.send_message(room_id, self.help)
                     if sender_display in self.admins:
-                        await self.send_message(room_id, '''Admin commands:
-
-.admins
-    List of users authorized to use these commands
-                                            
-.models
-    List available models
-
-.model <model>
-    Change the model
-
-.temperature <#>
-    Set temperature value between 0 and 1.  To reset to default, type reset instead of a number. (bot owner only)
-                                                
-.top_p <#>
-    Set top_p value between 0 and 1.  To reset to default, type reset instead of a number. (bot owner only)
-                                                
-.repeat_penalty <#>
-    Set repeat_penalty between 0 and 2.  To reset to default, type reset instead of a number. (bot owner only)
-                                                
-.clear
-    Reset bot for everyone (bot owner only)
-                                                
-.gpersona <personality>
-    Change default global personality (bot owner only)
-
-.gpersona reset
-    Reset global personality (bot owner only)
-                                            
-.auth <user>
-    Add an admin (bot owner only)
-                                            
-.deauth <user>
-    Remove an admin (bot owner only)
-
-''')
-
+                        await self.send_message(room_id, self.help_admin)
 
     # main loop
     async def main(self):
@@ -431,24 +372,16 @@ Available at https://github.com/h1ddenpr0cess20/ollamarama-matrix
         
         # start listening for messages
         self.client.add_event_callback(self.message_callback, RoomMessageText)
-                     
+
         await self.client.sync_forever(timeout=30000) 
 
 if __name__ == "__main__":
+    #load config file
+    with open("config.json", "r") as f:
+        config = json.load(f)
+        f.close()
     
-    server = "https://matrix.org" #change if using different homeserver
-    username = "@USERNAME:SERVER.TLD" 
-    password = "PASSWORD"
-
-    channels = ["#channel1:SERVER.TLD", 
-                "#channel2:SERVER.TLD", 
-                "#channel3:SERVER.TLD", 
-                "!ExAmPleOfApRivAtErOoM:SERVER.TLD", ] #enter the channels you want it to join here
-    
-    personality = "a helpful and thorough AI assistant who provides accurate and detailed answers without being too verbose"
-    
-    #list of authorized users for admin commands
-    admins = ['admin_nick1', 'admin_nick2',]
+    server, username, password, channels, personality, admins = config[1].values()
 
     # create bot instance
     bot = ollamarama(server, username, password, channels, personality, admins)

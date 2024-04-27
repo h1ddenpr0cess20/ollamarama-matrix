@@ -1,0 +1,57 @@
+.ai <message> or botname: <message>
+    Basic usage.
+    Personality is preset by bot operator.
+    
+.x <user> <message>
+    This allows you to talk to another user's chat history.
+    <user> is the display name of the user whose history you want to use
+    
+.persona <personality type or character or inanimate object>
+    Changes the personality.  It can be a character, personality type, object, idea.
+
+.custom <custom prompt>
+    Allows use of a custom system prompt instead of the roleplaying prompt
+
+.reset
+    Reset to preset personality
+    
+.stock
+    Remove personality and reset to standard model settings
+
+    
+Available at https://github.com/h1ddenpr0cess20/ollamarama-matrix
+
+~~~
+
+.admins
+    List of users authorized to use these commands
+                                            
+.models
+    List available models
+
+.model <model>
+    Change the model
+
+.temperature <#>
+    Set temperature value between 0 and 1.  To reset to default, type reset instead of a number. (bot owner only)
+                                                
+.top_p <#>
+    Set top_p value between 0 and 1.  To reset to default, type reset instead of a number. (bot owner only)
+                                                
+.repeat_penalty <#>
+    Set repeat_penalty between 0 and 2.  To reset to default, type reset instead of a number. (bot owner only)
+                                                
+.clear
+    Reset bot for everyone (bot owner only)
+                                                
+.gpersona <personality>
+    Change default global personality (bot owner only)
+
+.gpersona reset
+    Reset global personality (bot owner only)
+                                            
+.auth <user>
+    Add an admin (bot owner only)
+                                            
+.deauth <user>
+    Remove an admin (bot owner only)
