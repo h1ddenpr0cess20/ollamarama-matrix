@@ -1,0 +1,36 @@
+[
+    {
+        "llama3": "ollama/llama3",
+        "wizardlm2": "ollama/wizardlm2",
+        "phi3": "ollama/phi3",
+        "zephyr": "ollama/zephyr",
+        "solar": "ollama/solar",
+        "mistral": "ollama/mistral",
+        "codellama": "ollama/codellama",
+        "dolphin-mistral": "ollama/dolphin-mistral",
+        "dolphin-llama3": "dolphin-llama3",
+        "gemma": "ollama/gemma",
+        "codegemma": "ollama/codegemma"
+    },
+    {
+        "server": "https://matrix.org",
+        "username": "@USERNAME:SERVER.TLD",
+        "password": "PASSWORD",
+
+        "channels": 
+        [
+            "#channel1:SERVER.TLD", 
+            "#channel2:SERVER.TLD", 
+            "#channel3:SERVER.TLD", 
+            "!ExAmPleOfApRivAtErOoM:SERVER.TLD"
+        ],
+        
+        "personality": "a helpful and thorough AI assistant who provides accurate and detailed answers without being too verbose",
+        "admins": 
+        [
+            "admin_nick1", 
+            "admin_nick2"
+        ]
+
+    }
+]
