@@ -222,54 +222,28 @@ class ollamarama:
                             self.top_p = .7
                             self.repeat_penalty = 1.5
                             await self.send_message(room_id, "Bot has been reset for everyone")
-                        
-                        #temperature setting
-                        if message.startswith(".temperature "):
-                            if message == ".temperature reset":
-                                self.temperature = .9
-                                await self.send_message(room_id, f"Temperature set to {self.temperature}")
-                            else:
-                                try:
-                                    temp = float(message.split(" ", 1)[1])
-                                    if 0 <= temp <=1:
-                                        self.temperature = temp
-                                        await self.send_message(room_id, f"Temperature set to {self.temperature}")
-                                    else:
-                                        await self.send_message(room_id, f"Invalid input, temperature is still {self.temperature}")
-                                except:
-                                    await self.send_message(room_id, f"Invalid input, temperature is still {self.temperature}")
 
-                        #top_p setting
-                        if message.startswith(".top_p "):
-                            if message == ".top_p reset":
-                                self.top_p = .7
-                                await self.send_message(room_id, f"Top_p set to {self.top_p}")
-                            else:
-                                try:
-                                    top_p = float(message.split(" ", 1)[1])
-                                    if 0 <= top_p <=1:
-                                        self.top_p = top_p
-                                        await self.send_message(room_id, f"Top_p set to {self.top_p}")
-                                    else:
-                                        await self.send_message(room_id, f"Invalid input, top_p is still {self.top_p}")
-                                except:
-                                    await self.send_message(room_id, f"Invalid input, top_p is still {self.top_p}")                                                      
+                        if message.startswith((".temperature ", ".top_p ", ".repeat_penalty ")):
+                            attr_name = message.split()[0][1:]
+                            min_val, max_val, default_val = {
+                                "temperature": (0, 1, 0.9),
+                                "top_p": (0, 1, 0.7),
+                                "repeat_penalty": (0, 2, 1.5)
+                            }[attr_name]
 
-                        #repeat_penalty setting
-                        if message.startswith(".repeat_penalty "):
-                            if message == ".repeat_penalty reset":
-                                self.repeat_penalty = 1.5
-                                await self.send_message(room_id, f"Repeat_penalty set to {self.repeat_penalty}")
+                            if message.endswith(" reset"):
+                                setattr(self, attr_name, default_val)
+                                await self.send_message(room_id, f"{attr_name.capitalize()} set to {default_val}")
                             else:
                                 try:
-                                    repeat_penalty = float(message.split(" ", 1)[1])
-                                    if 0 <= repeat_penalty <=2:
-                                        self.repeat_penalty = repeat_penalty
-                                        await self.send_message(room_id, f"Repeat_penalty set to {self.repeat_penalty}")
+                                    value = float(message.split(" ", 1)[1])
+                                    if min_val <= value <= max_val:
+                                        setattr(self, attr_name, value)
+                                        await self.send_message(room_id, f"{attr_name.capitalize()} set to {value}")
                                     else:
-                                        await self.send_message(room_id, f"Invalid input, repeat_penalty is still {self.repeat_penalty}")
+                                        await self.send_message(room_id, f"Invalid input, {attr_name} is still {getattr(self, attr_name)}")
                                 except:
-                                    await self.send_message(room_id, f"Invalid input, repeat_penalty is still {self.repeat_penalty}")
+                                    await self.send_message(room_id, f"Invalid input, {attr_name} is still {getattr(self, attr_name)}")
 
                 # main AI response functionality
                 if message.startswith(".ai ") or message.startswith(self.bot_id):
