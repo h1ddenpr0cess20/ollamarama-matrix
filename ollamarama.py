@@ -30,7 +30,7 @@ class ollamarama:
         self.messages = {}
 
         #prompt parts
-        self.prompt = ("you are ", ". roleplay and speak in the first person and never break character.")
+        self.prompt = ("you are ", ". roleplay and speak in the first person and never break character.  keep your responses brief and to the point.")
 
         self.models = config[0]['models']
         #set model
@@ -250,7 +250,7 @@ class ollamarama:
                     if message != ".ai reset":
                         m = message.split(" ", 1)
                         try:
-                            m = m[1]  + " [your response must be one paragraph or less]"
+                            m = m[1]#  + " [your response must be one paragraph or less]"
                             await self.add_history("user", room_id, sender, m)
                             await self.respond(room_id, sender, self.messages[room_id][sender])
                         except:
@@ -262,7 +262,7 @@ class ollamarama:
                     if len(m) > 1:
                         disp_name = m[0]
                         name_id = ""
-                        m = m[1] + " [your response must be one paragraph or less]"
+                        m = m[1]# + " [your response must be one paragraph or less]"
                         if room_id in self.messages:
                             for user in self.messages[room_id]:
                                 try:
@@ -278,7 +278,7 @@ class ollamarama:
                 #change personality    
                 if message.startswith(".persona "):
                     m = message.split(" ", 1)
-                    m = m[1] + " [your response must be one paragraph or less]"
+                    m = m[1]# + " [your response must be one paragraph or less]"
                 
                     await self.persona(room_id, sender, m)
                     await self.respond(room_id, sender, self.messages[room_id][sender])
