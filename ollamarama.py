@@ -14,7 +14,8 @@ import asyncio
 class ollamarama:
     def __init__(self):
         #load config file
-        with open("config.json", "r") as f:
+        self.config_file = "config.json"
+        with open(self.config_file, "r") as f:
             config = json.load(f)
             f.close()
 
@@ -171,7 +172,11 @@ class ollamarama:
                 if sender_display in self.admins:
                     #model switching 
                     if message.startswith(".model"):
-                        if message == ".models":
+                        with open(self.config_file, "r") as f:
+                            config = json.load(f)
+                            f.close()
+                        self.models = config[0]['models']
+                        if message == ".models":                           
                             current_model = f"Current model: {self.model.removeprefix('ollama/')}\nAvailable models: {', '.join(sorted(list(self.models)))}"
                             await self.send_message(room_id, current_model)
                             
