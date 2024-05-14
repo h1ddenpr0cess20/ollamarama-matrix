@@ -160,11 +160,11 @@ class ollamarama:
             sender = event.sender
             sender_display = await self.display_name(sender)
             room_id = room.room_id
-            user = await self.display_name(event.sender)
+            
 
             #check if the message was sent after joining and not by the bot
             if message_time > self.join_time and sender != self.username:
-
+                user = await self.display_name(event.sender)
                 #admin commands
                 if message == ".admins":
                     await self.send_message(room_id, f"Bot admins: {', '.join(self.admins)}")
