@@ -30,7 +30,7 @@
             "!ExAmPleOfApRivAtErOoM:SERVER.TLD"
         ],
         
-        "personality": "a minimalist AI assistant",
+        "personality": "a minimalist AI assistant who provides longer responses when requested",
         "admins": 
         [
             "admin_nick1", 
