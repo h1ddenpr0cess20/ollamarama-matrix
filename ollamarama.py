@@ -19,7 +19,8 @@ class ollamarama:
             config = json.load(f)
             f.close()
 
-        self.server, self.username, self.password, self.channels, self.default_personality, self.admins = config[1].values()        
+        self.server, self.username, self.password, self.channels, self.default_personality, self.admins = config[1].values()
+        self.api_base = config[2]['api_base']
         self.personality = self.default_personality
 
         self.client = AsyncClient(self.server, self.username)
@@ -93,7 +94,7 @@ class ollamarama:
         try:
             #Generate response
             response = completion(
-                api_base="http://localhost:11434",
+                api_base=self.api_base,
                 model=self.model,
                 temperature=self.temperature,
                 top_p=self.top_p,

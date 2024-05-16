@@ -37,5 +37,8 @@
             "admin_nick2"
         ]
 
+    },
+    {
+        "api_base": "http://localhost:11434"
     }
 ]
