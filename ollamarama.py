@@ -6,10 +6,10 @@ Date: December 2023
 """
 
 from nio import AsyncClient, MatrixRoom, RoomMessageText
-from litellm import completion
 import json
 import datetime
 import asyncio
+import requests
 
 class ollamarama:
     def __init__(self):
@@ -20,7 +20,7 @@ class ollamarama:
             f.close()
 
         self.server, self.username, self.password, self.channels, self.default_personality, self.admins = config[1].values()
-        self.api_base = config[2]['api_base']
+        self.api_url = config[2]['api_base'] + "/api/chat"
         self.personality = self.default_personality
 
         self.client = AsyncClient(self.server, self.username)
@@ -40,9 +40,13 @@ class ollamarama:
         self.model = self.default_model
 
         #no idea if optimal, change if necessary
-        self.temperature = .9
-        self.top_p = .7
-        self.repeat_penalty = 1.5
+        self.temperature, self.top_p, self.repeat_penalty = config[2]['options'].values()
+        self.defaults = {
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "repeat_penalty": self.repeat_penalty
+        }
+        
 
         #load help menu
         with open("help.txt", "r") as f:
@@ -92,26 +96,27 @@ class ollamarama:
     #generate Ollama model response
     async def respond(self, channel, sender, message, sender2=None):
         try:
-            #Generate response
-            response = completion(
-                api_base=self.api_base,
-                model=self.model,
-                temperature=self.temperature,
-                top_p=self.top_p,
-                repeat_penalty=self.repeat_penalty,
-                messages=message,
-                timeout=60
-                ) 
+            # #Generate response
+            data = {
+                "model": self.model, 
+                "messages": message, 
+                "stream": False,
+                "options": {
+                    "top_p": self.top_p,
+                    "temperature": self.temperature,
+                    "repeat_penalty": self.repeat_penalty
+                    }
+                }
+            response = requests.post(self.api_url, json=data)
+            response.raise_for_status()
+            data = response.json()
+            
         except Exception as e:
             await self.send_message(channel, "Something went wrong")
             print(e)
         else:
             #Extract response text
-            response_text = response.choices[0].message.content
-            
-            #check for unwanted quotation marks around response and remove them
-            if response_text.startswith('"') and response_text.endswith('"'):
-                response_text = response_text.strip('"')
+            response_text = data["message"]['content']
 
             #add to history
             await self.add_history("assistant", channel, sender, response_text)
@@ -129,7 +134,10 @@ class ollamarama:
                 print(e)
             #Shrink history list for token size management 
             if len(self.messages[channel][sender]) > 24:
-                del self.messages[channel][sender][1:3]  #delete the first set of question and answers 
+                if self.messages[channel][sender][0]['role'] == 'system':
+                    del self.messages[channel][sender][1:3]  #delete the first set of question and answers
+                else:
+                    del self.messages[channel][sender][0:2]
 
     # change the personality of the bot
     async def persona(self, channel, sender, persona):
@@ -224,17 +232,16 @@ class ollamarama:
                         if message == ".clear":
                             self.messages.clear()
                             self.model = self.default_model
-                            self.temperature = .9
-                            self.top_p = .7
-                            self.repeat_penalty = 1.5
+                            self.temperature, self.top_p, self.repeat_penalty = self.defaults
+
                             await self.send_message(room_id, "Bot has been reset for everyone")
 
                         if message.startswith((".temperature ", ".top_p ", ".repeat_penalty ")):
                             attr_name = message.split()[0][1:]
                             min_val, max_val, default_val = {
-                                "temperature": (0, 1, 0.9),
-                                "top_p": (0, 1, 0.7),
-                                "repeat_penalty": (0, 2, 1.5)
+                                "temperature": (0, 1, self.defaults['temperature']),
+                                "top_p": (0, 1, self.defaults['top_p']),
+                                "repeat_penalty": (0, 2, self.defaults['repeat_penalty'])
                             }[attr_name]
 
                             if message.endswith(" reset"):
@@ -256,7 +263,7 @@ class ollamarama:
                     if message != ".ai reset":
                         m = message.split(" ", 1)
                         try:
-                            m = m[1]#  + " [your response must be one paragraph or less]"
+                            m = m[1]
                             await self.add_history("user", room_id, sender, m)
                             await self.respond(room_id, sender, self.messages[room_id][sender])
                         except:
@@ -268,7 +275,7 @@ class ollamarama:
                     if len(m) > 1:
                         disp_name = m[0]
                         name_id = ""
-                        m = m[1]# + " [your response must be one paragraph or less]"
+                        m = m[1]
                         if room_id in self.messages:
                             for user in self.messages[room_id]:
                                 try:
@@ -284,7 +291,7 @@ class ollamarama:
                 #change personality    
                 if message.startswith(".persona "):
                     m = message.split(" ", 1)
-                    m = m[1]# + " [your response must be one paragraph or less]"
+                    m = m[1]
                 
                     await self.persona(room_id, sender, m)
                     await self.respond(room_id, sender, self.messages[room_id][sender])
