@@ -91,3 +91,4 @@ python3 ollamarama.py
 
 **.gpersona reset**
     Reset global personality (bot owner only)
+
