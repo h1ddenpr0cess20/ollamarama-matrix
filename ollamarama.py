@@ -39,7 +39,6 @@ class ollamarama:
         self.default_model = self.models[config[0]['default_model']]
         self.model = self.default_model
 
-        #no idea if optimal, change if necessary
         self.temperature, self.top_p, self.repeat_penalty = config[2]['options'].values()
         self.defaults = {
             "temperature": self.temperature,
@@ -96,7 +95,6 @@ class ollamarama:
     #generate Ollama model response
     async def respond(self, channel, sender, message, sender2=None):
         try:
-            # #Generate response
             data = {
                 "model": self.model, 
                 "messages": message, 
@@ -135,7 +133,7 @@ class ollamarama:
             #Shrink history list for token size management 
             if len(self.messages[channel][sender]) > 24:
                 if self.messages[channel][sender][0]['role'] == 'system':
-                    del self.messages[channel][sender][1:3]  #delete the first set of question and answers
+                    del self.messages[channel][sender][1:3]
                 else:
                     del self.messages[channel][sender][0:2]
 
@@ -186,7 +184,7 @@ class ollamarama:
                             f.close()
                         self.models = config[0]['models']
                         if message == ".models":                           
-                            current_model = f"Current model: {self.model.removeprefix('ollama/')}\nAvailable models: {', '.join(sorted(list(self.models)))}"
+                            current_model = f"Current model: {self.model}\nAvailable models: {', '.join(sorted(list(self.models)))}"
                             await self.send_message(room_id, current_model)
                             
                         if message.startswith(".model "):
@@ -196,7 +194,7 @@ class ollamarama:
                                     self.model = self.models[m]
                                 elif m == 'reset':
                                     self.model = self.default_model
-                                await self.send_message(room_id, f"Model set to {self.model.removeprefix('ollama/')}")
+                                await self.send_message(room_id, f"Model set to {self.model}")
                     
                     #bot owner commands
                     if sender_display == self.admins[0]:
