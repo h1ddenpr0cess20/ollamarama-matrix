@@ -1,5 +1,31 @@
-[
+{ 
+    "matrix": 
+    {  
+        "server": "https://matrix.org",
+        "username": "@USERNAME:SERVER.TLD",
+        "password": "PASSWORD",
+        "channels":
+        [
+            "#channel1:SERVER.TLD",
+            "#channel2:SERVER.TLD",
+            "#channel3:SERVER.TLD",
+            "!ExAmPleOfApRivAtErOoM:SERVER.TLD"
+        ],
+        "admins":
+        [
+            "admin_nick1",
+            "admin_nick2"
+        ]
+    },
+    "ollama":
     {
+        "api_base": "http://localhost:11434",
+        "options":
+        {
+            "temperature": 0.8,
+            "top_p": 0.7,
+            "repeat_penalty": 1.2
+        },
         "models":
         {
             "llama3": "llama3:8b-instruct-q5_K_M",
@@ -11,40 +37,9 @@
             "dolphin-mistral": "dolphin-mistral:7b-v2.8-q5_K_M",
             "dolphin-llama3": "dolphin-llama3:8b-v2.9-q5_K_M",
             "llama3.1": "llama3.1:8b-instruct-q5_K_M"
-            
         },
-        
-        "default_model": "llama3.1"
-
-    },
-    {
-        "server": "https://matrix.org",
-        "username": "@USERNAME:SERVER.TLD",
-        "password": "PASSWORD",
-
-        "channels": 
-        [
-            "#channel1:SERVER.TLD", 
-            "#channel2:SERVER.TLD", 
-            "#channel3:SERVER.TLD", 
-            "!ExAmPleOfApRivAtErOoM:SERVER.TLD"
-        ],
-        
-        "personality": "a minimalist AI assistant who provides longer responses when requested",
-        "admins": 
-        [
-            "admin_nick1", 
-            "admin_nick2"
-        ]
-
-    },
-    {
-        "api_base": "http://localhost:11434",
-        "options":
-        {
-            "temperature": 0.8,
-            "top_p": 0.7,
-            "repeat_penalty": 1.2
-        }
+        "default_model": "llama3.1",
+        "prompt": ["you are ", ". roleplay and speak in the first person and never break character.  keep your responses brief and to the point."],
+        "personality": "a minimalist AI assistant who provides longer responses when requested"
     }
-]
+}

@@ -19,8 +19,10 @@ class ollamarama:
             config = json.load(f)
             f.close()
 
-        self.server, self.username, self.password, self.channels, self.default_personality, self.admins = config[1].values()
-        self.api_url = config[2]['api_base'] + "/api/chat"
+        self.server, self.username, self.password, self.channels, self.admins = config['matrix'].values()
+
+        self.api_url = config['ollama']['api_base'] + "/api/chat"
+        self.default_personality = config['ollama']['personality']
         self.personality = self.default_personality
 
         self.client = AsyncClient(self.server, self.username)
@@ -32,14 +34,14 @@ class ollamarama:
         self.messages = {}
 
         #prompt parts
-        self.prompt = ("you are ", ". roleplay and speak in the first person and never break character.  keep your responses brief and to the point.")
+        self.prompt = config['ollama']['prompt']
 
-        self.models = config[0]['models']
+        self.models = config['ollama']['models']
         #set model
-        self.default_model = self.models[config[0]['default_model']]
+        self.default_model = self.models[config['ollama']['default_model']]
         self.model = self.default_model
 
-        self.temperature, self.top_p, self.repeat_penalty = config[2]['options'].values()
+        self.temperature, self.top_p, self.repeat_penalty = config['ollama']['options'].values()
         self.defaults = {
             "temperature": self.temperature,
             "top_p": self.top_p,
@@ -182,7 +184,7 @@ class ollamarama:
                         with open(self.config_file, "r") as f:
                             config = json.load(f)
                             f.close()
-                        self.models = config[0]['models']
+                        self.models = config['ollama']['models']
                         if message == ".models":                           
                             current_model = f"Current model: {self.model}\nAvailable models: {', '.join(sorted(list(self.models)))}"
                             await self.send_message(room_id, current_model)
