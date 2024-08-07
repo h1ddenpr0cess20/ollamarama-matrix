@@ -217,6 +217,7 @@ class ollamarama:
 
                         #set new global personality
                         if message.startswith(".gpersona "):
+                            self.messages.clear()
                             m = message.split(" ", 1)[1]
                             if m != None:
                                 if m == 'reset':
@@ -233,7 +234,8 @@ class ollamarama:
                         if message == ".clear":
                             self.messages.clear()
                             self.model = self.default_model
-                            self.temperature, self.top_p, self.repeat_penalty = self.defaults
+                            self.personality = self.default_personality
+                            self.temperature, self.top_p, self.repeat_penalty = self.defaults.values()
 
                             await self.send_message(room_id, "Bot has been reset for everyone")
 
