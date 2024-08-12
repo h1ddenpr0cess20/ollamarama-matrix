@@ -157,7 +157,8 @@ class ollamarama:
             await self.messages[channel][sender].clear()
         except:
             pass
-        await self.add_history("system", channel, sender, prompt)  
+        await self.add_history("system", channel, sender, prompt)
+        await self.add_history("user", channel, sender, "introduce yourself")  
 
     # tracks the messages in channels
     async def message_callback(self, room: MatrixRoom, event: RoomMessageText):
