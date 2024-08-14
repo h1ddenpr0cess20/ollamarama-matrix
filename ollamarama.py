@@ -10,7 +10,7 @@ import json
 import datetime
 import asyncio
 import requests
-
+import markdown
 class ollamarama:
     def __init__(self):
         #load config file
@@ -67,7 +67,10 @@ class ollamarama:
         await self.client.room_send(
             room_id=channel,
             message_type="m.room.message",
-            content={"msgtype": "m.text", "body": message},
+            content={"msgtype": "m.text", 
+                "body": message,
+                "format": "org.matrix.custom.html",
+                "formatted_body": markdown.markdown(message, extensions=['fenced_code', 'nl2br'])},
         )
 
     # add messages to the history dictionary
