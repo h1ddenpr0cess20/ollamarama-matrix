@@ -11,6 +11,7 @@ import datetime
 import asyncio
 import requests
 import markdown
+
 class ollamarama:
     def __init__(self):
         #load config file
@@ -67,7 +68,8 @@ class ollamarama:
         await self.client.room_send(
             room_id=channel,
             message_type="m.room.message",
-            content={"msgtype": "m.text", 
+            content={
+                "msgtype": "m.text", 
                 "body": message,
                 "format": "org.matrix.custom.html",
                 "formatted_body": markdown.markdown(message, extensions=['fenced_code', 'nl2br'])},
@@ -110,7 +112,7 @@ class ollamarama:
                     "repeat_penalty": self.repeat_penalty
                     }
                 }
-            response = requests.post(self.api_url, json=data, timeout=60)
+            response = requests.post(self.api_url, json=data, timeout=120)
             response.raise_for_status()
             data = response.json()
             
@@ -316,6 +318,7 @@ class ollamarama:
                         if sender in self.messages[room_id]:
                             self.messages[room_id][sender].clear()
                             await self.persona(room_id, sender, self.personality)
+                            del self.messages[room_id][sender][1]
                             
                     try:
                         await self.send_message(room_id, f"{self.bot_id} reset to default for {sender_display}")
