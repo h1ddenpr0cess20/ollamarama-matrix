@@ -112,7 +112,7 @@ class ollamarama:
                     "repeat_penalty": self.repeat_penalty
                     }
                 }
-            response = requests.post(self.api_url, json=data, timeout=120)
+            response = requests.post(self.api_url, json=data, timeout=300) #may need to increase for larger models
             response.raise_for_status()
             data = response.json()
             
