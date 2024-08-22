@@ -27,7 +27,7 @@ pip3 install matrix-nio
 
 Set up a [Matrix account](https://app.element.io/) for your bot.  You'll need the server, username and password.
 
-Plug those into the appropriate variables in the config.json file.
+Add those to the config.json file.
 
 ```
 python3 ollamarama.py
@@ -35,60 +35,33 @@ python3 ollamarama.py
 
 ## Use
 
-**.ai _message_ or botname: _message_**
-    Basic usage.
-    Personality is preset by bot operator.
-  
-**.x _user message_**
-    This allows you to talk to another user's chat history.
-    _user_ is the display name of the user whose history you want to use
-      
+
+**.ai _message_** or **botname: _message_**
+&emsp;Basic usage.
+    
+**.x _user_ _message_**
+&emsp;This allows you to talk to another user's chat history.
+&emsp;_user_ is the display name of the user whose history you want to use
+    
 **.persona _personality_**
-    Changes the personality.  It can be a character, personality type, object, idea.
-    Don't use a custom system prompt here.
+&emsp;Changes the personality.  It can be a character, personality type, object, idea, whatever.  Use your imagination.
 
 **.custom _prompt_**
-    Allows use of a custom system prompt instead of the roleplaying prompt
+&emsp;Allows use of a custom system prompt instead of the roleplaying prompt
 
 **.reset**
-    Reset to preset personality
+&emsp;Clear history and reset to preset personality
     
 **.stock**
-    Remove personality and reset to standard settings
-    
-**.help**
-    Show the built-in help menu
+&emsp;Clear history and use without a system prompt
 
-**.models**
-    Show current model and available models (admin only)
-
-**.model _name_**
-    Set a model (admin only)
-
-**.model _reset_**
-    Reset to default model (admin only)
-
-**.temperature** 
-    Set temperature value between 0 and 1.  To reset to default, type reset instead of a number. (bot owner only)
-                                                
-**.top_p**
-    Set top_p value between 0 and 1.  To reset to default, type reset instead of a number. (bot owner only)
-                                                
-**.repeat_penalty**
-    Set repeat_penalty between 0 and 2.  To reset to default, type reset instead of a number. (bot owner only)
+**Admin only commands**
+                                            
+**.model _model_**
+&emsp;Omit model name to show current model and available models
+&emsp;Include model name to change model
                                                 
 **.clear**
-    Resets all bot history and sets default model (bot owner only)
-
-**.auth _user_**
-    Add user to admins (bot owner only)
-
-**.deauth _user_**
-    Remove user from admins (bot owner only)
-
-**.gpersona _persona_**
-    Change global personality (bot owner only)
-
-**.gpersona reset**
-    Reset global personality (bot owner only)
+&emsp;Reset bot for everyone
+                                
 
