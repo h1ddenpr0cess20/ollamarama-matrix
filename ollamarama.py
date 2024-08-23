@@ -126,7 +126,7 @@ class ollamarama:
     async def set_prompt(self, channel, sender, persona=None, custom=None, respond=True):
         #clear existing history
         try:
-            await self.messages[channel][sender].clear()
+            self.messages[channel][sender].clear()
         except:
             pass
         if persona != None:
@@ -244,7 +244,10 @@ class ollamarama:
             
             #check if the message was sent after joining and not by the bot
             if message_time > self.join_time and sender != self.username:
-                await self.handle_message(message, sender, sender_display, channel)
+                try:
+                    await self.handle_message(message, sender, sender_display, channel)
+                except:
+                    pass
 
     async def main(self):
         # Login, print "Logged in as @alice:example.org device id: RANDOMDID"
