@@ -129,10 +129,10 @@ class ollamarama:
             self.messages[channel][sender].clear()
         except:
             pass
-        if persona != None:
+        if persona != None and persona != "":
             # combine personality with prompt parts
             prompt = self.prompt[0] + persona + self.prompt[1]
-        if custom != None:
+        if custom != None  and custom != "":
             prompt = custom
         await self.add_history("system", channel, sender, prompt)
         if respond:
