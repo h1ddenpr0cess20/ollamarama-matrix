@@ -37,31 +37,48 @@ python3 ollamarama.py
 
 
 **.ai _message_** or **botname: _message_**
+
 &emsp;Basic usage.
+
     
 **.x _user_ _message_**
+
 &emsp;This allows you to talk to another user's chat history.
+
 &emsp;_user_ is the display name of the user whose history you want to use
+
     
 **.persona _personality_**
+
 &emsp;Changes the personality.  It can be a character, personality type, object, idea, whatever.  Use your imagination.
 
+
 **.custom _prompt_**
+
 &emsp;Allows use of a custom system prompt instead of the roleplaying prompt
 
 **.reset**
+
 &emsp;Clear history and reset to preset personality
+
     
 **.stock**
+
 &emsp;Clear history and use without a system prompt
 
+
 **Admin only commands**
-                                            
+
+
 **.model _model_**
+
 &emsp;Omit model name to show current model and available models
+
 &emsp;Include model name to change model
-                                                
+
+
 **.clear**
+
 &emsp;Reset bot for everyone
-                                
+
 
