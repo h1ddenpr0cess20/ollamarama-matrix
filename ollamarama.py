@@ -141,21 +141,19 @@ class ollamarama:
 
     async def ai(self, channel, message, sender, x=False):
         try:
-            if x:
-                if len(message) > 2:
-                    name = message[1]
-                    if message[2]:
-                        message = message[2:]
-                        if channel in self.messages:
-                            for user in self.messages[channel]:
-                                try:
-                                    username = await self.display_name(user)
-                                    if name == username:
-                                        name_id = user
-                                except:
-                                    name_id = name
-                            await self.add_history("user", channel, name_id, ' '.join(message))
-                            await self.respond(channel, name_id, self.messages[channel][name_id], sender)
+            if x and message[2]:
+                name = message[1]
+                message = message[2:]
+                if channel in self.messages:
+                    for user in self.messages[channel]:
+                        try:
+                            username = await self.display_name(user)
+                            if name == username:
+                                name_id = user
+                        except:
+                            name_id = name
+                    await self.add_history("user", channel, name_id, ' '.join(message))
+                    await self.respond(channel, name_id, self.messages[channel][name_id], sender)
             else:
                 await self.add_history("user", channel, sender, ' '.join(message[1:]))
                 await self.respond(channel, sender, self.messages[channel][sender])
