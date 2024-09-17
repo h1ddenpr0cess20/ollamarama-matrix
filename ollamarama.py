@@ -226,9 +226,10 @@ class ollamarama:
         command = message[0]
         if command in user_commands:
             action = user_commands[command]
+            await action()
         if sender_display in self.admins and command in admin_commands:
             action = admin_commands[command]
-        await action()
+            await action()
         
     async def message_callback(self, room: MatrixRoom, event: RoomMessageText):
         if isinstance(event, RoomMessageText):
