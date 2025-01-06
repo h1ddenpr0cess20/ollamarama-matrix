@@ -19,7 +19,7 @@
     },
     "ollama":
     {
-        "api_base": "http://localhost:11434",
+        "api_url": "http://localhost:11434/api/chat",
         "options":
         {
             "temperature": 0.8,
@@ -28,13 +28,10 @@
         },
         "models":
         {
-            "wizardlm2": "wizardlm2:7b-q5_K_M",
-            "mistral": "mistral:7b-instruct-v0.2-q5_K_M",
-            "dolphin-mistral": "dolphin-mistral:7b-v2.8-q5_K_M",
-            "dolphin-llama3": "dolphin-llama3:8b-v2.9-q5_K_M",
-            "llama3.1": "llama3.1:8b-instruct-q5_K_M"
+            "llama3.1": "llama3.1:8b-instruct-q5_K_M",
+            "llama3.2": "llama3.2:3b-instruct-fp16"
         },
-        "default_model": "llama3.1",
+        "default_model": "llama3.2",
         "prompt": ["you are ", ". roleplay and speak in the first person and never break character.  keep your responses brief and to the point."],
         "personality": "a minimalist AI assistant who provides longer responses when requested"
     }
