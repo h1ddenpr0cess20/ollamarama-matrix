@@ -14,8 +14,8 @@ import markdown
 
 class ollamarama:
     """
-    An AI chatbot for the Matrix chat protocol, supporting dynamic personalities, 
-    custom prompts, and interaction history management.
+    An Ollama-based chatbot for the Matrix chat protocol, supporting dynamic personalities, 
+    custom prompts, and cross-user interactions.
 
     Attributes:
         config_file (str): Path to the configuration file.
@@ -24,20 +24,20 @@ class ollamarama:
         password (str): Password for the Matrix account.
         channels (list): List of channel IDs the bot will join.
         admins (list): List of admin user IDs.
-        client (AsyncClient): Matrix client instance for communication.
+        client (AsyncClient): Matrix client instance.
         join_time (datetime): Timestamp when the bot joined.
         messages (dict): Stores message histories by channel and user.
-        api_url (str): URL for the AI API.
-        options (dict): Options for API calls.
-        models (dict): Available AI models.
-        default_model (str): Default AI model.
-        prompt (list): Template for the chatbot prompt.
+        api_url (str): URL for the Ollama API.
+        options (dict): Fine tuning parameters for generated responses.
+        models (dict): Available large language models.
+        default_model (str): Default large language model.
+        prompt (list): Template for the roleplaying system prompt.
         default_personality (str): Default personality for the chatbot.
-        model (str): Current AI model.
+        model (str): Current large language model.
         personality (str): Current personality for the chatbot.
     """
     def __init__(self):
-        """Initialize the ollamarama chatbot by loading configuration and setting up attributes."""
+        """Initialize ollamarama by loading configuration and setting up attributes."""
         self.config_file = "config.json"
         with open(self.config_file, "r") as f:
             config = json.load(f)
@@ -159,7 +159,7 @@ class ollamarama:
         Args:
             channel (str): Room ID.
             sender (str): User ID of the sender.
-            persona (str, optional): Predefined persona.
+            persona (str, optional): Personality name or description.
             custom (str, optional): Custom prompt.
             respond (bool, optional): Whether to generate a response. Defaults to True.
         """
