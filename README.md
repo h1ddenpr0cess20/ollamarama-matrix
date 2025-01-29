@@ -18,9 +18,9 @@ curl https://ollama.ai/install.sh | sh
 Once it's all set up, you'll need to [download the models](https://ollama.ai/library) you want to use.  You can play with the available ones and see what works best for you.  Add those to the config.json file.  If you want to use the examples I've included, just run ollama pull _modelname_ for each.
 
 
-You'll also need to install matrix-nio
+Install dependencies 
 ```
-pip3 install matrix-nio
+pip install -r requirements.txt
 ```
 
 Set up a [Matrix account](https://app.element.io/) for your bot.  You'll need the server, username and password.
@@ -28,7 +28,7 @@ Set up a [Matrix account](https://app.element.io/) for your bot.  You'll need th
 Add those to the config.json file.
 
 ```
-python3 ollamarama.py
+python ollamarama.py
 ```
 
 ## Use
