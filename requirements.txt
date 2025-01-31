@@ -23,7 +23,6 @@ python-socks==2.7.0
 referencing==0.36.2
 requests==2.32.3
 rpds-py==0.22.3
-safepickle==0.2.0
 typing_extensions==4.12.2
 unpaddedbase64==2.1.0
 urllib3==2.3.0
