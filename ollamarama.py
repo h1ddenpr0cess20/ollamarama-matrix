@@ -11,6 +11,14 @@ import datetime
 import asyncio
 import requests
 import markdown
+import logging
+import logging.config
+
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': True,
+})
+
 
 class ollamarama:
     """
@@ -35,6 +43,7 @@ class ollamarama:
         default_personality (str): Default personality for the chatbot.
         model (str): Current large language model.
         personality (str): Current personality for the chatbot.
+        history_size (int): Size of the chat history for each user
     """
     def __init__(self):
         """Initialize ollamarama by loading configuration and setting up attributes."""
@@ -50,9 +59,13 @@ class ollamarama:
         
         self.messages = {}
 
-        self.api_url, self.options, self.models, self.default_model, self.prompt, self.default_personality = config["ollama"].values()
+        self.api_url, self.options, self.models, self.default_model, self.prompt, self.default_personality, self.history_size = config["ollama"].values()
         self.model = self.default_model
         self.personality = self.default_personality
+
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        self.log = logging.getLogger(__name__).info
+        self.log(f"Model set to {self.model}")
 
     async def display_name(self, user):
         """
@@ -85,7 +98,7 @@ class ollamarama:
                 "msgtype": "m.text", 
                 "body": message,
                 "format": "org.matrix.custom.html",
-                "formatted_body": markdown.markdown(message, extensions=['fenced_code', 'nl2br'])},
+                "formatted_body": markdown.markdown(message, extensions=['extra', 'fenced_code', 'nl2br', 'sane_lists', 'tables', 'codehilite'])},
         )
 
     async def add_history(self, role, channel, sender, message):
@@ -106,11 +119,11 @@ class ollamarama:
         ]
         self.messages[channel][sender].append({"role": role, "content": message})
 
-        if len(self.messages[channel][sender]) > 24:
+        if len(self.messages[channel][sender]) > self.history_size:
             if self.messages[channel][sender][0]["role"] == "system":
-                del self.messages[channel][sender][1:3]
+                self.messages[channel][sender].pop(1)
             else:
-                del self.messages[channel][sender][0:2]
+                self.messages[channel][sender].pop(0)
 
     async def respond(self, channel, sender, message, sender2=None):
         """
@@ -127,17 +140,24 @@ class ollamarama:
                 "model": self.model, 
                 "messages": message, 
                 "stream": False,
-                "options": self.options
+                "options": self.options,
+                "timeout": 120
                 }
-            response = requests.post(self.api_url, json=data, timeout=120)
+            response = requests.post(self.api_url, json=data, timeout=60)
             response.raise_for_status()
             data = response.json()
             
         except Exception as e:
             await self.send_message(channel, "Something went wrong")
-            print(e)
+            self.log(e)
         else:
             response_text = data["message"]["content"]
+
+            if "<think>" in response_text:
+                thinking, response_text = response_text.split("</think>")
+                thinking = thinking.strip("<think>").strip()
+                self.log(f"Model thinking for {sender}: {thinking}")
+
             await self.add_history("assistant", channel, sender, response_text)
 
             if sender2:
@@ -148,9 +168,10 @@ class ollamarama:
             response_text = f"**{display_name}**:\n{response_text.strip()}"
             
             try:
+                self.log(f"Sending response to {display_name} in {channel}: {response_text}")
                 await self.send_message(channel, response_text)
             except Exception as e: 
-                print(e)
+                self.log(e)
             
     async def set_prompt(self, channel, sender, persona=None, custom=None, respond=True):
         """
@@ -172,6 +193,7 @@ class ollamarama:
         if custom != None  and custom != "":
             prompt = custom
         await self.add_history("system", channel, sender, prompt)
+        self.log(f"System prompt for {sender} set to '{prompt}'")
         if respond:
             await self.add_history("user", channel, sender, "introduce yourself")
             await self.respond(channel, sender, self.messages[channel][sender])
@@ -186,25 +208,25 @@ class ollamarama:
             sender (str): User ID of the sender.
             x (bool, optional): Whether to process cross-user interactions. Defaults to False.
         """
-        try:
-            if x and message[2]:
-                name = message[1]
-                message = message[2:]
-                if channel in self.messages:
-                    for user in self.messages[channel]:
-                        try:
-                            username = await self.display_name(user)
-                            if name == username:
-                                name_id = user
-                        except:
-                            name_id = name
-                    await self.add_history("user", channel, name_id, ' '.join(message))
-                    await self.respond(channel, name_id, self.messages[channel][name_id], sender)
-            else:
-                await self.add_history("user", channel, sender, ' '.join(message[1:]))
-                await self.respond(channel, sender, self.messages[channel][sender])
-        except:
-            pass
+        self.log(f"{sender} sent {" ".join(message)} in {channel}")
+        if x and message[2]:
+            target = message[1]
+            message = ' '.join(message[2:])
+            if channel in self.messages:
+                for user in self.messages[channel]:
+                    try:
+                        username = await self.display_name(user)
+                        if target == username:
+                            target = user
+                    except:
+                        pass
+                if target in self.messages[channel]:
+                    await self.add_history("user", channel, target, message)
+                    await self.respond(channel, target, self.messages[channel][target], sender)
+        else:
+            await self.add_history("user", channel, sender, ' '.join(message[1:]))
+            await self.respond(channel, sender, self.messages[channel][sender])
+
     
     async def reset(self, channel, sender, sender_display, stock=False):
         """
@@ -216,17 +238,16 @@ class ollamarama:
             sender_display (str): Display name of the sender.
             stock (bool): Whether to reset without setting a system prompt.  Defaults to False.
         """
-        if channel in self.messages:
-            try:
-                self.messages[channel][sender].clear()
-            except:
-                self.messages[channel] = {}
-                self.messages[channel][sender] = []
+        if channel not in self.messages:
+            self.messages[channel] = {}
+        self.messages[channel][sender] = []
         if not stock:
             await self.send_message(channel, f"{self.bot_id} reset to default for {sender_display}")
+            self.log(f"{self.bot_id} reset to default for {sender_display} in {channel}")
             await self.set_prompt(channel, sender, persona=self.personality, respond=False)
         else:
             await self.send_message(channel, f"Stock settings applied for {sender_display}")
+            self.log(f"Stock settings applied for {sender_display} in {channel}")
     
     async def help_menu(self, channel, sender_display):
         """
@@ -261,6 +282,7 @@ class ollamarama:
                     self.model = self.models[model]
                 elif model == 'reset':
                     self.model = self.default_model
+                self.log(f"Model set to {self.model}")
                 await self.send_message(channel, f"Model set to **{self.model}**")
             except:
                 pass
@@ -342,17 +364,17 @@ class ollamarama:
         Initialize the chatbot, log into Matrix, join rooms, and start syncing.
 
         """
-        print(await self.client.login(self.password))
+        self.log(await self.client.login(self.password))
 
         self.bot_id = await self.display_name(self.username)
         
         for channel in self.channels:
             try:
                 await self.client.join(channel)
-                print(f"{self.bot_id} joined {channel}")
+                self.log(f"{self.bot_id} joined {channel}")
                 
             except:
-                print(f"Couldn't join {channel}")
+                self.log(f"Couldn't join {channel}")
         
         self.client.add_event_callback(self.message_callback, RoomMessageText)
 
@@ -360,5 +382,5 @@ class ollamarama:
 
 if __name__ == "__main__":
     ollamarama = ollamarama()
-    asyncio.get_event_loop().run_until_complete(ollamarama.main())
+    asyncio.run(ollamarama.main())
 
