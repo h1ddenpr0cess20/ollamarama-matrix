@@ -22,8 +22,6 @@ Install dependencies
 ```
 pip install -r requirements.txt
 ```
-The requirements file only lists the main packages without pinned versions so
-that security updates are pulled automatically.
 
 Set up a [Matrix account](https://app.element.io/) for your bot.  You'll need the server, username and password.
 
