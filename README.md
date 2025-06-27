@@ -1,81 +1,115 @@
 # ollamarama-matrix
-Ollamarama is an AI chatbot for the [Matrix](https://matrix.org/) chat protocol using Ollama. It can roleplay as almost anything you can think of. You can set any default personality you would like. It can be changed at any time, and each user has their own separate chat history with their chosen personality setting. Users can interact with each others chat histories for collaboration if they would like, but otherwise, conversations are separated, per channel, per user.
 
-IRC version available at [ollamarama-irc](https://github.com/h1ddenpr0cess20/ollamarama-irc)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Matrix Protocol](https://img.shields.io/badge/chat-Matrix-green.svg)](https://matrix.org/)
+[![Ollama](https://img.shields.io/badge/AI-Ollama-orange.svg)](https://ollama.com/)
+[![GitHub](https://img.shields.io/github/stars/h1ddenpr0cess20/ollamarama-matrix?style=social)](https://github.com/h1ddenpr0cess20/ollamarama-matrix)
 
-Terminal-based version at [ollamarama](https://github.com/h1ddenpr0cess20/ollamarama)
+Ollamarama is a powerful AI chatbot for the [Matrix](https://matrix.org/) chat protocol powered by [Ollama](https://ollama.com/). Transform your Matrix channels with an AI that can roleplay as virtually anything you can imagine.
 
-## Setup
+## ✨ Features
 
-Install and familiarize yourself with [Ollama](https://ollama.ai/), make sure you can run local LLMs, etc.
+- 🎭 **Dynamic Personalities**: Switch between different AI personalities on the fly
+- 👥 **Per-User Chat History**: Each user maintains their own conversation context
+- 🔒 **Channel Isolation**: Conversations are separated by channel and user
+- 🤝 **Collaborative Mode**: Users can interact with each other's chat histories
+- 🛠️ **Admin Controls**: Model switching and global reset capabilities
+- 🎯 **Custom Prompts**: Use your own system prompts for specialized interactions
 
-You can install and update it with this command:
+## 🌟 Related Projects
+
+- 💬 **IRC Version**: [ollamarama-irc](https://github.com/h1ddenpr0cess20/ollamarama-irc)
+- 🖥️ **Terminal Version**: [ollamarama](https://github.com/h1ddenpr0cess20/ollamarama)
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+Install and familiarize yourself with [Ollama](https://ollama.com/) to run local LLMs.
+
+```bash
+curl https://ollama.com/install.sh | sh
 ```
-curl https://ollama.ai/install.sh | sh
+
+### 1. Install AI Models
+
+Download the models you want to use from the [Ollama library](https://ollama.com/library).
+
+**🎯 Recommended model:**
+```bash
+ollama pull qwen3
 ```
 
 
-Once it's all set up, you'll need to [download the models](https://ollama.ai/library) you want to use.  You can play with the available ones and see what works best for you.  Add those to the config.json file.  If you want to use the examples I've included, just run ollama pull _modelname_ for each.
+### 2. Install Dependencies
 
-
-Install dependencies
-```
+```bash
 pip install -r requirements.txt
 ```
 
-Set up a [Matrix account](https://app.element.io/) for your bot.  You'll need the server, username and password.
+### 3. Configure Matrix Bot
 
-Add those to the config.json file.
+1. Set up a [Matrix account](https://app.element.io/) for your bot
+2. Get your server URL, username, and password
+3. Update the `config.json` file with your credentials:
 
+```json
+{
+    "matrix": {
+        "server": "https://matrix.org",
+        "username": "@your_bot:matrix.org",
+        "password": "your_password",
+        "channels": ["#your-channel:matrix.org"]
+    }
+}
 ```
+
+### 4. Run the Bot
+
+```bash
 python ollamarama.py
 ```
 
-## Use
+## 📖 Usage Guide
 
+### Basic Commands
 
-**.ai** _message_ or **botname:** _message_  
-Basic usage.
+| Command | Description | Example |
+|---------|-------------|---------|
+| `.ai <message>` or `botname: <message>` | Basic chat with the AI | `.ai Hello there!` |
+| `.x <user> <message>` | Talk to another user's chat history | `.x Alice What did we discuss?` |
+| `.persona <personality>` | Change AI personality | `.persona helpful librarian` |
+| `.custom <prompt>` | Use custom system prompt | `.custom You are a coding expert` |
+| `.reset` | Clear history, reset to default personality | `.reset` |
+| `.stock` | Clear history, use without system prompt | `.stock` |
 
+### 👑 Admin Commands
 
-**.x** _user_ _message_  
+| Command | Description | Example |
+|---------|-------------|---------|
+| `.model [model_name]` | Show/change current model | `.model qwen3` |
+| `.clear` | Reset bot for all users | `.clear` |
 
-This allows you to talk to another user's chat history.  
+### 💡 Pro Tips
 
-_user_ is the display name of the user whose history you want to use
+- **Personality Examples**: Try `detective`, `pirate`, `shakespeare`, `helpful assistant`, `sarcastic critic`
+- **Collaborative Mode**: Use `.x username` to continue someone else's conversation
+- **Custom Prompts**: Perfect for specialized tasks like code review or creative writing
 
+## ⚖️ License
 
-**.persona** _personality_  
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See the [LICENSE](LICENSE) file for details.
 
-Changes the personality.  It can be a character, personality type, object, idea, whatever.  Use your imagination.
+## 🤝 Contributing
 
+Contributions are welcome! Feel free to:
+- 🐛 Report bugs
+- 💡 Suggest features
+- 🔧 Submit pull requests
 
-**.custom** _prompt_  
+## ⭐ Show Your Support
 
-Allows use of a custom system prompt instead of the roleplaying prompt
-
-**.reset**  
-
-Clear history and reset to preset personality
-
-
-**.stock**  
-
-Clear history and use without a system prompt
-
-
-**Admin only commands**  
-
-
-**.model** _model_  
-
-Omit model name to show current model and available models  
-
-Include model name to change model
-
-
-**.clear**  
-
-Reset bot for everyone
+If you find this project useful, please consider giving it a star on GitHub!
 
 
