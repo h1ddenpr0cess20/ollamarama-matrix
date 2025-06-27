@@ -15,7 +15,8 @@
         [
             "admin_nick1",
             "admin_nick2"
-        ]
+        ],
+        "device_id": ""
     },
     "ollama":
     {
@@ -23,7 +24,7 @@
         "options":
         {
             "temperature": 0.8,
-            "top_p": 0.7,
+            "top_p": 1,
             "repeat_penalty": 1.2
         },
         "models":

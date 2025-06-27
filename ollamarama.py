@@ -14,12 +14,6 @@ import markdown
 import logging
 import logging.config
 
-logging.config.dictConfig({
-    'version': 1,
-    'disable_existing_loggers': True,
-})
-
-
 class ollamarama:
     """
     An Ollama-based chatbot for the Matrix chat protocol, supporting dynamic personalities, 
@@ -47,13 +41,14 @@ class ollamarama:
     """
     def __init__(self):
         """Initialize ollamarama by loading configuration and setting up attributes."""
+        
         self.config_file = "config.json"
         with open(self.config_file, "r") as f:
             config = json.load(f)
             f.close()
-
-        self.server, self.username, self.password, self.channels, self.admins = config["matrix"].values()
-        self.client = AsyncClient(self.server, self.username)
+        
+        self.server, self.username, self.password, self.channels, self.admins, self.device_id = config["matrix"].values()
+        self.client = AsyncClient(self.server, self.username, device_id=self.device_id)
 
         self.join_time = datetime.datetime.now()
         
@@ -62,7 +57,10 @@ class ollamarama:
         self.api_url, self.options, self.models, self.default_model, self.prompt, self.default_personality, self.history_size = config["ollama"].values()
         self.model = self.default_model
         self.personality = self.default_personality
-
+        logging.config.dictConfig({
+            'version': 1,
+            'disable_existing_loggers': True,
+        })
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
         self.log = logging.getLogger(__name__).info
         self.log(f"Model set to {self.model}")
@@ -141,9 +139,9 @@ class ollamarama:
                 "messages": message, 
                 "stream": False,
                 "options": self.options,
-                "timeout": 120
+                "timeout": 180
                 }
-            response = requests.post(self.api_url, json=data, timeout=60)
+            response = requests.post(self.api_url, json=data, timeout=180)
             response.raise_for_status()
             data = response.json()
             
@@ -153,10 +151,22 @@ class ollamarama:
         else:
             response_text = data["message"]["content"]
 
+            # Check for different types of thought/solution delimiters
             if "<think>" in response_text:
                 thinking, response_text = response_text.split("</think>")
                 thinking = thinking.strip("<think>").strip()
                 self.log(f"Model thinking for {sender}: {thinking}")
+            if "<|begin_of_thought|>" in response_text:
+                parts = response_text.split("<|end_of_thought|>")
+                if len(parts) > 1:
+                    thinking = parts[0].strip("<|begin_of_thought|>").strip('<|end_of_thought|>')
+                    response_text = parts[1]
+                    self.log(f"Model thinking for {sender}: {thinking}")
+
+            # Check for solution delimiters and clean them up
+            if "<|begin_of_solution|>" in response_text:
+                parts = response_text.split("<|end_of_solution|>")
+                response_text = parts[0].split("<|begin_of_solution|>")[1].strip()
 
             await self.add_history("assistant", channel, sender, response_text)
 
@@ -364,7 +374,19 @@ class ollamarama:
         Initialize the chatbot, log into Matrix, join rooms, and start syncing.
 
         """
-        self.log(await self.client.login(self.password))
+        login_resp = await self.client.login(self.password, device_name=self.device_id)
+        self.log(login_resp)
+        if not self.device_id and hasattr(login_resp, 'device_id'):
+            self.device_id = login_resp.device_id
+            try:
+                with open(self.config_file, 'r+') as f:
+                    config = json.load(f)
+                    config.setdefault('matrix', {})['device_id'] = self.device_id
+                    f.seek(0)
+                    json.dump(config, f, indent=4)
+                    f.truncate()
+            except Exception:
+                pass
 
         self.bot_id = await self.display_name(self.username)
         
