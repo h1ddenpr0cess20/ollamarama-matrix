@@ -15,7 +15,8 @@
         [
             "admin_nick1",
             "admin_nick2"
-        ]
+        ],
+        "device_id": ""
     },
     "ollama":
     {

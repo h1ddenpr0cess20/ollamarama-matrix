@@ -52,8 +52,8 @@ class ollamarama:
             config = json.load(f)
             f.close()
 
-        self.server, self.username, self.password, self.channels, self.admins = config["matrix"].values()
-        self.client = AsyncClient(self.server, self.username)
+        self.server, self.username, self.password, self.channels, self.admins, self.device_id = config["matrix"].values()
+        self.client = AsyncClient(self.server, self.username, device_id=self.device_id)
 
         self.join_time = datetime.datetime.now()
         
@@ -364,7 +364,19 @@ class ollamarama:
         Initialize the chatbot, log into Matrix, join rooms, and start syncing.
 
         """
-        self.log(await self.client.login(self.password))
+        login_resp = await self.client.login(self.password, device_name=self.device_id)
+        self.log(login_resp)
+        if not self.device_id and hasattr(login_resp, 'device_id'):
+            self.device_id = login_resp.device_id
+            try:
+                with open(self.config_file, 'r+') as f:
+                    config = json.load(f)
+                    config.setdefault('matrix', {})['device_id'] = self.device_id
+                    f.seek(0)
+                    json.dump(config, f, indent=4)
+                    f.truncate()
+            except Exception:
+                pass
 
         self.bot_id = await self.display_name(self.username)
         
