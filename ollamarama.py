@@ -5,7 +5,7 @@ Author: Dustin Whyte
 Date: December 2023
 """
 
-from nio import AsyncClient, MatrixRoom, RoomMessageText
+from nio import AsyncClient, AsyncClientConfig, MatrixRoom, RoomMessageText
 import json
 import datetime
 import asyncio
@@ -27,6 +27,7 @@ class ollamarama:
         channels (list): List of channel IDs the bot will join.
         admins (list): List of admin user IDs.
         client (AsyncClient): Matrix client instance.
+        store_path (str): Directory used for encryption keys.
         join_time (datetime): Timestamp when the bot joined.
         messages (dict): Stores message histories by channel and user.
         api_url (str): URL for the Ollama API.
@@ -47,8 +48,17 @@ class ollamarama:
             config = json.load(f)
             f.close()
         
-        self.server, self.username, self.password, self.channels, self.admins, self.device_id = config["matrix"].values()
-        self.client = AsyncClient(self.server, self.username, device_id=self.device_id)
+        matrix_cfg = config["matrix"]
+        self.server = matrix_cfg.get("server")
+        self.username = matrix_cfg.get("username")
+        self.password = matrix_cfg.get("password")
+        self.channels = matrix_cfg.get("channels", [])
+        self.admins = matrix_cfg.get("admins", [])
+        self.device_id = matrix_cfg.get("device_id", "")
+        self.store_path = matrix_cfg.get("store_path", "store")
+
+        client_config = AsyncClientConfig(encryption_enabled=True, store_sync_tokens=True)
+        self.client = AsyncClient(self.server, self.username, device_id=self.device_id, store_path=self.store_path, config=client_config)
 
         self.join_time = datetime.datetime.now()
         
@@ -374,8 +384,10 @@ class ollamarama:
         Initialize the chatbot, log into Matrix, join rooms, and start syncing.
 
         """
+        await self.client.load_store()
         login_resp = await self.client.login(self.password, device_name=self.device_id)
         self.log(login_resp)
+        await self.client.sync(timeout=3000, full_state=True)
         if not self.device_id and hasattr(login_resp, 'device_id'):
             self.device_id = login_resp.device_id
             try:

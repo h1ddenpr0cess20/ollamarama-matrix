@@ -47,6 +47,7 @@ ollama pull qwen3
 ```bash
 pip install -r requirements.txt
 ```
+This installs `matrix-nio` with encryption support so the bot can work in encrypted rooms.
 
 ### 3. Configure Matrix Bot
 
@@ -60,7 +61,8 @@ pip install -r requirements.txt
         "server": "https://matrix.org",
         "username": "@your_bot:matrix.org",
         "password": "your_password",
-        "channels": ["#your-channel:matrix.org"]
+        "channels": ["#your-channel:matrix.org"],
+        "store_path": "store"
     }
 }
 ```
