@@ -5,7 +5,20 @@ Author: Dustin Whyte
 Date: December 2023
 """
 
-from nio import AsyncClient, AsyncClientConfig, MatrixRoom, RoomMessageText, KeyVerificationEvent, KeyVerificationStart, KeyVerificationKey, KeyVerificationMac, KeyVerificationCancel, ToDeviceError, LocalProtocolError
+from nio import (
+    AsyncClient,
+    AsyncClientConfig,
+    MatrixRoom,
+    RoomMessageText,
+    KeyVerificationEvent,
+    KeyVerificationStart,
+    KeyVerificationKey,
+    KeyVerificationMac,
+    KeyVerificationCancel,
+    ToDeviceError,
+    LocalProtocolError,
+    ToDeviceMessage,
+)
 import json
 import os
 import datetime
@@ -415,14 +428,18 @@ class ollamarama:
             elif isinstance(event, KeyVerificationMac):
                 sas = client.key_verifications[event.transaction_id]
                 try:
-                    todevice_msg = sas.get_mac()
-                except LocalProtocolError as e:
-                    self.log(f"Verification protocol error: {e}")
-                else:
-                    resp = await client.to_device(todevice_msg)
+                    done = ToDeviceMessage(
+                        "m.key.verification.done",
+                        event.sender,
+                        sas.other_olm_device.id,
+                        {"transaction_id": event.transaction_id},
+                    )
+                    resp = await client.to_device(done)
                     if isinstance(resp, ToDeviceError):
                         self.log(f"to_device failed: {resp}")
                     self.log("Emoji verification was successful.")
+                except Exception as e:
+                    self.log(f"Failed to send verification done: {e}")
             elif isinstance(event, KeyVerificationCancel):
                 self.log(f"Verification cancelled by {event.sender}: {event.reason}")
             else:
@@ -443,12 +460,15 @@ class ollamarama:
                     "methods": ["m.sas.v1"],
                     "transaction_id": txn_id
                 }
-                msg = {
-                    event.sender: {
-                        "m.key.verification.ready": content
-                    }
-                }
-                await self.client.to_device("m.key.verification.ready", msg)
+                message = ToDeviceMessage(
+                    "m.key.verification.ready",
+                    event.sender,
+                    from_device,
+                    content,
+                )
+                resp = await self.client.to_device(message)
+                if isinstance(resp, ToDeviceError):
+                    self.log(f"to_device failed: {resp}")
             except Exception as e:
                 self.log(f"Failed to send m.key.verification.ready: {e}")
 
