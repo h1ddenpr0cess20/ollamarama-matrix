@@ -5,7 +5,20 @@ Author: Dustin Whyte
 Date: December 2023
 """
 
-from nio import AsyncClient, AsyncClientConfig, MatrixRoom, RoomMessageText, KeyVerificationEvent, KeyVerificationStart, KeyVerificationKey, KeyVerificationMac, KeyVerificationCancel, ToDeviceError, LocalProtocolError
+from nio import (
+    AsyncClient,
+    AsyncClientConfig,
+    MatrixRoom,
+    RoomMessageText,
+    KeyVerificationEvent,
+    KeyVerificationStart,
+    KeyVerificationKey,
+    KeyVerificationMac,
+    KeyVerificationCancel,
+    ToDeviceError,
+    LocalProtocolError,
+    ToDeviceMessage,
+)
 import json
 import os
 import datetime
@@ -443,12 +456,15 @@ class ollamarama:
                     "methods": ["m.sas.v1"],
                     "transaction_id": txn_id
                 }
-                msg = {
-                    event.sender: {
-                        "m.key.verification.ready": content
-                    }
-                }
-                await self.client.to_device("m.key.verification.ready", msg)
+                message = ToDeviceMessage(
+                    "m.key.verification.ready",
+                    event.sender,
+                    from_device,
+                    content,
+                )
+                resp = await self.client.to_device(message)
+                if isinstance(resp, ToDeviceError):
+                    self.log(f"to_device failed: {resp}")
             except Exception as e:
                 self.log(f"Failed to send m.key.verification.ready: {e}")
 
