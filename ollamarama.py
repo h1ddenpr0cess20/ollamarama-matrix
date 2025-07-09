@@ -428,14 +428,18 @@ class ollamarama:
             elif isinstance(event, KeyVerificationMac):
                 sas = client.key_verifications[event.transaction_id]
                 try:
-                    todevice_msg = sas.get_mac()
-                except LocalProtocolError as e:
-                    self.log(f"Verification protocol error: {e}")
-                else:
-                    resp = await client.to_device(todevice_msg)
+                    done = ToDeviceMessage(
+                        "m.key.verification.done",
+                        event.sender,
+                        sas.other_olm_device.id,
+                        {"transaction_id": event.transaction_id},
+                    )
+                    resp = await client.to_device(done)
                     if isinstance(resp, ToDeviceError):
                         self.log(f"to_device failed: {resp}")
                     self.log("Emoji verification was successful.")
+                except Exception as e:
+                    self.log(f"Failed to send verification done: {e}")
             elif isinstance(event, KeyVerificationCancel):
                 self.log(f"Verification cancelled by {event.sender}: {event.reason}")
             else:
