@@ -19,6 +19,7 @@ from nio import (
     LocalProtocolError,
     ToDeviceMessage,
 )
+from nio.events.room_events import UnknownEvent
 import json
 import os
 import datetime
@@ -79,6 +80,10 @@ class ollamarama:
         self.client.user_id = self.username
         # Register emoji verification callback
         self.client.add_to_device_callback(self.emoji_verification_callback, (KeyVerificationEvent,))
+        # Listen for verification events sent in rooms so other users can verify the bot
+        self.client.add_event_callback(self.emoji_verification_callback, KeyVerificationEvent)
+        # Handle in-room verification requests
+        self.client.add_event_callback(self.verification_request_callback, UnknownEvent)
         # Register a generic to-device event logger for debugging
         self.client.add_to_device_callback(self.log_to_device_event, None)
         self.join_time = datetime.datetime.now()
@@ -450,6 +455,30 @@ class ollamarama:
     async def log_to_device_event(self, event):
         self.log(f"Received to-device event: {event}")
         # Accept verification requests so the emoji flow can proceed
+        if hasattr(event, 'type') and event.type == "m.key.verification.request":
+            try:
+                txn_id = event.source['content']['transaction_id']
+                from_device = event.source['content']['from_device']
+                self.log(f"Sending m.key.verification.ready for txn_id {txn_id} from_device {from_device}")
+                content = {
+                    "from_device": self.device_id,
+                    "methods": ["m.sas.v1"],
+                    "transaction_id": txn_id
+                }
+                message = ToDeviceMessage(
+                    "m.key.verification.ready",
+                    event.sender,
+                    from_device,
+                    content,
+                )
+                resp = await self.client.to_device(message)
+                if isinstance(resp, ToDeviceError):
+                    self.log(f"to_device failed: {resp}")
+            except Exception as e:
+                self.log(f"Failed to send m.key.verification.ready: {e}")
+
+    async def verification_request_callback(self, room, event):
+        """Handle in-room emoji verification requests."""
         if hasattr(event, 'type') and event.type == "m.key.verification.request":
             try:
                 txn_id = event.source['content']['transaction_id']

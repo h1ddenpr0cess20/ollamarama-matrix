@@ -73,6 +73,8 @@ This installs `matrix-nio` with encryption support so the bot can work in encryp
 python ollamarama.py
 ```
 
+If you use end-to-end encryption, start an emoji verification from your Matrix client. The bot now listens for in-room verification requests and will auto-accept them so other users can trust its device.
+
 ## 📖 Usage Guide
 
 ### Basic Commands
