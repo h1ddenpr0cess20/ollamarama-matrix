@@ -99,6 +99,12 @@ python ollamarama.py
 - **Collaborative Mode**: Use `.x username` to continue someone else's conversation
 - **Custom Prompts**: Perfect for specialized tasks like code review or creative writing
 
+## Encryption Support
+
+- This bot supports end-to-end encryption (E2E) in Matrix rooms using `matrix-nio[e2e]` and a built-in device verification system.
+- You must have `libolm` installed and available to Python for E2E to work.
+- On Windows, you need to build and install `libolm` from source for encryption support. If you do not need encrypted rooms or have issues with `libolm`, use the files in the `no-e2e/` folder.
+
 ## ⚖️ License
 
 This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See the [LICENSE](LICENSE) file for details.

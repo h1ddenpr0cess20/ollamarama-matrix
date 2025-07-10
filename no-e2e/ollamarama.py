@@ -5,16 +5,8 @@ Author: Dustin Whyte
 Date: December 2023
 """
 
-from nio import (
-    AsyncClient,
-    AsyncClientConfig,
-    MatrixRoom,
-    RoomMessageText,
-    KeyVerificationEvent,
-)
-from verification import VerificationMixin
+from nio import AsyncClient, MatrixRoom, RoomMessageText
 import json
-import os
 import datetime
 import asyncio
 import requests
@@ -22,7 +14,7 @@ import markdown
 import logging
 import logging.config
 
-class ollamarama(VerificationMixin):
+class ollamarama:
     """
     An Ollama-based chatbot for the Matrix chat protocol, supporting dynamic personalities, 
     custom prompts, and cross-user interactions.
@@ -35,7 +27,6 @@ class ollamarama(VerificationMixin):
         channels (list): List of channel IDs the bot will join.
         admins (list): List of admin user IDs.
         client (AsyncClient): Matrix client instance.
-        store_path (str): Directory used for encryption keys.
         join_time (datetime): Timestamp when the bot joined.
         messages (dict): Stores message histories by channel and user.
         api_url (str): URL for the Ollama API.
@@ -56,22 +47,9 @@ class ollamarama(VerificationMixin):
             config = json.load(f)
             f.close()
         
-        matrix_cfg = config["matrix"]
-        self.server = matrix_cfg.get("server")
-        self.username = matrix_cfg.get("username")
-        self.password = matrix_cfg.get("password")
-        self.channels = matrix_cfg.get("channels", [])
-        self.admins = matrix_cfg.get("admins", [])
-        self.device_id = matrix_cfg.get("device_id", "")
-        self.store_path = matrix_cfg.get("store_path", "store")
+        self.server, self.username, self.password, self.channels, self.admins, self.device_id = config["matrix"].values()
+        self.client = AsyncClient(self.server, self.username, device_id=self.device_id)
 
-        os.makedirs(self.store_path, exist_ok=True)
-
-        client_config = AsyncClientConfig(encryption_enabled=True, store_sync_tokens=True)
-        self.client = AsyncClient(self.server, self.username, device_id=self.device_id, store_path=self.store_path, config=client_config)
-        self.client.user_id = self.username
-        self.client.add_to_device_callback(self.emoji_verification_callback, (KeyVerificationEvent,))
-        self.client.add_to_device_callback(self.log_to_device_event, None)
         self.join_time = datetime.datetime.now()
         
         self.messages = {}
@@ -115,13 +93,11 @@ class ollamarama(VerificationMixin):
             room_id=channel,
             message_type="m.room.message",
             content={
-                "msgtype": "m.text",
+                "msgtype": "m.text", 
                 "body": message,
                 "format": "org.matrix.custom.html",
                 "formatted_body": markdown.markdown(message, extensions=['extra', 'fenced_code', 'nl2br', 'sane_lists', 'tables', 'codehilite'])},
-            ignore_unverified_devices=True,
         )
-
 
     async def add_history(self, role, channel, sender, message):
         """
@@ -175,6 +151,7 @@ class ollamarama(VerificationMixin):
         else:
             response_text = data["message"]["content"]
 
+            # Check for different types of thought/solution delimiters
             if "<think>" in response_text:
                 thinking, response_text = response_text.split("</think>")
                 thinking = thinking.strip("<think>").strip()
@@ -186,6 +163,7 @@ class ollamarama(VerificationMixin):
                     response_text = parts[1]
                     self.log(f"Model thinking for {sender}: {thinking}")
 
+            # Check for solution delimiters and clean them up
             if "<|begin_of_solution|>" in response_text:
                 parts = response_text.split("<|end_of_solution|>")
                 response_text = parts[0].split("<|begin_of_solution|>")[1].strip()
@@ -384,30 +362,20 @@ class ollamarama(VerificationMixin):
             sender = event.sender
             sender_display = await self.display_name(sender)
             channel = room.room_id
-
+            
             if message_time > self.join_time and sender != self.username:
                 try:
-                    await self.allow_devices(sender)
                     await self.handle_message(message, sender, sender_display, channel)
                 except:
                     pass
-
 
     async def main(self):
         """
         Initialize the chatbot, log into Matrix, join rooms, and start syncing.
 
         """
-        if self.device_id and hasattr(self.client, 'load_store') and callable(self.client.load_store):
-            result = self.client.load_store()
-            if asyncio.iscoroutine(result):
-                await result
-
         login_resp = await self.client.login(self.password, device_name=self.device_id)
         self.log(login_resp)
-        if hasattr(self.client, 'should_upload_keys') and self.client.should_upload_keys:
-            await self.client.keys_upload()
-        await self.client.sync(timeout=3000, full_state=True)
         if not self.device_id and hasattr(login_resp, 'device_id'):
             self.device_id = login_resp.device_id
             try:
