@@ -15,8 +15,6 @@ from nio import (
     KeyVerificationKey,
     KeyVerificationMac,
     KeyVerificationCancel,
-    ToDeviceError,
-    LocalProtocolError,
     ToDeviceMessage,
 )
 import json
@@ -57,7 +55,7 @@ class ollamarama:
     def __init__(self):
         """Initialize ollamarama by loading configuration and setting up attributes."""
         
-        self.config_file = "config_test.json"
+        self.config_file = "config.json"
         with open(self.config_file, "r") as f:
             config = json.load(f)
             f.close()
@@ -70,16 +68,13 @@ class ollamarama:
         self.admins = matrix_cfg.get("admins", [])
         self.device_id = matrix_cfg.get("device_id", "")
         self.store_path = matrix_cfg.get("store_path", "store")
-        # Ensure the store directory exists for the client database
+
         os.makedirs(self.store_path, exist_ok=True)
 
         client_config = AsyncClientConfig(encryption_enabled=True, store_sync_tokens=True)
         self.client = AsyncClient(self.server, self.username, device_id=self.device_id, store_path=self.store_path, config=client_config)
-        # Ensure client has a user_id before loading the store
         self.client.user_id = self.username
-        # Register emoji verification callback
         self.client.add_to_device_callback(self.emoji_verification_callback, (KeyVerificationEvent,))
-        # Register a generic to-device event logger for debugging
         self.client.add_to_device_callback(self.log_to_device_event, None)
         self.join_time = datetime.datetime.now()
         
@@ -197,7 +192,6 @@ class ollamarama:
         else:
             response_text = data["message"]["content"]
 
-            # Check for different types of thought/solution delimiters
             if "<think>" in response_text:
                 thinking, response_text = response_text.split("</think>")
                 thinking = thinking.strip("<think>").strip()
@@ -209,7 +203,6 @@ class ollamarama:
                     response_text = parts[1]
                     self.log(f"Model thinking for {sender}: {thinking}")
 
-            # Check for solution delimiters and clean them up
             if "<|begin_of_solution|>" in response_text:
                 parts = response_text.split("<|end_of_solution|>")
                 response_text = parts[0].split("<|begin_of_solution|>")[1].strip()
@@ -418,29 +411,21 @@ class ollamarama:
 
     async def emoji_verification_callback(self, event):
         """Auto-accept incoming emoji verification requests (SAS)."""
-        self.log(f"Received KeyVerificationEvent: {event}")
         client = self.client
         try:
             if isinstance(event, KeyVerificationStart):
                 if "emoji" not in event.short_authentication_string:
-                    self.log("Other device does not support emoji verification.")
                     return
-                resp = await client.accept_key_verification(event.transaction_id)
-                if isinstance(resp, ToDeviceError):
-                    self.log(f"accept_key_verification failed: {resp}")
+                await client.accept_key_verification(event.transaction_id)
                 sas = client.key_verifications[event.transaction_id]
                 todevice_msg = sas.share_key()
-                resp = await client.to_device(todevice_msg)
-                if isinstance(resp, ToDeviceError):
-                    self.log(f"to_device failed: {resp}")
+                await client.to_device(todevice_msg)
             elif isinstance(event, KeyVerificationKey):
                 sas = client.key_verifications[event.transaction_id]
                 emojis = sas.get_emoji()
                 self.log(f"Emoji verification requested: {emojis}")
                 # Auto-accept for bot
-                resp = await client.confirm_short_auth_string(event.transaction_id)
-                if isinstance(resp, ToDeviceError):
-                    self.log(f"confirm_short_auth_string failed: {resp}")
+                await client.confirm_short_auth_string(event.transaction_id)
             elif isinstance(event, KeyVerificationMac):
                 sas = client.key_verifications[event.transaction_id]
                 try:
@@ -450,27 +435,22 @@ class ollamarama:
                         sas.other_olm_device.id,
                         {"transaction_id": event.transaction_id},
                     )
-                    resp = await client.to_device(done)
-                    if isinstance(resp, ToDeviceError):
-                        self.log(f"to_device failed: {resp}")
+                    await client.to_device(done)
                     self.log("Emoji verification was successful.")
-                except Exception as e:
-                    self.log(f"Failed to send verification done: {e}")
+                except Exception:
+                    self.log("Failed to complete emoji verification.")
             elif isinstance(event, KeyVerificationCancel):
-                self.log(f"Verification cancelled by {event.sender}: {event.reason}")
-            else:
-                self.log(f"Received unexpected event type: {type(event)}")
-        except Exception as e:
-            self.log(f"Exception in emoji verification: {e}")
+                self.log(f"Verification cancelled.")
+        except Exception:
+            self.log("Exception during emoji verification.")
 
     async def log_to_device_event(self, event):
-        self.log(f"Received to-device event: {event}")
         # Accept verification requests so the emoji flow can proceed
         if hasattr(event, 'type') and event.type == "m.key.verification.request":
             try:
                 txn_id = event.source['content']['transaction_id']
                 from_device = event.source['content']['from_device']
-                self.log(f"Sending m.key.verification.ready for txn_id {txn_id} from_device {from_device}")
+                self.log("Verification ready message sent.")
                 content = {
                     "from_device": self.device_id,
                     "methods": ["m.sas.v1"],
@@ -482,18 +462,15 @@ class ollamarama:
                     from_device,
                     content,
                 )
-                resp = await self.client.to_device(message)
-                if isinstance(resp, ToDeviceError):
-                    self.log(f"to_device failed: {resp}")
-            except Exception as e:
-                self.log(f"Failed to send m.key.verification.ready: {e}")
+                await self.client.to_device(message)
+            except Exception:
+                self.log("Failed to send verification ready message.")
 
     async def main(self):
         """
         Initialize the chatbot, log into Matrix, join rooms, and start syncing.
 
         """
-        # Load stored sync tokens and keys if a device_id exists
         if self.device_id and hasattr(self.client, 'load_store') and callable(self.client.load_store):
             result = self.client.load_store()
             if asyncio.iscoroutine(result):
@@ -501,7 +478,6 @@ class ollamarama:
 
         login_resp = await self.client.login(self.password, device_name=self.device_id)
         self.log(login_resp)
-        # Upload encryption keys after login (required for verification and E2EE)
         if hasattr(self.client, 'should_upload_keys') and self.client.should_upload_keys:
             await self.client.keys_upload()
         await self.client.sync(timeout=3000, full_state=True)
