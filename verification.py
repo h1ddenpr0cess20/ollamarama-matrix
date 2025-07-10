@@ -1,6 +1,5 @@
 # Verification and authentication utilities for ollamarama
 from nio import (
-    KeyVerificationEvent,
     KeyVerificationStart,
     KeyVerificationKey,
     KeyVerificationMac,
@@ -10,7 +9,12 @@ from nio import (
 
 class VerificationMixin:
     async def allow_devices(self, user_id):
-        """Ensure messages can be sent to all of a user's devices."""
+        """
+        Ensure messages can be sent to all of a user's devices.
+
+        Args:
+            user_id (str): The Matrix user ID whose devices should be allowed.
+        """
         try:
             for device in self.client.device_store.active_user_devices(user_id):
                 try:
@@ -24,7 +28,12 @@ class VerificationMixin:
             self.log(f"Failed to allow devices for {user_id}: {e}")
 
     async def emoji_verification_callback(self, event):
-        """Auto-accept incoming emoji verification requests (SAS)."""
+        """
+        Auto-accept incoming emoji verification requests (SAS).
+
+        Args:
+            event (Event): The key verification event to handle.
+        """
         client = self.client
         try:
             if isinstance(event, KeyVerificationStart):
@@ -58,7 +67,12 @@ class VerificationMixin:
             self.log("Exception during emoji verification.")
 
     async def log_to_device_event(self, event):
-        """Handle to-device events for SAS verification."""
+        """
+        Handle to-device events for SAS verification.
+
+        Args:
+            event (Event): The to-device event for SAS verification.
+        """
         if hasattr(event, 'type') and event.type == "m.key.verification.request":
             try:
                 txn_id = event.source['content']['transaction_id']

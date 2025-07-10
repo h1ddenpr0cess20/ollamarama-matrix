@@ -56,22 +56,15 @@ class ollamarama(VerificationMixin):
             config = json.load(f)
             f.close()
         
-        matrix_cfg = config["matrix"]
-        self.server = matrix_cfg.get("server")
-        self.username = matrix_cfg.get("username")
-        self.password = matrix_cfg.get("password")
-        self.channels = matrix_cfg.get("channels", [])
-        self.admins = matrix_cfg.get("admins", [])
-        self.device_id = matrix_cfg.get("device_id", "")
-        self.store_path = matrix_cfg.get("store_path", "store")
+        self.server, self.username, self.password, self.channels, self.admins, self.device_id, self.store_path = config["matrix"].values()
 
         os.makedirs(self.store_path, exist_ok=True)
-
         client_config = AsyncClientConfig(encryption_enabled=True, store_sync_tokens=True)
         self.client = AsyncClient(self.server, self.username, device_id=self.device_id, store_path=self.store_path, config=client_config)
         self.client.user_id = self.username
         self.client.add_to_device_callback(self.emoji_verification_callback, (KeyVerificationEvent,))
         self.client.add_to_device_callback(self.log_to_device_event, None)
+        
         self.join_time = datetime.datetime.now()
         
         self.messages = {}
@@ -79,6 +72,7 @@ class ollamarama(VerificationMixin):
         self.api_url, self.options, self.models, self.default_model, self.prompt, self.default_personality, self.history_size = config["ollama"].values()
         self.model = self.default_model
         self.personality = self.default_personality
+        
         logging.config.dictConfig({
             'version': 1,
             'disable_existing_loggers': True,
