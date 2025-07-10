@@ -124,11 +124,26 @@ class ollamarama:
             room_id=channel,
             message_type="m.room.message",
             content={
-                "msgtype": "m.text", 
+                "msgtype": "m.text",
                 "body": message,
                 "format": "org.matrix.custom.html",
                 "formatted_body": markdown.markdown(message, extensions=['extra', 'fenced_code', 'nl2br', 'sane_lists', 'tables', 'codehilite'])},
+            ignore_unverified_devices=True,
         )
+
+    async def allow_devices(self, user_id):
+        """Ensure messages can be sent to all of a user's devices."""
+        try:
+            for device in self.client.device_store.active_user_devices(user_id):
+                try:
+                    if self.client.olm.is_device_blacklisted(device):
+                        self.client.unblacklist_device(device)
+                    if not self.client.olm.is_device_verified(device):
+                        self.client.ignore_device(device)
+                except Exception as e:
+                    self.log(f"Failed to allow device {device.id} for {user_id}: {e}")
+        except Exception as e:
+            self.log(f"Failed to allow devices for {user_id}: {e}")
 
     async def add_history(self, role, channel, sender, message):
         """
@@ -393,9 +408,10 @@ class ollamarama:
             sender = event.sender
             sender_display = await self.display_name(sender)
             channel = room.room_id
-            
+
             if message_time > self.join_time and sender != self.username:
                 try:
+                    await self.allow_devices(sender)
                     await self.handle_message(message, sender, sender_display, channel)
                 except:
                     pass
