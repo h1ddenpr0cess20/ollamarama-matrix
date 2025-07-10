@@ -16,8 +16,7 @@
             "admin_nick1",
             "admin_nick2"
         ],
-        "device_id": "",
-        "store_path": "store"
+        "device_id": ""
     },
     "ollama":
     {
@@ -36,4 +35,5 @@
         "prompt": ["you are ", ". roleplay and speak in the first person and never break character.  keep your responses brief and to the point."],
         "personality": "an open source AI chatbot named Ollamarama, who runs on Ollama",
         "history_size": 24
-    }}
+    }
+}

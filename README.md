@@ -47,6 +47,7 @@ ollama pull qwen3
 ```bash
 pip install -r requirements.txt
 ```
+This installs `matrix-nio` with encryption support so the bot can work in encrypted rooms.
 
 ### 3. Configure Matrix Bot
 
@@ -60,7 +61,8 @@ pip install -r requirements.txt
         "server": "https://matrix.org",
         "username": "@your_bot:matrix.org",
         "password": "your_password",
-        "channels": ["#your-channel:matrix.org"]
+        "channels": ["#your-channel:matrix.org"],
+        "store_path": "store"
     }
 }
 ```
@@ -96,6 +98,12 @@ python ollamarama.py
 - **Personality Examples**: Try `detective`, `pirate`, `shakespeare`, `helpful assistant`, `sarcastic critic`
 - **Collaborative Mode**: Use `.x username` to continue someone else's conversation
 - **Custom Prompts**: Perfect for specialized tasks like code review or creative writing
+
+## Encryption Support
+
+- This bot supports end-to-end encryption (E2E) in Matrix rooms using `matrix-nio[e2e]` and a built-in device verification system.
+- You must have `libolm` installed and available to Python for E2E to work.
+- On Windows, you need to build and install `libolm` from source for encryption support. If you do not need encrypted rooms or have issues with `libolm`, use the files in the `no-e2e/` folder.
 
 ## ⚖️ License
 
