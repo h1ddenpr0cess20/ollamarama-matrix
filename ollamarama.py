@@ -234,7 +234,7 @@ class ollamarama(VerificationMixin):
             sender (str): User ID of the sender.
             x (bool, optional): Whether to process cross-user interactions. Defaults to False.
         """
-        self.log(f"{sender} sent {" ".join(message)} in {channel}")
+        self.log(f"{sender} sent {' '.join(message)} in {channel}")
         if x and message[2]:
             target = message[1]
             message = ' '.join(message[2:])
