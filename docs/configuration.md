@@ -19,13 +19,12 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
   - prompt: two strings `[prefix, suffix]` used around personality
   - personality: non‑empty default personality text
   - history_size: 1–1000 messages retained per user per room
-  - timeout: request timeout in seconds (default 180)
   - options: advanced generation options (e.g., `temperature`, `top_p`, `repeat_penalty`)
 - markdown: render replies as Markdown (default: true)
 
 ## Overrides
 
-- CLI flags: `--e2e/--no-e2e`, `--ollama-url`, `--model`, `--store-path`, `--timeout`, `--no-markdown`
+- CLI flags: `--e2e/--no-e2e`, `--ollama-url`, `--model`, `--store-path`, `--no-markdown`
 - Environment variables:
   - `OLLAMARAMA_OLLAMA_URL`
   - `OLLAMARAMA_MODEL`

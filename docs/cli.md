@@ -20,7 +20,6 @@ Or run the module directly:
   - `-m, --model`
   - `-s, --store-path`
   - `-u, --ollama-url`
-  - `-t, --timeout`
   - `-M, --no-markdown`
 
 ## Examples
@@ -29,10 +28,10 @@ Or run the module directly:
   - `ollamarama-matrix --dry-run -v`
 - Validate with overrides:
   - `ollamarama-matrix --dry-run --model qwen3 --ollama-url http://localhost:11434/api/chat`
- - Fetch models from server:
-   - `ollamarama-matrix -S --config config.json`
- - Run with verbose colored logs:
-   - `OLLAMARAMA_LOG_LEVEL=DEBUG ollamarama-matrix --config config.json`
+- Fetch models from server:
+  - `ollamarama-matrix -S --config config.json`
+- Run with verbose colored logs:
+  - `OLLAMARAMA_LOG_LEVEL=DEBUG ollamarama-matrix --config config.json`
 
 ## Exit Codes
 

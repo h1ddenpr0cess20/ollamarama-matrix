@@ -16,11 +16,13 @@ Ollamarama is a Matrix chatbot powered by local LLMs via the Ollama Chat API. It
 ## Quick Links
 
 - Getting Started: see `docs/getting-started.md`
+- Ollama Setup: see `docs/ollama.md`
 - Configuration: see `docs/configuration.md`
 - Commands: see `docs/commands.md`
 - Architecture: see `docs/architecture.md`
 - CLI Reference: see `docs/cli.md`
 - Operations & Security: see `docs/operations.md`
+- Not a Companion: see `docs/not-a-companion.md`
 - Development Guide: see `docs/development.md`
 - Migration Notes: see `docs/migration.md`
 - Refactor Blueprint (historic): see `docs/refactor-plan.md`

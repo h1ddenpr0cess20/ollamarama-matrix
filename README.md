@@ -12,6 +12,7 @@ Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the 
 
 - [Overview](docs/index.md)
 - [Getting Started](docs/getting-started.md)
+- [Ollama Setup](docs/ollama.md)
 - [Configuration](docs/configuration.md)
 - [Commands](docs/commands.md)
 - [CLI Reference](docs/cli.md)
@@ -64,6 +65,8 @@ Pull at least one model (recommended):
 ```bash
 ollama pull qwen3
 ```
+
+For deeper setup and verification steps, see [Ollama Setup](docs/ollama.md).
 
 ### 1) Install dependencies
 
@@ -145,6 +148,7 @@ Common commands (see [Commands](docs/commands.md) for the full list):
 - [Contributing](CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)
 - [Security](docs/security.md)
+- [Not a Companion](docs/not-a-companion.md)
 - [AI Output Disclaimer](docs/ai-output-disclaimer.md)
 
 ## License

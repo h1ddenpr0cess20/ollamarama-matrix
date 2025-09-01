@@ -8,6 +8,8 @@ This guide gets you from zero to a running Matrix bot backed by Ollama.
 - A Matrix account for the bot (server URL, username, password)
 - [Ollama](https://ollama.com/) installed and at least one model pulled
 
+For a deeper Ollama configuration guide, see `docs/ollama.md`.
+
 Install Ollama and a model:
 
 ```bash
@@ -50,7 +52,6 @@ Create or edit `config.json` at the repo root:
     "prompt": ["you are ", "."],
     "personality": "a helpful assistant",
     "history_size": 24,
-    "timeout": 60,
     "options": {"temperature": 0.8, "top_p": 1, "repeat_penalty": 1}
   },
   "markdown": true
