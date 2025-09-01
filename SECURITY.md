@@ -38,4 +38,4 @@ Please make a good‑faith effort to avoid privacy breaches, service disruption,
 
 ## Hardening Guide
 
-See `docs/security.md` for practical steps to harden your deployment (device verification, room controls, config secrets, logging, and more).
+See the [Security Hardening Guide](docs/security.md) for practical steps to harden your deployment (device verification, room controls, config secrets, logging, and more).

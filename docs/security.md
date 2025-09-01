@@ -63,6 +63,5 @@ This guide provides practical steps to deploy the bot more safely in real rooms.
 
 ## Responsible Use
 
-- Share the AI Output Disclaimer (`docs/ai-output-disclaimer.md`) with users. Set expectations about non‑professional use and risks.
+- Share the [AI Output Disclaimer](ai-output-disclaimer.md) with users. Set expectations about non‑professional use and risks.
 - Follow applicable laws and organizational policies.
-

@@ -43,7 +43,7 @@ CLI helpers:
 - `--model`: override the default model
 - `-S, --server-models`: fetch available models from the server at startup
 
-See `docs/cli.md` and `docs/configuration.md` for details.
+See [CLI Reference](cli.md) and [Configuration](configuration.md) for details.
 
 ## Local vs. Remote
 
@@ -83,11 +83,11 @@ ollamarama-matrix --config config.json
 
 - Configure a map of friendly names to model IDs under `ollama.models`.
 - The `default_model` must match either a map key or an exact model ID.
-- With `-S/--server-models`, the bot will prefer the models reported by your Ollama server. If the configured default is missing on the server, the launcher prefers `qwen3` if present; otherwise it falls back to the first available model.
+- With `-S/--server-models`, the bot will prefer the models reported by your Ollama server. If the configured default is missing on the server, the launcher falls back to the first available model.
 
 ## Options
 
-Per‑request options live under `ollama.options` in `config.json` (see `docs/configuration.md` for validation ranges):
+Per‑request options live under `ollama.options` in `config.json` (see [Configuration](configuration.md) for validation ranges):
 
 - `temperature`, `top_p`, `repeat_penalty`, etc.
 

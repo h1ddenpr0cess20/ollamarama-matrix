@@ -39,7 +39,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("-m", "--model", help="Override default model")
     parser.add_argument("-s", "--store-path", help="Override store path")
     parser.add_argument("-u", "--ollama-url", help="Override Ollama API URL")
-    parser.add_argument("-t", "--timeout", type=int, help="HTTP timeout seconds")
     parser.add_argument(
         "-S",
         "--server-models",
@@ -80,8 +79,6 @@ def main(argv: Optional[List[str]] = None) -> int:
             overrides.setdefault("ollama", {})["default_model"] = args.model
         if args.store_path:
             overrides.setdefault("matrix", {})["store_path"] = args.store_path
-        if args.timeout is not None:
-            overrides.setdefault("ollama", {})["timeout"] = int(args.timeout)
         if args.e2e:
             overrides.setdefault("matrix", {})["e2e"] = True
         if args.no_e2e:
@@ -129,8 +126,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         overrides.setdefault("ollama", {})["default_model"] = args.model
     if args.store_path:
         overrides.setdefault("matrix", {})["store_path"] = args.store_path
-    if args.timeout is not None:
-        overrides.setdefault("ollama", {})["timeout"] = int(args.timeout)
+    # timeout is fixed internally; no CLI override
     if args.e2e:
         overrides.setdefault("matrix", {})["e2e"] = True
     if args.no_e2e:

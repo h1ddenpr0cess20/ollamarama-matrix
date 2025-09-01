@@ -55,11 +55,8 @@ def test_cli_dry_run_overrides(capsys, tmp_path):
         "http://host:11434/api/chat",
         "--store-path",
         "st",
-        "--timeout",
-        "10",
         "--no-markdown",
     ])
     out = capsys.readouterr().out
     assert code == 0
     assert "Configuration OK" in out
-

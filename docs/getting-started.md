@@ -8,7 +8,7 @@ This guide gets you from zero to a running Matrix bot backed by Ollama.
 - A Matrix account for the bot (server URL, username, password)
 - [Ollama](https://ollama.com/) installed and at least one model pulled
 
-For a deeper Ollama configuration guide, see `docs/ollama.md`.
+For a deeper Ollama configuration guide, see [Ollama Setup](ollama.md).
 
 Install Ollama and a model:
 
@@ -58,7 +58,7 @@ Create or edit `config.json` at the repo root:
 }
 ```
 
-See `docs/configuration.md` for the full schema and validation rules.
+See [Configuration](configuration.md) for the full schema and validation rules.
 
 ## Run
 

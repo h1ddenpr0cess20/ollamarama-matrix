@@ -30,9 +30,10 @@
         },
         "models":
         {
-            "qwen3": "qwen3"
+            "qwen3": "qwen3",
+            "gpt-oss": "gpt-oss:20b"
         },
-        "default_model": "qwen3",
+        "default_model": "gpt-oss",
         "prompt": ["you are ", ". roleplay and speak in the first person and never break character.  keep your responses brief and to the point."],
         "personality": "an open source AI chatbot named Ollamarama, who runs on Ollama",
         "history_size": 24
