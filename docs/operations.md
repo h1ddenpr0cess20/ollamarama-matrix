@@ -32,7 +32,7 @@
 
 - Use `.model` to check current/available models and to change or reset.
 - Use `OLLAMA_HOST`/`OLLAMARAMA_OLLAMA_URL` if your Ollama API is remote.
-- Use `--models-from-server` to populate the model list from the server at startup.
+- Use `-S/--server-models` to populate the model list from the server at startup.
 
 ## Security Guidelines
 
