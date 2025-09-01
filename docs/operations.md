@@ -5,6 +5,7 @@
 - E2E requires `matrix-nio[e2e]` and libolm. When unavailable, run without E2E.
 - Toggle with CLI flags `--e2e` / `--no-e2e` or via `matrix.e2e` in config.
 - Persist the `store/` directory between runs to retain device keys; treat it as sensitive.
+- See also: Device verification steps and behavior in `docs/verification.md`.
 
 ## Running the Bot
 
