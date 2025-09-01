@@ -4,22 +4,24 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Matrix Protocol](https://img.shields.io/badge/chat-Matrix-green.svg)](https://matrix.org/)
 [![Ollama](https://img.shields.io/badge/AI-Ollama-orange.svg)](https://ollama.com/)
+[![GitHub](https://img.shields.io/github/stars/h1ddenpr0cess20/ollamarama-matrix?style=social)](https://github.com/h1ddenpr0cess20/ollamarama-matrix)
 
-Ollamarama is a Matrix chatbot powered by local LLMs via the Ollama Chat API. It brings private, fast AI assistance to your rooms with per‑user history, dynamic personalities, and admin‑level model control.
+Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the Ollama Chat API. Transform your Matrix rooms with an AI that can roleplay as virtually anything you can imagine — privately, locally, and fast.
 
-Docs quick links:
+## Documentation
 
-- Getting Started: `docs/getting-started.md`
-- Configuration: `docs/configuration.md`
-- Commands: `docs/commands.md`
-- CLI Reference: `docs/cli.md`
-- Architecture: `docs/architecture.md`
-- Operations: `docs/operations.md`
-- Development: `docs/development.md`
-- Migration & Legacy Map: `docs/migration.md`, `docs/legacy-map.md`
-- Security & Disclaimer: `docs/security.md`, `docs/ai-output-disclaimer.md`
+- Overview: [docs/index.md](docs/index.md)
+- Getting Started: [docs/getting-started.md](docs/getting-started.md)
+- Configuration: [docs/configuration.md](docs/configuration.md)
+- Commands: [docs/commands.md](docs/commands.md)
+- CLI Reference: [docs/cli.md](docs/cli.md)
+- Operations & E2E: [docs/operations.md](docs/operations.md)
+- Architecture: [docs/architecture.md](docs/architecture.md)
+- Development: [docs/development.md](docs/development.md)
+- Migration & Legacy Map: [docs/migration.md](docs/migration.md), [docs/legacy-map.md](docs/legacy-map.md)
+- Security & AI Disclaimer: [docs/security.md](docs/security.md), [docs/ai-output-disclaimer.md](docs/ai-output-disclaimer.md)
 
-## Features
+## ✨ Features
 
 - Dynamic personalities with quick switching
 - Per‑user history, isolated per room and user
@@ -27,55 +29,115 @@ Docs quick links:
 - Admin controls for model switching and resets
 - Custom system prompts for specialized tasks
 
-## Quick Start
+## 🌟 Related Projects
 
-1) Install Ollama and pull a model
+- IRC version: https://github.com/h1ddenpr0cess20/ollamarama-irc
+- CLI version: https://github.com/h1ddenpr0cess20/ollamarama
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+Install and familiarize yourself with Ollama to run local LLMs.
 
 ```bash
-curl https://ollama.com/install.sh | sh
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+Pull at least one model (recommended):
+
+```bash
 ollama pull qwen3
 ```
 
-2) Install Python deps
+### 1) Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3) Configure and run
+### 2) Configure
 
-Edit `config.json` with your Matrix server, bot account, and room(s), then run:
+Create or edit `config.json` at the repo root. Minimum example:
+
+```json
+{
+  "matrix": {
+    "server": "https://matrix.org",
+    "username": "@your_bot:matrix.org",
+    "password": "your_password",
+    "channels": ["#your-room:matrix.org"],
+    "admins": ["Your Display Name"],
+    "store_path": "store"
+  },
+  "ollama": {
+    "api_url": "http://localhost:11434/api/chat",
+    "models": {"qwen3": "qwen3"},
+    "default_model": "qwen3",
+    "prompt": ["you are ", "."],
+    "personality": "a helpful assistant",
+    "history_size": 24,
+    "timeout": 60,
+    "options": {"temperature": 0.8, "top_p": 1, "repeat_penalty": 1}
+  }
+}
+```
+
+See [docs/configuration.md](docs/configuration.md) for full schema and validation.
+
+### 3) Run
+
+Preferred (installed command):
 
 ```bash
 ollamarama-matrix --config config.json
 ```
 
-Full setup details: see `docs/getting-started.md` and `docs/configuration.md`.
+Validate only (no network login):
 
-## Usage
+```bash
+ollamarama-matrix --dry-run -v
+```
 
-Common commands (full list in `docs/commands.md`):
+Alternatively, run as a module:
 
-- `.ai <message>` or `botname: <message>`: chat with the AI
-- `.x <user> <message>`: talk using another user’s context
-- `.persona <name>`: change the AI personality
-- `.custom <prompt>`: use a custom system prompt
-- `.reset` / `.stock`: clear history (with or without system prompt)
-- Admin: `.model [name]` to show/change model; `.clear` reset for all
+```bash
+python -m ollamarama --config config.json
+```
+
+### 4) Verify
+
+- The bot logs in and joins configured rooms
+- Send `.ai hello` or `BotName: hello` in a joined room
+- The bot replies and maintains per‑user history
+
+## 📖 Usage Guide
+
+Common commands (see [docs/commands.md](docs/commands.md) for the full list):
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `.ai <message>` or `botname: <message>` | Chat with the AI | `.ai Hello there!` |
+| `.x <user> <message>` | Continue another user's conversation | `.x Alice What did we discuss?` |
+| `.persona <text>` | Change your personality | `.persona helpful librarian` |
+| `.custom <prompt>` | Use a custom system prompt | `.custom You are a coding expert` |
+| `.reset` / `.stock` | Clear history (default/stock prompt) | `.reset` |
+| `.model [name]` (admin) | Show/change model | `.model qwen3` |
+| `.clear` (admin) | Reset globally for all users | `.clear` |
 
 ## Encryption Support
 
 - Works in encrypted Matrix rooms using `matrix-nio[e2e]` with device verification.
-- Requires `libolm` available to Python for E2E. On Windows, build/install `libolm` or use WSL if needed.
-- Include a `store` path in `config.json` to persist encryption state and device IDs.
+- Requires `libolm` available to Python for E2E. If unavailable, you can run without E2E; see [docs/getting-started.md](docs/getting-started.md) (Install Dependencies).
+- Persist the `store/` directory to retain device keys and encryption state.
 
 ## Community & Policies
 
-- Code of Conduct: `CODE_OF_CONDUCT.md`
-- Contributing: `CONTRIBUTING.md`
-- Security Policy and Hardening: `SECURITY.md`, `docs/security.md`
-- AI Output Disclaimer: `docs/ai-output-disclaimer.md`
+- Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Security Policy and Hardening: [SECURITY.md](SECURITY.md), [docs/security.md](docs/security.md)
+- AI Output Disclaimer: [docs/ai-output-disclaimer.md](docs/ai-output-disclaimer.md)
 
-## License
+## ⚖️ License
 
-AGPL‑3.0 — see `LICENSE` for details.
+AGPL‑3.0 — see [LICENSE](LICENSE.md) for details.
