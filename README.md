@@ -31,8 +31,21 @@ Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the 
 
 ## 🌟 Related Projects
 
-- IRC version: https://github.com/h1ddenpr0cess20/ollamarama-irc
-- CLI version: https://github.com/h1ddenpr0cess20/ollamarama
+- IRC version: <https://github.com/h1ddenpr0cess20/ollamarama-irc>
+- CLI version: <https://github.com/h1ddenpr0cess20/ollamarama>
+
+## Installation
+
+Options depending on how you prefer to run it:
+
+- From source (installs CLI):
+  - Clone this repo, then run: `pip install .`
+  - Or use pipx for isolation: `pipx install .`
+- From source without installing the package:
+  - `pip install -r requirements.txt`
+  - Run with: `python -m ollamarama --config config.json`
+
+After installation, use the `ollamarama-matrix` command. For E2E encryption, ensure `libolm` is installed; see [docs/operations.md](docs/operations.md).
 
 ## 🚀 Quick Start
 
@@ -77,7 +90,6 @@ Create or edit `config.json` at the repo root. Minimum example:
     "prompt": ["you are ", "."],
     "personality": "a helpful assistant",
     "history_size": 24,
-    "timeout": 60,
     "options": {"temperature": 0.8, "top_p": 1, "repeat_penalty": 1}
   }
 }
@@ -140,4 +152,4 @@ Common commands (see [docs/commands.md](docs/commands.md) for the full list):
 
 ## ⚖️ License
 
-AGPL‑3.0 — see [LICENSE](LICENSE.md) for details.
+AGPL‑3.0 — see [LICENSE](LICENSE) for details.
