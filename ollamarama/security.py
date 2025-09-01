@@ -39,7 +39,11 @@ class Security:
             etype = type(event).__name__
         except Exception:
             etype = "<unknown>"
-        self.logger.info("to-device event: %s", etype)
+        raw_type = getattr(event, "type", None)
+        if raw_type and raw_type != etype:
+            self.logger.info("to-device event: %s (%s)", etype, raw_type)
+        else:
+            self.logger.info("to-device event: %s", etype)
 
         # Respond to verification requests so the emoji flow can proceed
         if getattr(event, "type", None) == "m.key.verification.request":
@@ -84,13 +88,29 @@ class Security:
                 await client.confirm_short_auth_string(event.transaction_id)
             elif isinstance(event, KeyVerificationMac):
                 sas = client.key_verifications[event.transaction_id]
-                done = ToDeviceMessage(
-                    "m.key.verification.done",
-                    event.sender,  # type: ignore[attr-defined]
-                    sas.other_olm_device.id,
-                    {"transaction_id": event.transaction_id},
-                )
-                await client.to_device(done)
+                # Prefer sending our MAC (more correct SAS completion) when available.
+                try:
+                    if hasattr(sas, "get_mac"):
+                        await client.to_device(sas.get_mac())
+                    elif hasattr(sas, "send_mac"):
+                        await client.to_device(sas.send_mac())
+                    elif hasattr(client, "send_sas_mac"):
+                        await client.send_sas_mac(event.transaction_id)  # type: ignore[attr-defined]
+                except Exception:
+                    # Fallback to just sending done if MAC helpers are unavailable
+                    pass
+
+                # Always send `done` to conclude the flow; harmless if already sent.
+                try:
+                    done = ToDeviceMessage(
+                        "m.key.verification.done",
+                        event.sender,  # type: ignore[attr-defined]
+                        sas.other_olm_device.id,
+                        {"transaction_id": event.transaction_id},
+                    )
+                    await client.to_device(done)
+                except Exception:
+                    pass
                 self.logger.info("Emoji verification was successful.")
             elif isinstance(event, KeyVerificationCancel):
                 self.logger.info("Verification cancelled.")
