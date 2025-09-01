@@ -1,0 +1,2 @@
+[console_scripts]
+ollamarama-matrix = ollamarama.cli:main
