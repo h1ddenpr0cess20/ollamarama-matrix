@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ollamarama-matrix"
+version = "1.0.0.dev0"
+description = "Matrix chatbot powered by Ollama"
+readme = "README.md"
+requires-python = ">=3.7"
+authors = [{ name = "Dustin Whyte" }]
+license = { file = "LICENSE" }
+dependencies = [
+  "matrix-nio[e2e]",
+  "markdown",
+  "requests",
+]
+
+[project.scripts]
+ollamarama-matrix = "ollamarama.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["ollamarama*"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+python_files = ["test_*.py"]
+testpaths = ["tests"]

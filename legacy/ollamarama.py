@@ -1,3 +1,6 @@
+"""ARCHIVED LEGACY ENTRYPOINT
+Prefer `python -m ollamarama`. See MIGRATION.md for details.
+"""
 """
 ollamarama-matrix: An AI chatbot for the Matrix chat protocol with infinite personalities.
 
@@ -431,4 +434,3 @@ class ollamarama(VerificationMixin):
 if __name__ == "__main__":
     ollamarama = ollamarama()
     asyncio.run(ollamarama.main())
-
