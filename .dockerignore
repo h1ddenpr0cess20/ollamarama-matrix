@@ -1,0 +1,17 @@
+# Reduce build context and avoid leaking local state
+.git
+.github
+.venv
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+tests
+legacy
+store
+*.log
+*.tmp
+dist
+build
+node_modules
+

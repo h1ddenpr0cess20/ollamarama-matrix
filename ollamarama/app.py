@@ -197,11 +197,6 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
                 return
             sender_display = await ctx.matrix.display_name(sender)
             is_admin = sender_display in ctx.admins
-            # Log incoming user message with display + id
-            try:
-                ctx.log(f"{sender_display} ({sender}) sent {text} in {room.room_id}")  # type: ignore
-            except Exception:
-                pass
             handler, args = router.dispatch(
                 ctx,
                 room.room_id,  # type: ignore
@@ -214,6 +209,11 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
             )
             if handler is None:
                 return
+            # Log only messages relevant to bot commands (after dispatch)
+            try:
+                ctx.log(f"{sender_display} ({sender}) sent {text} in {room.room_id}")  # type: ignore
+            except Exception:
+                pass
             # Attempt to allow devices for this sender before handling
             try:
                 await security.allow_devices(sender)

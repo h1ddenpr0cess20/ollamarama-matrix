@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    # GPU (optional): uncomment for NVIDIA GPUs and a recent Docker/nvidia-container-toolkit
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: [gpu]
+
+  bot:
+    build: .
+    image: ollamarama-matrix:latest
+    container_name: ollamarama
+    depends_on:
+      - ollama
+    environment:
+      OLLAMARAMA_LOG_LEVEL: INFO
+      OLLAMARAMA_OLLAMA_URL: http://ollama:11434/api/chat
+    volumes:
+      - ./config.json:/data/config.json:ro
+      - ./store:/data/store
+    restart: unless-stopped
+
+volumes:
+  ollama:
+

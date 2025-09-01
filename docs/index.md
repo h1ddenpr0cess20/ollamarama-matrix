@@ -19,6 +19,7 @@ Ollamarama is a Matrix chatbot powered by local LLMs via the Ollama Chat API. It
 - [Ollama Setup](ollama.md)
 - [Configuration](configuration.md)
 - [Commands](commands.md)
+ - [Docker](docker.md)
 - [Architecture](architecture.md)
 - [CLI Reference](cli.md)
 - [Operations & Security](operations.md)
