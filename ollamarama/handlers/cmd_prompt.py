@@ -8,7 +8,7 @@ async def handle_persona(ctx: Any, room_id: str, sender_id: str, sender_display:
     ctx.history.init_prompt(room_id, sender_id, persona=persona)
     try:
         prompt = f"{ctx.history.prompt_prefix}{persona or ctx.history.personality}{ctx.history.prompt_suffix}"
-        ctx.log(f"System prompt for {sender_id} set to '{prompt}'")
+        ctx.log(f"System prompt for {sender_display} ({sender_id}) set to '{prompt}'")
     except Exception:
         pass
     # Introduce self to seed the conversation
@@ -22,7 +22,7 @@ async def handle_custom(ctx: Any, room_id: str, sender_id: str, sender_display: 
         return
     ctx.history.init_prompt(room_id, sender_id, custom=custom)
     try:
-        ctx.log(f"System prompt for {sender_id} set to '{custom}'")
+        ctx.log(f"System prompt for {sender_display} ({sender_id}) set to '{custom}'")
     except Exception:
         pass
     ctx.history.add(room_id, sender_id, "user", "introduce yourself")
@@ -50,7 +50,7 @@ async def _respond(ctx: Any, room_id: str, user_id: str, header_display: str) ->
             thinking = thinking.replace("<think>", "").strip()
             response_text = rest
             try:
-                ctx.log(f"Model thinking for {user_id}: {thinking}")
+                ctx.log(f"Model thinking for {header_display} ({user_id}): {thinking}")
             except Exception:
                 pass
         except Exception:
@@ -62,7 +62,7 @@ async def _respond(ctx: Any, room_id: str, user_id: str, header_display: str) ->
                 thinking = parts[0].replace("<|begin_of_thought|>", "").replace("<|end_of_thought|>", "").strip()
                 response_text = parts[1]
                 try:
-                    ctx.log(f"Model thinking for {user_id}: {thinking}")
+                    ctx.log(f"Model thinking for {header_display} ({user_id}): {thinking}")
                 except Exception:
                     pass
         except Exception:

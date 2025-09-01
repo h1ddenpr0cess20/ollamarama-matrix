@@ -123,6 +123,12 @@ python -m ollamarama --config config.json
 - Send `.ai hello` or `BotName: hello` in a joined room
 - The bot replies and maintains per‑user history
 
+## Logging
+
+- Uses `rich` for colorful, readable logs by default.
+- Configure verbosity with `--log-level` or `OLLAMARAMA_LOG_LEVEL` (e.g., `DEBUG`, `INFO`).
+- Automatically falls back to standard logging if `rich` is unavailable.
+
 ## 📖 Usage Guide
 
 Common commands (see [docs/commands.md](docs/commands.md) for the full list):

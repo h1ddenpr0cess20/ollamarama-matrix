@@ -163,9 +163,9 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
                 return
             sender_display = await ctx.matrix.display_name(sender)
             is_admin = sender_display in ctx.admins
-            # Log incoming user message
+            # Log incoming user message with display + id
             try:
-                ctx.log(f"{sender} sent {text} in {room.room_id}")  # type: ignore
+                ctx.log(f"{sender_display} ({sender}) sent {text} in {room.room_id}")  # type: ignore
             except Exception:
                 pass
             handler, args = router.dispatch(

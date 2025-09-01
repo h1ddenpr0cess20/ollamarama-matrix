@@ -37,7 +37,7 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
         try:
             thinking, rest = response_text.split("</think>", 1)
             thinking = thinking.replace("<think>", "").strip()
-            ctx.log(f"Model thinking for {sender_id}: {thinking}")
+            ctx.log(f"Model thinking for {sender_display} ({sender_id}): {thinking}")
             response_text = rest
         except Exception:
             pass
@@ -46,7 +46,7 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
             parts = response_text.split("<|end_of_thought|>")
             if len(parts) > 1:
                 thinking = parts[0].replace("<|begin_of_thought|>", "").replace("<|end_of_thought|>", "").strip()
-                ctx.log(f"Model thinking for {sender_id}: {thinking}")
+                ctx.log(f"Model thinking for {sender_display} ({sender_id}): {thinking}")
                 response_text = parts[1]
         except Exception:
             pass
