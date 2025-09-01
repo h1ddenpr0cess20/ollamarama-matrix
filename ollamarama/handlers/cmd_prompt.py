@@ -4,6 +4,23 @@ from typing import Any
 
 
 async def handle_persona(ctx: Any, room_id: str, sender_id: str, sender_display: str, args: str) -> None:
+    """Set a persona for the conversation and introduce the bot.
+
+    Initializes the system prompt using a persona appended to the configured
+    prefix/suffix, seeds the conversation with an introduction request, and
+    responds with the model output.
+
+    Args:
+        ctx: Application context with `history`, `model`, `options`, `timeout`,
+            `ollama`, `render`, `matrix`, and `log`.
+        room_id: Matrix room identifier where the command was received.
+        sender_id: Fully qualified Matrix user ID of the sender.
+        sender_display: Display name of the sender for logging.
+        args: Persona text to append to the system prompt.
+
+    Returns:
+        None. Sends a response message to the room.
+    """
     persona = args.strip()
     ctx.history.init_prompt(room_id, sender_id, persona=persona)
     try:
@@ -17,6 +34,22 @@ async def handle_persona(ctx: Any, room_id: str, sender_id: str, sender_display:
 
 
 async def handle_custom(ctx: Any, room_id: str, sender_id: str, sender_display: str, args: str) -> None:
+    """Set a fully custom system prompt and introduce the bot.
+
+    Replaces the system prompt for this room/user with a custom string and
+    seeds the conversation with an introduction request.
+
+    Args:
+        ctx: Application context with `history`, `model`, `options`, `timeout`,
+            `ollama`, `render`, `matrix`, and `log`.
+        room_id: Matrix room identifier where the command was received.
+        sender_id: Fully qualified Matrix user ID of the sender.
+        sender_display: Display name of the sender for logging.
+        args: Custom system prompt. No action if empty.
+
+    Returns:
+        None. Sends a response message to the room.
+    """
     custom = args.strip()
     if not custom:
         return
@@ -30,6 +63,21 @@ async def handle_custom(ctx: Any, room_id: str, sender_id: str, sender_display: 
 
 
 async def _respond(ctx: Any, room_id: str, user_id: str, header_display: str) -> None:
+    """Helper to query the model and post a response.
+
+    Fetches history for the given room/user, invokes the model in a worker
+    thread, strips any think markers from the reply, updates history, and
+    sends the formatted response.
+
+    Args:
+        ctx: Application context used to access history, model, and Matrix I/O.
+        room_id: Matrix room identifier of the conversation.
+        user_id: Target user whose history is being extended.
+        header_display: Display name used in the message header.
+
+    Returns:
+        None. Messages are sent via the Matrix client.
+    """
     messages = ctx.history.get(room_id, user_id)
     try:
         data = await ctx.to_thread(

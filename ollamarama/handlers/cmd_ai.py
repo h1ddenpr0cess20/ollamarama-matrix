@@ -4,14 +4,22 @@ from typing import Any
 
 
 async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str, args: str) -> None:
-    """Handle `.ai` or mention form messages.
+    """Handle `.ai` command or bot mention.
 
-    Expects `ctx` to provide:
-      - history: HistoryStore
-      - ollama: OllamaClient
-      - matrix: MatrixClientWrapper
-      - model: str
-      - options: dict
+    Uses conversation history and the configured model to generate a response
+    and sends it back to the room. Think/chain-of-thought markers are stripped
+    from output, but snippets may be logged for debugging.
+
+    Args:
+        ctx: Application context providing `history`, `ollama`, `matrix`,
+            `model`, `options`, `timeout`, `render`, and `log`.
+        room_id: Matrix room identifier where the command was received.
+        sender_id: Fully qualified Matrix user ID of the sender.
+        sender_display: Display name of the sender for user-friendly logging.
+        args: Remainder of the message after the command prefix.
+
+    Returns:
+        None. Sends a response message to the room.
     """
     history = ctx.history
     matrix = ctx.matrix

@@ -29,8 +29,15 @@ class MatrixHighlighter:
     def __call__(self, value):
         """Make the highlighter callable like Rich's Highlighter.
 
-        Accepts either a str or a rich.text.Text, applies styles in-place,
-        and returns a Text instance.
+        Accepts either a string or a `rich.text.Text`, applies styles in place,
+        and returns a `Text` instance.
+
+        Args:
+            value: Text content to highlight.
+
+        Returns:
+            A `Text` object with styles applied (or the original value if Rich
+            is unavailable).
         """
         try:
             from rich.text import Text  # type: ignore
@@ -41,6 +48,14 @@ class MatrixHighlighter:
         return text
 
     def highlight(self, text) -> None:  # rich.text.Text-like interface
+        """Apply highlighting to a Rich `Text` object in place.
+
+        Args:
+            text: A `rich.text.Text`-like object to stylize.
+
+        Returns:
+            None. Modifies `text` in place.
+        """
         s = text.plain
 
         for m in self._user_re.finditer(s):
@@ -111,6 +126,13 @@ def setup_logging(level: str = "INFO", json: bool = False) -> None:
     Falls back to standard logging if Rich is unavailable. The ``json`` flag is
     retained for backward compatibility but is treated as a request for a more
     detailed format; it does not emit strict JSON.
+
+    Args:
+        level: Logging level name (e.g., ``"INFO"`` or ``"DEBUG"``).
+        json: If True, include the logger name in the plain fallback format.
+
+    Returns:
+        None.
     """
     lvl = getattr(logging, level.upper(), logging.INFO)
 

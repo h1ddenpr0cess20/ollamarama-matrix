@@ -39,6 +39,18 @@ class AppConfig:
 
 
 def _deep_update(base: dict, updates: dict) -> dict:
+    """Recursively update a mapping.
+
+    For keys present in both mappings, nested dictionaries are merged
+    recursively; other values are overwritten.
+
+    Args:
+        base: Original dictionary to update.
+        updates: Dictionary of updates to apply.
+
+    Returns:
+        The updated dictionary (same object as `base`).
+    """
     for k, v in updates.items():
         if isinstance(v, dict) and isinstance(base.get(k), dict):
             base[k] = _deep_update(dict(base[k]), v)
@@ -48,6 +60,14 @@ def _deep_update(base: dict, updates: dict) -> dict:
 
 
 def _asdict_redacted(cfg: AppConfig) -> dict:
+    """Convert config to a dictionary with sensitive fields redacted.
+
+    Args:
+        cfg: Application configuration.
+
+    Returns:
+        A dictionary representation with credentials masked.
+    """
     d = asdict(cfg)
     # Redact sensitive values
     if "matrix" in d:
@@ -67,6 +87,20 @@ def load_config(
     env: Optional[Dict[str, str]] = None,
     overrides: Optional[Dict[str, Any]] = None,
 ) -> AppConfig:
+    """Load configuration from JSON and apply overrides.
+
+    Reads `path` (or `OLLAMARAMA_CONFIG`/`config.json`), applies selected
+    environment overrides and explicit overrides, and returns a structured
+    `AppConfig`.
+
+    Args:
+        path: Path to a JSON config file. If `None`, uses environment/defaults.
+        env: Environment variables mapping; defaults to `os.environ`.
+        overrides: Explicit overrides to merge into the loaded config.
+
+    Returns:
+        Parsed application configuration.
+    """
     env = env or os.environ
     cfg_path = path or env.get("OLLAMARAMA_CONFIG", "config.json")
 
@@ -121,6 +155,15 @@ _URL_RE = re.compile(r"^https?://", re.I)
 
 
 def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
+    """Validate configuration values and return errors, if any.
+
+    Args:
+        cfg: Application configuration to validate.
+
+    Returns:
+        A tuple of `(ok, errors)` where `ok` is `True` if the configuration is
+        valid, and `errors` is a list of human-readable error messages.
+    """
     errors: List[str] = []
 
     # Matrix
@@ -185,5 +228,12 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
 
 
 def summarize(cfg: AppConfig) -> Dict[str, Any]:
-    """Return a redacted summary dict suitable for printing."""
+    """Return a redacted summary dict suitable for printing.
+
+    Args:
+        cfg: Application configuration to summarize.
+
+    Returns:
+        A redacted dictionary intended for user display or logs.
+    """
     return _asdict_redacted(cfg)

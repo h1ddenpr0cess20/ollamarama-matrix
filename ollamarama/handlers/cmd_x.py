@@ -4,6 +4,24 @@ from typing import Any
 
 
 async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, args: str) -> None:
+    """Send a message on behalf of one user to another.
+
+    Expects arguments in the form: `<target_display_name> <message>`. The
+    target is resolved by exact display name match among users with existing
+    history in the room, or by a provided user ID. The model response is
+    appended to the target user's history.
+
+    Args:
+        ctx: Application context with `history`, `matrix`, `ollama`, `model`,
+            `options`, `timeout`, and `render`.
+        room_id: Matrix room identifier where the command was received.
+        sender_id: Fully qualified Matrix user ID of the sender.
+        sender_display: Display name of the sender for display in the reply.
+        args: Target display name and message body.
+
+    Returns:
+        None. Sends a response message to the room if the target is resolved.
+    """
     # Expect: <target_display_name> <message>
     parts = (args or "").split()
     if len(parts) < 2:

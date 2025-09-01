@@ -58,10 +58,29 @@ class AppContext:
         self.bot_id = "Ollamarama"
 
     async def to_thread(self, fn, *args, **kwargs) -> Any:
+        """Run a blocking function in the background thread pool.
+
+        Args:
+            fn: Callable to execute.
+            *args: Positional arguments for the callable.
+            **kwargs: Keyword arguments for the callable.
+
+        Returns:
+            The result returned by the callable.
+        """
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(self.executor, lambda: fn(*args, **kwargs))
 
     def render(self, body: str) -> Optional[str]:
+        """Render Markdown to HTML if Markdown is enabled.
+
+        Args:
+            body: Message body in Markdown.
+
+        Returns:
+            Rendered HTML if Markdown is enabled and rendering succeeds;
+            otherwise ``None``.
+        """
         if not self.cfg.markdown:
             return None
         try:
@@ -80,6 +99,20 @@ from typing import Optional
 
 
 async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
+    """Start the Matrix bot using the provided configuration.
+
+    Sets up the application context, registers command handlers, connects to
+    the Matrix server, joins configured rooms, and processes messages until
+    interrupted. Persists the device ID to `config_path` if discovered.
+
+    Args:
+        cfg: Fully validated application configuration.
+        config_path: Optional path to the configuration file for persisting
+            a discovered device ID.
+
+    Returns:
+        None. Runs until stop signal or sync completion.
+    """
     ctx = AppContext(cfg)
 
     router = Router()
@@ -151,6 +184,7 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
     join_time = _dt.datetime.now()
 
     async def on_text(room, event) -> None:
+        """Handle incoming text events from Matrix and dispatch commands."""
         try:
             message_time = getattr(event, "server_timestamp", 0) / 1000.0
             message_time = _dt.datetime.fromtimestamp(message_time)

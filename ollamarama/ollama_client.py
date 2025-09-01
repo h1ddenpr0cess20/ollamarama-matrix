@@ -34,9 +34,21 @@ class OllamaClient:
         timeout: Optional[int] = None,
         stream: bool = False,
     ) -> Dict[str, Any]:
-        """Send a non-streaming chat request and return parsed JSON.
+        """Send a chat request and return the parsed JSON response.
 
-        Raises NetworkError on HTTP/transport issues; RuntimeFailure on malformed responses.
+        Args:
+            messages: Conversation messages in ChatML-like format.
+            model: Model name or ID to use.
+            options: Optional model-specific parameters.
+            timeout: Optional request timeout override in seconds.
+            stream: Whether to request a streaming response (kept for API compatibility).
+
+        Returns:
+            Parsed JSON response from the Ollama server.
+
+        Raises:
+            NetworkError: If the HTTP request fails or the server returns an error.
+            RuntimeFailure: If the response body is not valid JSON.
         """
         url = f"{self.base_url}/chat"
         payload: Dict[str, Any] = {
@@ -64,8 +76,10 @@ class OllamaClient:
     def health(self) -> bool:
         """Best-effort health check against the Ollama API.
 
-        Tries a cheap endpoint (`/tags`). Not all servers may implement it; in
-        that case, fall back to a HEAD on `/chat`.
+        Tries `/tags` first, falling back to a `HEAD` on `/chat` if needed.
+
+        Returns:
+            True if a quick request succeeds; otherwise False.
         """
         tags = f"{self.base_url}/tags"
         try:
@@ -84,9 +98,15 @@ class OllamaClient:
     def list_models(self) -> Dict[str, str]:
         """Return a mapping of available model names from the server.
 
-        Uses the `/tags` endpoint which typically returns a payload like:
-        {"models": [{"name": "qwen3"}, ...]}.
-        Falls back to an empty mapping on unexpected shapes by raising NetworkError.
+        Uses the `/tags` endpoint, which typically returns a payload like
+        `{"models": [{"name": "qwen3"}, ...]}`.
+
+        Returns:
+            Mapping of model name to model identifier (usually the same string).
+
+        Raises:
+            NetworkError: If the HTTP request fails.
+            RuntimeFailure: If the response is invalid or contains no models.
         """
         url = f"{self.base_url}/tags"
         try:
