@@ -34,7 +34,14 @@ class Security:
         self.logger = logger or logging.getLogger(__name__)
 
     async def log_to_device_event(self, event: Any) -> None:
-        """Log arbitrary to-device events and handle verification requests."""
+        """Log to-device events and respond to verification requests.
+
+        Args:
+            event: An incoming to-device event object from the Matrix client.
+
+        Returns:
+            None.
+        """
         try:
             etype = type(event).__name__
         except Exception:
@@ -70,7 +77,14 @@ class Security:
                 self.logger.info("Failed to send verification ready message.")
 
     async def emoji_verification_callback(self, event: Any) -> None:  # KeyVerificationEvent
-        """Handle SAS emoji verification events."""
+        """Handle SAS emoji verification events.
+
+        Args:
+            event: A verification-related event carrying state for the flow.
+
+        Returns:
+            None.
+        """
         client = getattr(self.matrix, "client", None)
         if client is None:
             return

@@ -19,6 +19,16 @@ class Router:
         self._admin_handlers: Dict[str, Callable] = {}
 
     def register(self, cmd: str, fn: Callable, admin: bool = False) -> None:
+        """Register a handler for a command prefix.
+
+        Args:
+            cmd: Command keyword (e.g., `.ai`).
+            fn: Callable to invoke for the command.
+            admin: Whether the command requires admin privileges.
+
+        Returns:
+            None.
+        """
         if admin:
             self._admin_handlers[cmd] = fn
         else:
@@ -35,6 +45,26 @@ class Router:
         bot_name: Optional[str] = None,
         timestamp: Optional[_dt.datetime] = None,
     ) -> Tuple[Optional[Callable], Tuple]:
+        """Resolve a message into a handler and argument tuple.
+
+        Matches the first token in the message against registered commands.
+        If a `bot_name` is provided, also supports the mention form
+        "Botname: message" by dispatching to `.ai`.
+
+        Args:
+            ctx: Opaque application context passed through to handlers.
+            room_id: Matrix room identifier of the message.
+            sender_id: Fully qualified Matrix user ID of the sender.
+            sender_display: Display name of the sender.
+            text: Raw message body.
+            is_admin: Whether the sender has admin rights.
+            bot_name: Optional display name for mention-style dispatch.
+            timestamp: Optional timestamp for filtering (unused here).
+
+        Returns:
+            A tuple of (handler, args). If no handler matches, returns
+            (None, ()).
+        """
         parts = text.strip().split()
         if not parts:
             return None, tuple()
@@ -49,4 +79,3 @@ class Router:
         if is_admin and cmd in self._admin_handlers:
             return self._admin_handlers[cmd], (ctx, room_id, sender_id, sender_display, args)
         return None, tuple()
-

@@ -13,6 +13,11 @@ from .app import run as run_app
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build and return the command-line argument parser.
+
+    Returns:
+        Configured `argparse.ArgumentParser` for the Ollamarama CLI.
+    """
     parser = argparse.ArgumentParser(
         prog="ollamarama-matrix",
         description=(
@@ -49,6 +54,18 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    """Entry point for the `ollamarama-matrix` CLI.
+
+    Parses arguments, optionally validates configuration in a dry-run, fetches
+    available models when requested, and runs the application.
+
+    Args:
+        argv: Optional list of CLI arguments. Defaults to `sys.argv[1:]`.
+
+    Returns:
+        Process exit code. `0` on success, `2` on configuration or runtime
+        errors during startup.
+    """
     argv = sys.argv[1:] if argv is None else argv
     parser = build_parser()
     args = parser.parse_args(argv)
