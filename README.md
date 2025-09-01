@@ -20,7 +20,7 @@ Ollamarama is a powerful AI chatbot for the [Matrix](https://matrix.org/) chat p
 ## 🌟 Related Projects
 
 - 💬 **IRC Version**: [ollamarama-irc](https://github.com/h1ddenpr0cess20/ollamarama-irc)
-- 🖥️ **Terminal Version**: [ollamarama](https://github.com/h1ddenpr0cess20/ollamarama)
+- 🖥️ **CLI Version**: [ollamarama](https://github.com/h1ddenpr0cess20/ollamarama)
 
 ## 🚀 Quick Start
 
