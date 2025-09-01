@@ -10,16 +10,18 @@ Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the 
 
 ## Documentation
 
-- Overview: [docs/index.md](docs/index.md)
-- Getting Started: [docs/getting-started.md](docs/getting-started.md)
-- Configuration: [docs/configuration.md](docs/configuration.md)
-- Commands: [docs/commands.md](docs/commands.md)
-- CLI Reference: [docs/cli.md](docs/cli.md)
-- Operations & E2E: [docs/operations.md](docs/operations.md)
-- Architecture: [docs/architecture.md](docs/architecture.md)
-- Development: [docs/development.md](docs/development.md)
-- Migration & Legacy Map: [docs/migration.md](docs/migration.md), [docs/legacy-map.md](docs/legacy-map.md)
-- Security & AI Disclaimer: [docs/security.md](docs/security.md), [docs/ai-output-disclaimer.md](docs/ai-output-disclaimer.md)
+- [Overview](docs/index.md)
+- [Getting Started](docs/getting-started.md)
+- [Configuration](docs/configuration.md)
+- [Commands](docs/commands.md)
+- [CLI Reference](docs/cli.md)
+- [Operations & E2E](docs/operations.md)
+- [Architecture](docs/architecture.md)
+- [Development](docs/development.md)
+- [Migration](docs/migration.md)
+- [Legacy Map](docs/legacy-map.md)
+- [Security](docs/security.md)
+- [AI Output Disclaimer](docs/ai-output-disclaimer.md)
 
 ## ✨ Features
 
@@ -45,7 +47,7 @@ Options depending on how you prefer to run it:
   - `pip install -r requirements.txt`
   - Run with: `python -m ollamarama --config config.json`
 
-After installation, use the `ollamarama-matrix` command. For E2E encryption, ensure `libolm` is installed; see [docs/operations.md](docs/operations.md).
+After installation, use the `ollamarama-matrix` command. For E2E encryption, ensure `libolm` is installed; see [Operations & E2E](docs/operations.md).
 
 ## 🚀 Quick Start
 
@@ -95,7 +97,7 @@ Create or edit `config.json` at the repo root. Minimum example:
 }
 ```
 
-See [docs/configuration.md](docs/configuration.md) for full schema and validation.
+See [Configuration](docs/configuration.md) for full schema and validation.
 
 ### 3) Run
 
@@ -143,7 +145,7 @@ python -m ollamarama --config config.json
 
 ## 📖 Usage Guide
 
-Common commands (see [docs/commands.md](docs/commands.md) for the full list):
+Common commands (see [Commands](docs/commands.md) for the full list):
 
 | Command | Description | Example |
 |---------|-------------|---------|
@@ -158,15 +160,16 @@ Common commands (see [docs/commands.md](docs/commands.md) for the full list):
 ## Encryption Support
 
 - Works in encrypted Matrix rooms using `matrix-nio[e2e]` with device verification.
-- Requires `libolm` available to Python for E2E. If unavailable, you can run without E2E; see [docs/getting-started.md](docs/getting-started.md) (Install Dependencies).
+- Requires `libolm` available to Python for E2E. If unavailable, you can run without E2E; see [Getting Started](docs/getting-started.md) (Install Dependencies).
 - Persist the `store/` directory to retain device keys and encryption state.
 
 ## Community & Policies
 
-- Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
-- Security Policy and Hardening: [SECURITY.md](SECURITY.md), [docs/security.md](docs/security.md)
-- AI Output Disclaimer: [docs/ai-output-disclaimer.md](docs/ai-output-disclaimer.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Security](docs/security.md)
+- [AI Output Disclaimer](docs/ai-output-disclaimer.md)
 
 ## ⚖️ License
 
