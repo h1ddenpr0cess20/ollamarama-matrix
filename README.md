@@ -23,7 +23,7 @@ Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the 
 - [Security](docs/security.md)
 - [AI Output Disclaimer](docs/ai-output-disclaimer.md)
 
-## ✨ Features
+## Features
 
 - Dynamic personalities with quick switching
 - Per‑user history, isolated per room and user
@@ -31,7 +31,7 @@ Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the 
 - Admin controls for model switching and resets
 - Custom system prompts for specialized tasks
 
-## 🌟 Related Projects
+## Related Projects
 
 - IRC version: <https://github.com/h1ddenpr0cess20/ollamarama-irc>
 - CLI version: <https://github.com/h1ddenpr0cess20/ollamarama>
@@ -49,7 +49,7 @@ Options depending on how you prefer to run it:
 
 After installation, use the `ollamarama-matrix` command. For E2E encryption, ensure `libolm` is installed; see [Operations & E2E](docs/operations.md).
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -73,31 +73,7 @@ pip install -r requirements.txt
 
 ### 2) Configure
 
-Create or edit `config.json` at the repo root. Minimum example:
-
-```json
-{
-  "matrix": {
-    "server": "https://matrix.org",
-    "username": "@your_bot:matrix.org",
-    "password": "your_password",
-    "channels": ["#your-room:matrix.org"],
-    "admins": ["Your Display Name"],
-    "store_path": "store"
-  },
-  "ollama": {
-    "api_url": "http://localhost:11434/api/chat",
-    "models": {"qwen3": "qwen3"},
-    "default_model": "qwen3",
-    "prompt": ["you are ", "."],
-    "personality": "a helpful assistant",
-    "history_size": 24,
-    "options": {"temperature": 0.8, "top_p": 1, "repeat_penalty": 1}
-  }
-}
-```
-
-See [Configuration](docs/configuration.md) for full schema and validation.
+Create or edit `config.json` at the repo root. See [Configuration](docs/configuration.md) for a minimal example, full schema, and validation guidance.
 
 ### 3) Run
 
@@ -131,7 +107,7 @@ Alternatively, run as a module:
 python -m ollamarama --config config.json
 ```
 
-### 4) Verify
+### 4) Try It
 
 - The bot logs in and joins configured rooms
 - Send `.ai hello` or `BotName: hello` in a joined room
@@ -143,7 +119,7 @@ python -m ollamarama --config config.json
 - Configure verbosity with `--log-level` or `OLLAMARAMA_LOG_LEVEL` (e.g., `DEBUG`, `INFO`).
 - Automatically falls back to standard logging if `rich` is unavailable.
 
-## 📖 Usage Guide
+## Usage Guide
 
 Common commands (see [Commands](docs/commands.md) for the full list):
 
@@ -171,6 +147,6 @@ Common commands (see [Commands](docs/commands.md) for the full list):
 - [Security](docs/security.md)
 - [AI Output Disclaimer](docs/ai-output-disclaimer.md)
 
-## ⚖️ License
+## License
 
 AGPL‑3.0 — see [LICENSE](LICENSE) for details.
