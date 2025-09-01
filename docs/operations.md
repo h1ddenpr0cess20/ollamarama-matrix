@@ -10,12 +10,29 @@
 
 - Start: `ollamarama-matrix --config config.json`
 - Validate only: `ollamarama-matrix --dry-run -v`
-- Log level: `--log-level DEBUG` (affects CLI launcher output)
+- Log level: `--log-level DEBUG` or env `OLLAMARAMA_LOG_LEVEL=DEBUG`
+
+### Logging
+
+- Uses Rich for colorful logs and rich tracebacks by default.
+- The console disables generic syntax highlighting (targeted styles only).
+- The highlighter colors:
+  - Display names/user IDs: cyan
+  - Room IDs/aliases: magenta
+  - “Thinking” details: dim italic
+  - Response body: bold
+  - Models and verification info: yellow/green
+
+### Graceful Exit
+
+- Stop the bot with Ctrl‑C (SIGINT) or send SIGTERM.
+- The bot cancels the sync loop, logs out, closes the Matrix client, and shuts down worker threads.
 
 ## Health & Model
 
 - Use `.model` to check current/available models and to change or reset.
 - Use `OLLAMA_HOST`/`OLLAMARAMA_OLLAMA_URL` if your Ollama API is remote.
+- Use `--models-from-server` to populate the model list from the server at startup.
 
 ## Security Guidelines
 

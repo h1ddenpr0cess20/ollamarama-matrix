@@ -192,4 +192,41 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
             ctx.log(e)
 
     ctx.matrix.add_text_handler(on_text)
-    await ctx.matrix.sync_forever()
+
+    # Graceful shutdown: handle SIGINT/SIGTERM and race with sync task
+    import signal as _signal
+    stop = asyncio.Event()
+    try:
+        loop = asyncio.get_running_loop()
+        for sig in (_signal.SIGINT, _signal.SIGTERM):
+            try:
+                loop.add_signal_handler(sig, stop.set)
+            except Exception:
+                # Not supported on some platforms or threads
+                pass
+    except Exception:
+        pass
+
+    sync_task = asyncio.create_task(ctx.matrix.sync_forever())
+    stop_task = asyncio.create_task(stop.wait())
+    try:
+        done, pending = await asyncio.wait({sync_task, stop_task}, return_when=asyncio.FIRST_COMPLETED)
+    except KeyboardInterrupt:
+        # Fallback path if signals aren't available
+        pass
+    finally:
+        # If stop was triggered, cancel sync; if sync finished, just proceed
+        for t in (sync_task, stop_task):
+            if not t.done():
+                t.cancel()
+        # Best-effort client shutdown
+        try:
+            if hasattr(ctx.matrix, "shutdown"):
+                await ctx.matrix.shutdown()
+        except Exception:
+            pass
+        # Stop background executor threads
+        try:
+            ctx.executor.shutdown(wait=False, cancel_futures=True)
+        except Exception:
+            pass

@@ -88,3 +88,17 @@ class MatrixClientWrapper:
 
     async def sync_forever(self, timeout_ms: int = 30000) -> None:
         await self.client.sync_forever(timeout=timeout_ms, full_state=True)
+
+    async def shutdown(self) -> None:
+        """Best-effort logout/close of the underlying client."""
+        # Logout is optional; close is the important bit to end sync loop connections
+        try:
+            if hasattr(self.client, "logout"):
+                await self.client.logout()  # type: ignore[arg-type]
+        except Exception:
+            pass
+        try:
+            if hasattr(self.client, "close"):
+                await self.client.close()  # type: ignore[arg-type]
+        except Exception:
+            pass

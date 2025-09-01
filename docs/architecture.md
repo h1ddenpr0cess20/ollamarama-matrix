@@ -6,7 +6,7 @@ The bot is a small, modular async application that wires a Matrix client to the 
 
 - `ollamarama/cli.py`: CLI entry, `--dry-run` validation, starts the app.
 - `ollamarama/config.py`: Dataclasses, deep‑merge, validation, redacted summaries.
-- `ollamarama/logging_conf.py`: Central logging setup.
+- `ollamarama/logging_conf.py`: Central logging setup with Rich handler, custom highlighter for Matrix context, and rich tracebacks.
 - `ollamarama/ollama_client.py`: HTTP client for `/api/chat` and health checks.
 - `ollamarama/matrix_client.py`: Thin wrapper over `nio.AsyncClient` (login/join/send/sync).
 - `ollamarama/history.py`: Per‑room/user histories with prompt injection and trimming.

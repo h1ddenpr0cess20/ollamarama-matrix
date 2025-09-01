@@ -105,6 +105,12 @@ Preferred (installed command):
 ollamarama-matrix --config config.json
 ```
 
+Fetch models from the server (ignores `ollama.models` in config):
+
+```bash
+ollamarama-matrix --config config.json --models-from-server
+```
+
 Validate only (no network login):
 
 ```bash

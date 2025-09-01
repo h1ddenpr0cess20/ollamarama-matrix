@@ -81,3 +81,34 @@ class OllamaClient:
         except requests.RequestException:
             return False
 
+    def list_models(self) -> Dict[str, str]:
+        """Return a mapping of available model names from the server.
+
+        Uses the `/tags` endpoint which typically returns a payload like:
+        {"models": [{"name": "qwen3"}, ...]}.
+        Falls back to an empty mapping on unexpected shapes by raising NetworkError.
+        """
+        url = f"{self.base_url}/tags"
+        try:
+            resp = self._session.get(url, timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+        except requests.RequestException as e:
+            raise NetworkError(str(e))
+        except ValueError as e:
+            raise RuntimeFailure(f"Invalid JSON from Ollama: {e}")
+
+        models: Dict[str, str] = {}
+        try:
+            items = data.get("models", []) if isinstance(data, dict) else []
+            for item in items:
+                name = None
+                if isinstance(item, dict):
+                    name = item.get("name") or item.get("model")
+                if isinstance(name, str) and name:
+                    models[name] = name
+        except Exception:
+            pass
+        if not models:
+            raise RuntimeFailure("No models found in Ollama /tags response")
+        return models

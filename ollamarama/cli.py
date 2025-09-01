@@ -34,6 +34,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--store-path", help="Override store path (dry-run only at this phase)")
     parser.add_argument("--ollama-url", help="Override Ollama API URL (dry-run only at this phase)")
     parser.add_argument("--timeout", type=int, help="HTTP timeout seconds (dry-run only at this phase)")
+    parser.add_argument(
+        "--models-from-server",
+        action="store_true",
+        help="Fetch available models from the Ollama server instead of using config",
+    )
     parser.add_argument("--no-markdown", action="store_true", help="Disable Markdown formatting (reserved)")
     parser.add_argument("--dry-run", action="store_true", help="Validate configuration and exit")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print effective (redacted) configuration on dry-run")
@@ -72,6 +77,22 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"Failed to load config: {e}")
             return 2
 
+        # Optionally fetch models from server
+        if args.models_from_server:
+            try:
+                from .ollama_client import OllamaClient
+
+                client = OllamaClient(base_url=cfg.ollama.api_url.rsplit("/", 1)[0], timeout=cfg.ollama.timeout)
+                models = client.list_models()
+                if models:
+                    cfg.ollama.models = models
+                    # Ensure default_model exists in mapping; fall back to first available
+                    if cfg.ollama.default_model not in models and cfg.ollama.default_model not in set(models.values()):
+                        cfg.ollama.default_model = next(iter(sorted(models.keys())))
+            except Exception as e:
+                print(f"Failed to fetch models from server: {e}")
+                return 2
+
         ok, errs = validate_config(cfg)
         if not ok:
             print("Configuration errors:")
@@ -105,6 +126,20 @@ def main(argv: Optional[List[str]] = None) -> int:
     except FileNotFoundError:
         print(f"Config file not found: {args.config or 'config.json'}")
         return 2
+    # Optionally fetch models from server for runtime
+    if args.models_from_server:
+        try:
+            from .ollama_client import OllamaClient
+
+            client = OllamaClient(base_url=cfg.ollama.api_url.rsplit("/", 1)[0], timeout=cfg.ollama.timeout)
+            models = client.list_models()
+            if models:
+                cfg.ollama.models = models
+                if cfg.ollama.default_model not in models and cfg.ollama.default_model not in set(models.values()):
+                    cfg.ollama.default_model = next(iter(sorted(models.keys())))
+        except Exception as e:
+            print(f"Failed to fetch models from server: {e}")
+            return 2
     ok, errs = validate_config(cfg)
     if not ok:
         print("Configuration errors:")
