@@ -15,18 +15,18 @@ Ollamarama is a Matrix chatbot powered by local LLMs via the Ollama Chat API. It
 
 ## Quick Links
 
-- Getting Started: see `docs/getting-started.md`
-- Ollama Setup: see `docs/ollama.md`
-- Configuration: see `docs/configuration.md`
-- Commands: see `docs/commands.md`
-- Architecture: see `docs/architecture.md`
-- CLI Reference: see `docs/cli.md`
-- Operations & Security: see `docs/operations.md`
-- Not a Companion: see `docs/not-a-companion.md`
-- Development Guide: see `docs/development.md`
-- Migration Notes: see `docs/migration.md`
-- Refactor Blueprint (historic): see `docs/refactor-plan.md`
-- Legacy → New Map: see `docs/legacy-map.md`
+- [Getting Started](getting-started.md)
+- [Ollama Setup](ollama.md)
+- [Configuration](configuration.md)
+- [Commands](commands.md)
+- [Architecture](architecture.md)
+- [CLI Reference](cli.md)
+- [Operations & Security](operations.md)
+- [Not a Companion — Please Read](not-a-companion.md)
+- [Development Guide](development.md)
+- [Migration Notes](migration.md)
+- [Refactor Blueprint (historic)](refactor-plan.md)
+- [Legacy → New Map](legacy-map.md)
 
 ## Overview
 
@@ -40,4 +40,4 @@ Ollamarama connects a Matrix client (matrix‑nio) to the Ollama Chat API. Incom
 
 ## Support & Issues
 
-Please open GitHub issues with clear repro steps and relevant logs (redact credentials). Pull requests are welcome; see `docs/development.md` for coding and testing guidelines.
+Please open GitHub issues with clear repro steps and relevant logs (redact credentials). Pull requests are welcome; see [Development Guide](development.md) for coding and testing guidelines.

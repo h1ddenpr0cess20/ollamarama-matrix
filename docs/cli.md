@@ -12,7 +12,7 @@ Or run the module directly:
 
 - `-c, --config PATH`: Path to `config.json` (default: `./config.json`).
 - `-L, --log-level LEVEL`: `DEBUG|INFO|WARNING|ERROR|CRITICAL` (colored Rich logs).
-- `-S, --server-models`: Fetch available models from the Ollama server and use them instead of `ollama.models` from config. If the configured `default_model` is not present on the server, the launcher prefers `qwen3` if available; otherwise falls back to the first available model.
+- `-S, --server-models`: Fetch available models from the Ollama server and use them instead of `ollama.models` from config. If the configured `default_model` is not present on the server, the launcher falls back to the first available model.
 - `-d, --dry-run`: Load, merge overrides, validate config, and exit.
 - `-v, --verbose`: With `--dry-run`, print redacted effective config.
 - Overrides:

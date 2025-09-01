@@ -144,7 +144,7 @@ def load_config(
             prompt=list(ollama.get("prompt", ["you are ", "."])) ,
             personality=ollama.get("personality", ""),
             history_size=int(ollama.get("history_size", 24)),
-            timeout=int(ollama.get("timeout", 180)),
+            timeout=180,
         ),
         markdown=bool(raw.get("markdown", True)),
     )
