@@ -94,9 +94,14 @@ class FastMCPClient:
             # Always pass a mapping {name: spec} for consistency
             spec = cfg
             client = Client({name: spec})
-            async with client:
-                tools = await client.list_tools()
-            logger.debug("Server '%s' returned %d tool(s)", name, len(tools))
+            try:
+                async with client:
+                    tools = await client.list_tools()
+                logger.debug("Server '%s' returned %d tool(s)", name, len(tools))
+            except Exception as e:
+                # Offline/misconfigured servers should not crash startup; skip them.
+                logger.error("Failed to list tools from MCP server '%s': %s", name, e)
+                continue
             for tool in tools:
                 self._tool_servers[tool.name] = name
                 schema.append(
@@ -129,6 +134,9 @@ class FastMCPClient:
             asyncio.set_event_loop(loop)
             try:
                 result["value"] = loop.run_until_complete(coro)
+            except Exception as e:
+                # Capture exception to re-raise on the caller thread
+                result["exc"] = e
             finally:
                 loop.close()
 
@@ -137,6 +145,8 @@ class FastMCPClient:
         t = threading.Thread(target=runner)
         t.start()
         t.join()
+        if "exc" in result:
+            raise result["exc"]  # type: ignore[misc]
         return result.get("value")
 
     def list_tools(self) -> List[Dict[str, Any]]:

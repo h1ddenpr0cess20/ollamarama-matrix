@@ -160,7 +160,7 @@ def load_config(
             prompt=list(ollama.get("prompt", ["you are ", "."])) ,
             personality=ollama.get("personality", ""),
             history_size=int(ollama.get("history_size", 24)),
-            timeout=180,
+            timeout=360,
             mcp_servers=dict(ollama.get("mcp_servers", {})),
         ),
         markdown=bool(raw.get("markdown", True)),
