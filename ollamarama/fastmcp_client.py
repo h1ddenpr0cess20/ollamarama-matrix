@@ -64,8 +64,30 @@ class FastMCPClient:
                 )
         return schema
 
+    def _run(self, coro):
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+        result: Dict[str, Any] = {}
+
+        def runner() -> None:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result["value"] = loop.run_until_complete(coro)
+            finally:
+                loop.close()
+
+        import threading
+
+        t = threading.Thread(target=runner)
+        t.start()
+        t.join()
+        return result.get("value")
+
     def list_tools(self) -> List[Dict[str, Any]]:
-        return asyncio.run(self._list_tools_async())
+        return self._run(self._list_tools_async())
 
     async def _call_tool_async(self, client: Client, name: str, arguments: Dict[str, Any]) -> Any:
         async with client:
@@ -87,7 +109,7 @@ class FastMCPClient:
         cfg = self._servers.get(server_name)
         client = Client(cfg) if isinstance(cfg, str) else Client({server_name: cfg})
         try:
-            data = asyncio.run(self._call_tool_async(client, name, arguments))
+            data = self._run(self._call_tool_async(client, name, arguments))
         except Exception as e:
             return json.dumps({"error": f"Tool execution error for {name}: {e}"}, ensure_ascii=False)
         try:

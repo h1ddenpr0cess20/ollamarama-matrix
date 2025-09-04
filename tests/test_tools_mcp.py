@@ -52,6 +52,14 @@ def test_fastmcp_client(monkeypatch):
     assert data["echo"] == "hi"
 
 
+@pytest.mark.asyncio
+async def test_fastmcp_client_inside_loop(monkeypatch):
+    monkeypatch.setattr("ollamarama.fastmcp_client.Client", fake_client)
+    client = FastMCPClient({"s": {"command": "none"}})
+    tools = client.list_tools()
+    assert tools[0]["function"]["name"] == "echo"
+
+
 class FakeOllama:
     def __init__(self):
         self.calls = 0
