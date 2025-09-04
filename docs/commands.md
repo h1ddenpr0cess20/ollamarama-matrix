@@ -4,7 +4,7 @@ Users can interact with the bot using dot‑commands or by mentioning the bot na
 
 ## User Commands
 
-- `.ai <message>` or `BotName: <message>` — Chat with the AI.
+- `.ai <message>` or `BotName: <message>` — Chat with the AI (calls tools automatically when configured).
 - `.x <display_name|@user:server> <message>` — Continue another user’s conversation.
 - `.persona <text>` — Set or change your personality for the system prompt.
 - `.custom <prompt>` — Replace the system prompt with a custom one.

@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 from .config import AppConfig
 from .history import HistoryStore
@@ -17,6 +17,8 @@ from .handlers.cmd_help import handle_help
 from .handlers.cmd_prompt import handle_persona, handle_custom
 from .handlers.cmd_x import handle_x
 from .security import Security
+from .fastmcp_client import FastMCPClient
+from .tools import execute_tool, load_schema
 
 
 class AppContext:
@@ -56,6 +58,45 @@ class AppContext:
         self.timeout = cfg.ollama.timeout
         self.admins = cfg.matrix.admins
         self.bot_id = "Ollamarama"
+        # Tool calling
+        self.tools_enabled: bool = True
+        self.mcp_client: FastMCPClient | None = None
+        self._mcp_tool_names: set[str] = set()
+        try:
+            builtin_schema = load_schema()
+        except Exception:
+            builtin_schema = []
+        mcp_schema: List[Dict[str, Any]] = []
+        if cfg.ollama.mcp_servers:
+            successful: Dict[str, Any] = {}
+            for name, cfg_spec in cfg.ollama.mcp_servers.items():
+                if not cfg_spec:
+                    continue
+                try:
+                    client = FastMCPClient({name: cfg_spec})
+                    tools = client.list_tools()
+                    successful[name] = cfg_spec
+                    mcp_schema.extend(tools)
+                    for tool in tools:
+                        fn = (tool.get("function") or {}).get("name")
+                        if isinstance(fn, str):
+                            self._mcp_tool_names.add(fn)
+                except Exception:
+                    continue
+            if successful:
+                try:
+                    self.mcp_client = FastMCPClient(successful)
+                    _ = self.mcp_client.list_tools()
+                except Exception:
+                    self.mcp_client = None
+        combined: List[Dict[str, Any]] = list(mcp_schema)
+        for tool in builtin_schema:
+            fn = (tool.get("function") or {}).get("name")
+            if isinstance(fn, str) and fn not in self._mcp_tool_names:
+                combined.append(tool)
+        self.tools_schema = combined
+        if not self.tools_schema:
+            self.tools_enabled = False
 
     async def to_thread(self, fn, *args, **kwargs) -> Any:
         """Run a blocking function in the background thread pool.
@@ -92,6 +133,81 @@ class AppContext:
             )
         except Exception:
             return None
+
+    def _execute_tool(self, name: str, arguments: Dict[str, Any]) -> str:
+        if self.mcp_client is not None and name in self._mcp_tool_names:
+            return self.mcp_client.call_tool(name, arguments)
+        return execute_tool(name, arguments)
+
+    def respond_with_tools(self, messages: List[Dict[str, Any]], *, tool_choice: str | None = "auto") -> str:
+        try:
+            result = self.ollama.chat_with_tools(
+                model=self.model,
+                messages=messages,
+                options=self.options,
+                tools=self.tools_schema,
+                tool_choice=tool_choice,
+                timeout=self.timeout,
+            )
+        except Exception:
+            return ""
+        max_iterations = 8
+        iterations = 0
+        while iterations < max_iterations:
+            msg = result.get("message", {})
+            tool_calls = msg.get("tool_calls") or []
+            if not tool_calls:
+                break
+            messages.append(msg)
+            for call in tool_calls:
+                func = (call.get("function") or {})
+                name = func.get("name") or ""
+                raw_args = func.get("arguments")
+                try:
+                    if isinstance(raw_args, str):
+                        import json as _json
+
+                        args = _json.loads(raw_args) if raw_args.strip() else {}
+                    elif isinstance(raw_args, dict):
+                        args = raw_args
+                    else:
+                        args = {}
+                except Exception:
+                    args = {}
+                tool_result = self._execute_tool(name, args)
+                tool_msg: Dict[str, Any] = {
+                    "role": "tool",
+                    "content": str(tool_result),
+                }
+                if call.get("id"):
+                    tool_msg["tool_call_id"] = call["id"]
+                messages.append(tool_msg)
+            try:
+                result = self.ollama.chat_with_tools(
+                    model=self.model,
+                    messages=messages,
+                    options=self.options,
+                    tools=self.tools_schema,
+                    tool_choice=tool_choice,
+                    timeout=self.timeout,
+                )
+            except Exception:
+                return ""
+            iterations += 1
+        final = result.get("message", {})
+        content = final.get("content", "").strip()
+        messages.append({"role": "assistant", "content": content})
+        messages[:] = [
+            m
+            for m in messages
+            if not (m.get("role") == "tool" or (isinstance(m, dict) and m.get("tool_calls")))
+        ]
+        if len(messages) > 24:
+            if messages and messages[0].get("role") == "system":
+                messages.pop(1)
+            else:
+                messages.pop(0)
+        return content
 
 
 import json

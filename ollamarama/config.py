@@ -29,6 +29,7 @@ class OllamaConfig:
     personality: str = ""
     history_size: int = 24
     timeout: int = 180
+    mcp_servers: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -145,6 +146,7 @@ def load_config(
             personality=ollama.get("personality", ""),
             history_size=int(ollama.get("history_size", 24)),
             timeout=180,
+            mcp_servers=dict(ollama.get("mcp_servers", {})),
         ),
         markdown=bool(raw.get("markdown", True)),
     )
@@ -222,6 +224,8 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
     rp = opts.get("repeat_penalty")
     if rp is not None and not (0.5 <= float(rp) <= 2):
         errors.append("ollama.options.repeat_penalty must be between 0.5 and 2")
+    if not isinstance(cfg.ollama.mcp_servers, dict):
+        errors.append("ollama.mcp_servers must be a mapping if provided")
 
     ok = len(errors) == 0
     return ok, errors

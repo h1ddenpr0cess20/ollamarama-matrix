@@ -20,6 +20,7 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
   - personality: non‑empty default personality text
   - history_size: 1–1000 messages retained per user per room
   - options: advanced generation options (e.g., `temperature`, `top_p`, `repeat_penalty`)
+  - mcp_servers: mapping of names to MCP server specs for tool calling (optional)
 - markdown: render replies as Markdown (default: true)
 
 ## Overrides

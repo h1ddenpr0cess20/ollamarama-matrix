@@ -73,6 +73,38 @@ class OllamaClient:
             raise RuntimeFailure(f"Invalid JSON from Ollama: {e}")
         return data
 
+    def chat_with_tools(
+        self,
+        *,
+        messages: List[Dict[str, Any]],
+        model: str,
+        options: Optional[Dict[str, Any]],
+        tools: List[Dict[str, Any]],
+        tool_choice: Optional[str] = "auto",
+        timeout: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "stream": False,
+            "options": options or {},
+            "tools": tools,
+        }
+        if tool_choice is not None:
+            payload["tool_choice"] = tool_choice
+        if timeout is not None:
+            payload["timeout"] = int(timeout)
+        url = f"{self.base_url}/chat"
+        try:
+            resp = self._session.post(url, json=payload, timeout=(self.timeout if timeout is None else int(timeout)))
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            raise NetworkError(str(e))
+        try:
+            return resp.json()
+        except ValueError as e:
+            raise RuntimeFailure(f"Invalid JSON from Ollama: {e}")
+
     def health(self) -> bool:
         """Best-effort health check against the Ollama API.
 
