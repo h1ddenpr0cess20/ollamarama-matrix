@@ -25,6 +25,8 @@ class MatrixHighlighter:
     _sys_prompt_re = re.compile(r"System prompt for\s+(?P<who>.+?)\s+\(.*?\)\s+set to\s+'(?P<prompt>.*)'")
     _verified_re = re.compile(r"\bverified device\s+(?P<dev>\S+)")
     _persist_re = re.compile(r"\bPersisted device_id to\s+(?P<path>\S+)")
+    # Tool-call lines: "Tool (MCP|builtin): <name> args=<json>"
+    _tool_call_re = re.compile(r"(?P<tool>Tool)\s+\((?P<origin>MCP|builtin)\):\s+(?P<name>\S+)\s+args=(?P<args>.*)")
 
     def __call__(self, value):
         """Make the highlighter callable like Rich's Highlighter.
@@ -119,6 +121,17 @@ class MatrixHighlighter:
             span = m.span("path")
             text.stylize("green", span[0], span[1])
 
+        # Tool-call coloring
+        for m in self._tool_call_re.finditer(s):
+            tsp = m.span("tool")
+            osp = m.span("origin")
+            nsp = m.span("name")
+            asp = m.span("args")
+            text.stylize("bold cyan", tsp[0], tsp[1])
+            text.stylize("cyan", osp[0], osp[1])
+            text.stylize("bold yellow", nsp[0], nsp[1])
+            text.stylize("dim", asp[0], asp[1])
+
 
 def setup_logging(level: str = "INFO", json: bool = False) -> None:
     """Configure logging using Rich for colorful, structured output.
@@ -166,11 +179,22 @@ def setup_logging(level: str = "INFO", json: bool = False) -> None:
         # Use message-only format; Rich renders time/level
         datefmt = "[%X]"
         fmt = "%(message)s"
-        # If caller asked for "json" (previously meant more detail), include name
         if json:
             fmt = "%(name)s - %(message)s"
 
-        logging.basicConfig(level=lvl, format=fmt, datefmt=datefmt, handlers=[handler])
+        # Route only our package logs to the handler; silence others at root
+        root = logging.getLogger()
+        root.handlers = []
+        root.setLevel(logging.ERROR)
+
+        pkg_logger = logging.getLogger("ollamarama")
+        pkg_logger.handlers = []
+        pkg_logger.setLevel(lvl)
+        # Manually build a Formatter for non-Rich fallback of message formatting inside RichHandler
+        # RichHandler ignores the formatter for message, but keeps datefmt for legacy; safe to set basicConfig-like state
+        logging.Formatter(fmt=fmt, datefmt=datefmt)
+        pkg_logger.addHandler(handler)
+        pkg_logger.propagate = False
     except Exception:
         # Fallback to plain logging
         fmt = (
@@ -178,4 +202,13 @@ def setup_logging(level: str = "INFO", json: bool = False) -> None:
             if json
             else "%(asctime)s - %(levelname)s - %(message)s"
         )
-        logging.basicConfig(level=lvl, format=fmt)
+        root = logging.getLogger()
+        root.handlers = []
+        root.setLevel(logging.ERROR)
+        pkg_logger = logging.getLogger("ollamarama")
+        pkg_logger.handlers = []
+        pkg_logger.setLevel(lvl)
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(fmt))
+        pkg_logger.addHandler(handler)
+        pkg_logger.propagate = False

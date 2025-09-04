@@ -15,6 +15,7 @@ Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the 
 - [Ollama Setup](docs/ollama.md)
 - [Configuration](docs/configuration.md)
 - [Commands](docs/commands.md)
+- [Tools & MCP](docs/tools-and-mcp.md)
 - [Docker](docs/docker.md)
 - [CLI Reference](docs/cli.md)
 - [Operations & E2E](docs/operations.md)

@@ -7,6 +7,7 @@ ollamarama/app.py
 ollamarama/cli.py
 ollamarama/config.py
 ollamarama/exceptions.py
+ollamarama/fastmcp_client.py
 ollamarama/history.py
 ollamarama/interfaces.py
 ollamarama/logging_conf.py
@@ -21,6 +22,12 @@ ollamarama/handlers/cmd_prompt.py
 ollamarama/handlers/cmd_reset.py
 ollamarama/handlers/cmd_x.py
 ollamarama/handlers/router.py
+ollamarama/tools/__init__.py
+ollamarama/tools/math.py
+ollamarama/tools/text.py
+ollamarama/tools/utils.py
+ollamarama/tools/weather.py
+ollamarama/tools/web.py
 ollamarama_matrix.egg-info/PKG-INFO
 ollamarama_matrix.egg-info/SOURCES.txt
 ollamarama_matrix.egg-info/dependency_links.txt
@@ -41,3 +48,4 @@ tests/test_render.py
 tests/test_router.py
 tests/test_router_more.py
 tests/test_security.py
+tests/test_tools_mcp.py

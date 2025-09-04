@@ -21,6 +21,17 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
   - history_size: 1–1000 messages retained per user per room
   - options: advanced generation options (e.g., `temperature`, `top_p`, `repeat_penalty`)
   - mcp_servers: mapping of names to MCP server specs for tool calling (optional)
+    - Accepts multiple formats per server:
+      - String URL: `"http://localhost:9000"`
+      - Shell string: `"uvx my-mcp-server --port 9000"`
+      - List argv: `["uvx", "my-mcp-server", "--port", "9000"]`
+      - Dict: `{ "command": "uvx", "args": ["my-mcp-server", "--port", "9000"] }`
+      - Dict with embedded args: `{ "command": "uvx my-mcp-server --port 9000" }`
+      - Dict URL alias: `{ "url": "http://localhost:9000" }`
+    - Notes:
+      - The app normalizes these forms and will log which servers are configured.
+      - Server processes started via `command` have their stderr suppressed to reduce noise.
+      - You may also place `mcp_servers` at the top level of the config; it will be merged into `ollama.mcp_servers` for backward compatibility.
 - markdown: render replies as Markdown (default: true)
 
 ## Overrides
@@ -47,3 +58,4 @@ Validation checks:
 - `ollama.default_model` is non‑empty and present by key or ID
 - `ollama.prompt` is a 2‑element list of strings
 - Bounds on `options` (temperature 0–2, top_p 0–1, repeat_penalty 0.5–2)
+ - `ollama.mcp_servers` must be a mapping if provided

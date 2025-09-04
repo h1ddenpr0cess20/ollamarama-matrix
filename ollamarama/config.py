@@ -123,6 +123,21 @@ def load_config(
     if overrides:
         raw = _deep_update(raw, overrides)
 
+    # Back-compat: allow top-level "mcp_servers" and merge into ollama section
+    try:
+        if isinstance(raw.get("mcp_servers"), dict):
+            raw.setdefault("ollama", {})
+            existing = raw["ollama"].get("mcp_servers")
+            if not isinstance(existing, dict):
+                raw["ollama"]["mcp_servers"] = dict(raw["mcp_servers"])  # copy
+            else:
+                merged = dict(existing)
+                merged.update(raw["mcp_servers"])  # top-level wins
+                raw["ollama"]["mcp_servers"] = merged
+    except Exception:
+        # Non-fatal; validation will surface bad types later
+        pass
+
     matrix = raw.get("matrix", {})
     ollama = raw.get("ollama", {})
 
