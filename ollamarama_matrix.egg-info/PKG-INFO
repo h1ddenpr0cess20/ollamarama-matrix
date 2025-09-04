@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: ollamarama-matrix
-Version: 1.0.0
+Version: 1.1.0
 Summary: Matrix chatbot powered by Ollama
 Author: Dustin Whyte
 License:                     GNU AFFERO GENERAL PUBLIC LICENSE
@@ -691,6 +691,7 @@ Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the 
 - [Ollama Setup](docs/ollama.md)
 - [Configuration](docs/configuration.md)
 - [Commands](docs/commands.md)
+- [Tools & MCP](docs/tools-and-mcp.md)
 - [Docker](docs/docker.md)
 - [CLI Reference](docs/cli.md)
 - [Operations & E2E](docs/operations.md)
