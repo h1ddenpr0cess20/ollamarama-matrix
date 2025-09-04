@@ -50,17 +50,6 @@ Notes:
 - The bot does not expose ports; it connects out to Matrix and Ollama.
 - Persist `/data/store` to retain device keys for E2E rooms.
 
-Validate configuration without logging in:
-
-```bash
-docker run --rm -it \
-  -v "$(pwd)/config.json":/data/config.json:ro \
-  -v "$(pwd)/store":/data/store \
-  -e OLLAMARAMA_OLLAMA_URL=http://<host>:11434/api/chat \
-  ollamarama-matrix:latest \
-  ollamarama-matrix --dry-run -v --config /data/config.json
-```
-
 ## Run with Docker Compose
 
 This repo includes a `docker-compose.yml` that starts both Ollama and the bot.
@@ -117,4 +106,3 @@ See [Configuration](configuration.md) for the full schema and validation rules.
 - E2E errors: ensure `/data/store` is writable and persisted; try running without E2E to isolate.
 - Models missing: pull the model in the `ollama` container or point `OLLAMARAMA_OLLAMA_URL` to a server with the model.
 - Increase verbosity: set `-e OLLAMARAMA_LOG_LEVEL=DEBUG`.
-

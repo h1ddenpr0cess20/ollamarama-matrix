@@ -33,30 +33,39 @@ def write_cfg(tmp_path: Path) -> Path:
     return p
 
 
-def test_cli_dry_run_ok(capsys, tmp_path):
-    cfg = write_cfg(tmp_path)
-    code = main(["--dry-run", "-v", "--config", str(cfg)])
-    captured = capsys.readouterr().out
-    assert code == 0
-    assert "Configuration OK" in captured
-    # redacted username
-    assert "\"username\": \"***:" in captured
-
-
-def test_cli_dry_run_overrides(capsys, tmp_path):
-    cfg = write_cfg(tmp_path)
-    code = main([
-        "--dry-run",
-        "--config",
-        str(cfg),
-        "--model",
-        "qwen3",
-        "--ollama-url",
-        "http://host:11434/api/chat",
-        "--store-path",
-        "st",
-        "--no-markdown",
-    ])
+def test_cli_missing_config_file(capsys):
+    code = main(["--config", "nonexistent.json"])
     out = capsys.readouterr().out
-    assert code == 0
-    assert "Configuration OK" in out
+    assert code == 2
+    assert "Config file not found:" in out
+
+
+def test_cli_invalid_config_fails_validation(tmp_path, capsys):
+    # Write an invalid config (missing required fields)
+    bad = {
+        "matrix": {
+            "server": "not-a-url",
+            "username": "",
+            "password": "",
+            "channels": [],
+            "admins": [],
+            "store_path": "store",
+        },
+        "ollama": {
+            "api_url": "http://localhost:11434/api/chat",
+            "models": {},
+            "default_model": "",  # invalid
+            "prompt": ["you are ", "."],
+            "personality": "",
+            "history_size": 0,
+            "timeout": 30,
+        },
+        "markdown": True,
+    }
+    p = tmp_path / "bad.json"
+    p.write_text(json.dumps(bad))
+
+    code = main(["--config", str(p)])
+    out = capsys.readouterr().out
+    assert code == 2
+    assert "Configuration errors:" in out

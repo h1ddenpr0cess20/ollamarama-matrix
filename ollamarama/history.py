@@ -6,12 +6,34 @@ from typing import Dict, List, Optional
 class HistoryStore:
     """In-memory history per room and user with system prompt support."""
 
-    def __init__(self, prompt_prefix: str, prompt_suffix: str, personality: str, max_items: int = 24) -> None:
+    def __init__(
+        self,
+        prompt_prefix: str,
+        prompt_suffix: str,
+        personality: str,
+        *,
+        prompt_suffix_extra: str = "",
+        max_items: int = 24,
+    ) -> None:
         self.prompt_prefix = prompt_prefix
         self.prompt_suffix = prompt_suffix
+        # Optional extra suffix (e.g., brevity clause). Included unless verbose mode is enabled.
+        self.prompt_suffix_extra = prompt_suffix_extra
+        self._include_extra = True
         self.personality = personality
         self.max_items = max_items
         self._messages: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
+
+    def set_verbose(self, verbose: bool) -> None:
+        """Control whether to include the optional extra suffix for new conversations.
+
+        Args:
+            verbose: When True, omit the extra suffix (be more verbose).
+        """
+        self._include_extra = not bool(verbose)
+
+    def _full_suffix(self) -> str:
+        return f"{self.prompt_suffix}{self.prompt_suffix_extra if self._include_extra and self.prompt_suffix_extra else ''}"
 
     def _ensure(self, room: str, user: str) -> None:
         """Ensure internal structures exist for a room/user and seed system prompt."""
@@ -19,7 +41,7 @@ class HistoryStore:
             self._messages[room] = {}
         if user not in self._messages[room]:
             self._messages[room][user] = [
-                {"role": "system", "content": f"{self.prompt_prefix}{self.personality}{self.prompt_suffix}"}
+                {"role": "system", "content": f"{self.prompt_prefix}{self.personality}{self._full_suffix()}"}
             ]
 
     def init_prompt(self, room: str, user: str, persona: Optional[str] = None, custom: Optional[str] = None) -> None:
@@ -37,7 +59,7 @@ class HistoryStore:
         else:
             p = persona if (persona is not None and persona != "") else self.personality
             self._messages[room][user] = [
-                {"role": "system", "content": f"{self.prompt_prefix}{p}{self.prompt_suffix}"}
+                {"role": "system", "content": f"{self.prompt_prefix}{p}{self._full_suffix()}"}
             ]
 
     def add(self, room: str, user: str, role: str, content: str) -> None:

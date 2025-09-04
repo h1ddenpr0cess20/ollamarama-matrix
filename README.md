@@ -6,7 +6,7 @@
 [![Ollama](https://img.shields.io/badge/AI-Ollama-orange.svg)](https://ollama.com/)
 [![GitHub](https://img.shields.io/github/stars/h1ddenpr0cess20/ollamarama-matrix?style=social)](https://github.com/h1ddenpr0cess20/ollamarama-matrix)
 
-Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the Ollama Chat API. Transform your Matrix rooms with an AI that can roleplay as virtually anything you can imagine — privately, locally, and fast.
+Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the Ollama Chat API. Transform your Matrix rooms with an AI that can roleplay as virtually anything you can imagine — privately and locally.
 
 ## Documentation
 
@@ -100,12 +100,6 @@ Short form:
 ollamarama-matrix -S --config config.json
 ```
 
-Validate only (no network login):
-
-```bash
-ollamarama-matrix --dry-run -v
-```
-
 Alternatively, run as a module:
 
 ```bash
@@ -131,6 +125,8 @@ Common commands (see [Commands](docs/commands.md) for the full list):
 | `.reset` / `.stock` | Clear history (default/stock prompt) | `.reset` |
 | `.model [name]` (admin) | Show/change model | `.model qwen3` |
 | `.clear` (admin) | Reset globally for all users | `.clear` |
+| `.help` | Show inline help | `.help` |
+| `.verbose [on|off|toggle]` (admin) | Control inclusion of brevity clause for new conversations | `.verbose on` |
 
 ## Encryption Support
 

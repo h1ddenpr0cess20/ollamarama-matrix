@@ -20,6 +20,7 @@ ollamarama/handlers/cmd_help.py
 ollamarama/handlers/cmd_model.py
 ollamarama/handlers/cmd_prompt.py
 ollamarama/handlers/cmd_reset.py
+ollamarama/handlers/cmd_verbose.py
 ollamarama/handlers/cmd_x.py
 ollamarama/handlers/router.py
 ollamarama/tools/__init__.py

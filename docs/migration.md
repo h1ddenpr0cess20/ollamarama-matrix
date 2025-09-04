@@ -11,4 +11,3 @@ The project moved from a single‑file script to a modular package. The new CLI 
 ## How To Run (now)
 
 - Start the bot: `ollamarama-matrix --config config.json`
-- Validate configuration: `ollamarama-matrix --dry-run -v`

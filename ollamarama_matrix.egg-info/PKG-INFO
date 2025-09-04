@@ -776,12 +776,6 @@ Short form:
 ollamarama-matrix -S --config config.json
 ```
 
-Validate only (no network login):
-
-```bash
-ollamarama-matrix --dry-run -v
-```
-
 Alternatively, run as a module:
 
 ```bash

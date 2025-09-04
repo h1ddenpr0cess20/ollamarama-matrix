@@ -10,7 +10,6 @@
 ## Running the Bot
 
 - Start: `ollamarama-matrix --config config.json`
-- Validate only: `ollamarama-matrix --dry-run -v`
 - Log level: `--log-level DEBUG` or env `OLLAMARAMA_LOG_LEVEL=DEBUG`
 
 ### Logging

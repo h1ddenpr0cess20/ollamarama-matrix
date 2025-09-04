@@ -25,7 +25,7 @@ Set the Ollama Chat API URL and default model in `config.json`:
     "api_url": "http://localhost:11434/api/chat",
     "models": {"qwen3": "qwen3"},
     "default_model": "qwen3",
-    "prompt": ["you are ", "."],
+    "prompt": ["you are ", ".", "  keep your responses brief and to the point."],
     "personality": "a helpful assistant",
     "history_size": 24
   }
@@ -42,6 +42,7 @@ CLI helpers:
 - `--ollama-url`: override the API URL
 - `--model`: override the default model
 - `-S, --server-models`: fetch available models from the server at startup
+- `-v, --verbose`: enable verbose mode (omit brevity clause for new conversations)
 
 See [CLI Reference](cli.md) and [Configuration](configuration.md) for details.
 
