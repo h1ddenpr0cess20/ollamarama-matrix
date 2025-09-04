@@ -30,7 +30,11 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
     messages = history.get(room_id, sender_id)
 
     try:
-        data = await ctx.to_thread(ollama.chat, messages=messages, model=ctx.model, options=ctx.options, timeout=ctx.timeout)
+        if getattr(ctx, "tools_enabled", False):
+            response_text = await ctx.to_thread(ctx.respond_with_tools, messages)
+        else:
+            data = await ctx.to_thread(ollama.chat, messages=messages, model=ctx.model, options=ctx.options, timeout=ctx.timeout)
+            response_text = data.get("message", {}).get("content", "")
     except Exception as e:
         try:
             await matrix.send_text(room_id, "Something went wrong", html=ctx.render("Something went wrong"))
@@ -38,8 +42,6 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
         except Exception:
             pass
         return
-
-    response_text = data.get("message", {}).get("content", "")
     # Strip think tags if present
     if "</think>" in response_text and "<think>" in response_text:
         try:

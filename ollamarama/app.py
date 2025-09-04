@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import json
 import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 from .config import AppConfig
 from .history import HistoryStore
@@ -17,6 +18,8 @@ from .handlers.cmd_help import handle_help
 from .handlers.cmd_prompt import handle_persona, handle_custom
 from .handlers.cmd_x import handle_x
 from .security import Security
+from .fastmcp_client import FastMCPClient
+from .tools import execute_tool, load_schema
 
 
 class AppContext:
@@ -31,6 +34,12 @@ class AppContext:
         self.logger = logging.getLogger(__name__)
         # Convenience: info-level callable
         self.log = self.logger.info
+        # Suppress noisy logs from MCP client/server libraries by lowering their log levels
+        try:
+            for _name in ("fastmcp", "mcp", "mcp.server", "mcp.client", "openai.mcp"):
+                logging.getLogger(_name).setLevel(logging.ERROR)
+        except Exception:
+            pass
         self.matrix = MatrixClientWrapper(
             server=cfg.matrix.server,
             username=cfg.matrix.username,
@@ -56,6 +65,60 @@ class AppContext:
         self.timeout = cfg.ollama.timeout
         self.admins = cfg.matrix.admins
         self.bot_id = "Ollamarama"
+        # Tool calling
+        self.tools_enabled: bool = True
+        self.mcp_client: FastMCPClient | None = None
+        self._mcp_tool_names: set[str] = set()
+        try:
+            builtin_schema = load_schema()
+        except Exception:
+            self.logger.exception("Failed to load builtin tools schema")
+            builtin_schema = []
+        mcp_schema: List[Dict[str, Any]] = []
+        if cfg.ollama.mcp_servers:
+            self.logger.info("MCP servers configured: %s", list(cfg.ollama.mcp_servers.keys()))
+            successful: Dict[str, Any] = {}
+            for name, cfg_spec in cfg.ollama.mcp_servers.items():
+                if not cfg_spec:
+                    continue
+                try:
+                    self.logger.debug("Probing MCP server '%s' for tools", name)
+                    client = FastMCPClient({name: cfg_spec})
+                    tools = client.list_tools()
+                    self.logger.info("MCP server '%s' returned %d tool(s)", name, len(tools))
+                    successful[name] = cfg_spec
+                    mcp_schema.extend(tools)
+                    for tool in tools:
+                        fn = (tool.get("function") or {}).get("name")
+                        if isinstance(fn, str):
+                            self._mcp_tool_names.add(fn)
+                except Exception:
+                    self.logger.exception("Failed to list tools from MCP server '%s'", name)
+                    continue
+            if successful:
+                try:
+                    self.mcp_client = FastMCPClient(successful)
+                    _ = self.mcp_client.list_tools()
+                    self.logger.debug("Initialized consolidated MCP client for servers: %s", list(successful.keys()))
+                except Exception:
+                    self.logger.exception("Failed to initialize consolidated MCP client")
+                    self.mcp_client = None
+        combined: List[Dict[str, Any]] = list(mcp_schema)
+        for tool in builtin_schema:
+            fn = (tool.get("function") or {}).get("name")
+            if isinstance(fn, str) and fn not in self._mcp_tool_names:
+                combined.append(tool)
+        self.tools_schema = combined
+        if not self.tools_schema:
+            self.tools_enabled = False
+            self.logger.info("Tool calling disabled: no tools available")
+        else:
+            self.logger.info(
+                "Tool calling enabled with %d tools (%d MCP, %d builtin)",
+                len(self.tools_schema),
+                len(mcp_schema),
+                len(self.tools_schema) - len(mcp_schema),
+            )
 
     async def to_thread(self, fn, *args, **kwargs) -> Any:
         """Run a blocking function in the background thread pool.
@@ -93,9 +156,102 @@ class AppContext:
         except Exception:
             return None
 
+    def _execute_tool(self, name: str, arguments: Dict[str, Any]) -> str:
+        log = getattr(self, "logger", logging.getLogger(__name__))
+        # Prepare concise, safe parameter logging
+        try:
+            _args_str = json.dumps(arguments or {}, ensure_ascii=False, default=str)
+        except Exception:
+            _args_str = str(arguments)
+        # Truncate for readability
+        if len(_args_str) > 800:
+            _args_str = _args_str[:800] + "…"
+        if self.mcp_client is not None and name in self._mcp_tool_names:
+            log.info("Tool (MCP): %s args=%s", name, _args_str)
+            return self.mcp_client.call_tool(name, arguments)
+        log.info("Tool (builtin): %s args=%s", name, _args_str)
+        return execute_tool(name, arguments)
 
-import json
-from typing import Optional
+    def respond_with_tools(self, messages: List[Dict[str, Any]], *, tool_choice: str | None = "auto") -> str:
+        log = getattr(self, "logger", logging.getLogger(__name__))
+        try:
+            result = self.ollama.chat_with_tools(
+                model=self.model,
+                messages=messages,
+                options=self.options,
+                tools=self.tools_schema,
+                tool_choice=tool_choice,
+                timeout=self.timeout,
+            )
+        except Exception:
+            log.exception("Initial chat_with_tools failed")
+            return ""
+        max_iterations = 8
+        iterations = 0
+        while iterations < max_iterations:
+            msg = result.get("message", {})
+            tool_calls = msg.get("tool_calls") or []
+            if not tool_calls:
+                break
+            try:
+                log.info("Model requested %d tool call(s)", len(tool_calls))
+                log.debug("Requested tools: %s", [
+                    (tc.get("function") or {}).get("name") for tc in tool_calls
+                ])
+            except Exception:
+                pass
+            messages.append(msg)
+            for call in tool_calls:
+                func = (call.get("function") or {})
+                name = func.get("name") or ""
+                raw_args = func.get("arguments")
+                try:
+                    if isinstance(raw_args, str):
+                        args = json.loads(raw_args) if raw_args.strip() else {}
+                    elif isinstance(raw_args, dict):
+                        args = raw_args
+                    else:
+                        args = {}
+                except Exception:
+                    log.exception("Failed to parse tool arguments for '%s'", name)
+                    args = {}
+                tool_result = self._execute_tool(name, args)
+                tool_msg: Dict[str, Any] = {
+                    "role": "tool",
+                    "content": str(tool_result),
+                }
+                if call.get("id"):
+                    tool_msg["tool_call_id"] = call["id"]
+                messages.append(tool_msg)
+            log.debug("Executed %d tool call(s)", len(tool_calls))
+            try:
+                result = self.ollama.chat_with_tools(
+                    model=self.model,
+                    messages=messages,
+                    options=self.options,
+                    tools=self.tools_schema,
+                    tool_choice=tool_choice,
+                    timeout=self.timeout,
+                )
+            except Exception:
+                log.exception("Follow-up chat_with_tools failed")
+                return ""
+            iterations += 1
+        final = result.get("message", {})
+        content = final.get("content", "").strip()
+        messages.append({"role": "assistant", "content": content})
+        messages[:] = [
+            m
+            for m in messages
+            if not (m.get("role") == "tool" or (isinstance(m, dict) and m.get("tool_calls")))
+        ]
+        if len(messages) > 24:
+            if messages and messages[0].get("role") == "system":
+                messages.pop(1)
+            else:
+                messages.pop(0)
+        log.debug("Responded with %d characters after %d iteration(s)", len(content), iterations)
+        return content
 
 
 async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:

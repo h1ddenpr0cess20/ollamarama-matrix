@@ -2,3 +2,4 @@ matrix-nio[e2e]
 markdown
 requests
 rich
+fastmcp

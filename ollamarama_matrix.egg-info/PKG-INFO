@@ -691,6 +691,7 @@ Ollamarama is a powerful AI chatbot for the Matrix chat protocol powered by the 
 - [Ollama Setup](docs/ollama.md)
 - [Configuration](docs/configuration.md)
 - [Commands](docs/commands.md)
+- [Docker](docs/docker.md)
 - [CLI Reference](docs/cli.md)
 - [Operations & E2E](docs/operations.md)
 - [Architecture](docs/architecture.md)
@@ -791,12 +792,6 @@ python -m ollamarama --config config.json
 - The bot logs in and joins configured rooms
 - Send `.ai hello` or `BotName: hello` in a joined room
 - The bot replies and maintains per‑user history
-
-## Logging
-
-- Uses `rich` for colorful, readable logs by default.
-- Configure verbosity with `--log-level` or `OLLAMARAMA_LOG_LEVEL` (e.g., `DEBUG`, `INFO`).
-- Automatically falls back to standard logging if `rich` is unavailable.
 
 ## Usage Guide
 
