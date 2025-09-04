@@ -74,12 +74,6 @@ Alternatively, run as a module:
 python -m ollamarama --config config.json
 ```
 
-Validate configuration without starting the bot:
-
-```bash
-ollamarama-matrix --dry-run -v
-```
-
 ## Verify
 
 - The bot logs in and joins configured rooms

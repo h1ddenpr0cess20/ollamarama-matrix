@@ -16,5 +16,6 @@ Users can interact with the bot using dot‑commands or by mentioning the bot na
 
 - `.model [name|reset]` — Show/change the active model. `reset` restores default.
 - `.clear` — Reset the bot globally for all users.
+- `.verbose [on|off|toggle]` — Omit or include the brevity clause for new conversations.
 
 Tip: Admin privileges are based on the sender display name matching one of the configured `matrix.admins` entries.

@@ -16,10 +16,11 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
   - api_url: Chat endpoint (default: `http://localhost:11434/api/chat`)
   - models: mapping of friendly names to model IDs (e.g., `{ "qwen3": "qwen3" }`)
   - default_model: selected model (must match a key or ID)
-  - prompt: two strings `[prefix, suffix]` used around personality
+  - prompt: two strings `[prefix, suffix]` used around personality; optionally a third string for a brevity clause `[prefix, suffix, brevity]`
   - personality: non‑empty default personality text
   - history_size: 1–1000 messages retained per user per room
   - options: advanced generation options (e.g., `temperature`, `top_p`, `repeat_penalty`)
+  - verbose: boolean, when true omit the optional brevity clause for new conversations
   - mcp_servers: mapping of names to MCP server specs for tool calling (optional)
     - Accepts multiple formats per server:
       - String URL: `"http://localhost:9000"`
@@ -36,7 +37,7 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
 
 ## Overrides
 
-- CLI flags: `--e2e/--no-e2e`, `--ollama-url`, `--model`, `--store-path`, `--no-markdown`
+- CLI flags: `--e2e/--no-e2e`, `--ollama-url`, `--model`, `--store-path`
 - Environment variables:
   - `OLLAMARAMA_OLLAMA_URL`
   - `OLLAMARAMA_MODEL`
@@ -45,17 +46,13 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
 
 ## Validation
 
-The CLI dry‑run validates the configuration and prints a redacted summary with `-v`.
-
-```bash
-python -m ollamarama --dry-run -v
-```
+The application validates configuration on startup; on errors it prints messages and exits with code `2`.
 
 Validation checks:
 
 - `matrix.server` is a valid http(s) URL
 - Credentials and channels are present and well‑formed
 - `ollama.default_model` is non‑empty and present by key or ID
-- `ollama.prompt` is a 2‑element list of strings
+- `ollama.prompt` is a list of 2 or 3 strings
 - Bounds on `options` (temperature 0–2, top_p 0–1, repeat_penalty 0.5–2)
  - `ollama.mcp_servers` must be a mapping if provided

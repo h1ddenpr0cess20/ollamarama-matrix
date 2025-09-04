@@ -25,11 +25,13 @@ class OllamaConfig:
     options: Dict[str, Any] = field(default_factory=dict)
     models: Dict[str, str] = field(default_factory=dict)
     default_model: str = ""
-    prompt: List[str] = field(default_factory=lambda: ["you are ", "."])
+    prompt: List[str] = field(default_factory=lambda: ["you are ", "."]) 
     personality: str = ""
     history_size: int = 24
     timeout: int = 180
     mcp_servers: Dict[str, Any] = field(default_factory=dict)
+    # When True, omit the optional brevity clause (third prompt element) from new conversations
+    verbose: bool = False
 
 
 @dataclass
@@ -162,6 +164,7 @@ def load_config(
             history_size=int(ollama.get("history_size", 24)),
             timeout=360,
             mcp_servers=dict(ollama.get("mcp_servers", {})),
+            verbose=bool(ollama.get("verbose", False)),
         ),
         markdown=bool(raw.get("markdown", True)),
     )
@@ -221,8 +224,13 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
                 errors.append("ollama.default_model must match a key or id in ollama.models")
         except Exception:
             pass
-    if not isinstance(cfg.ollama.prompt, list) or len(cfg.ollama.prompt) != 2 or not all(isinstance(p, str) for p in cfg.ollama.prompt):
-        errors.append("ollama.prompt must be a 2-element list of strings [prefix, suffix]")
+    # Allow 2-element [prefix, suffix] or 3-element with optional brevity clause as [prefix, suffix, brevity]
+    if (
+        not isinstance(cfg.ollama.prompt, list)
+        or len(cfg.ollama.prompt) not in (2, 3)
+        or not all(isinstance(p, str) for p in cfg.ollama.prompt)
+    ):
+        errors.append("ollama.prompt must be a list of 2 or 3 strings [prefix, suffix, (optional brevity clause)]")
     if not isinstance(cfg.ollama.personality, str) or not cfg.ollama.personality:
         errors.append("ollama.personality must be a non-empty string")
     if not (1 <= cfg.ollama.history_size <= 1000):

@@ -49,10 +49,16 @@ class AppContext:
             encryption_enabled=bool(getattr(cfg.matrix, "e2e", True)),
         )
         self.ollama = OllamaClient(base_url=cfg.ollama.api_url.rsplit("/", 1)[0], timeout=cfg.ollama.timeout)
+        # Support optional third prompt element used as a brevity clause
+        _prompt = list(cfg.ollama.prompt or ["you are ", "."])
+        _prefix = _prompt[0] if len(_prompt) >= 1 else "you are "
+        _suffix = _prompt[1] if len(_prompt) >= 2 else "."
+        _extra = _prompt[2] if len(_prompt) >= 3 else ""
         self.history = HistoryStore(
-            prompt_prefix=cfg.ollama.prompt[0],
-            prompt_suffix=cfg.ollama.prompt[1],
+            prompt_prefix=_prefix,
+            prompt_suffix=_suffix,
             personality=cfg.ollama.personality,
+            prompt_suffix_extra=_extra,
             max_items=cfg.ollama.history_size,
         )
         # Expose commonly used fields
@@ -65,6 +71,15 @@ class AppContext:
         self.timeout = cfg.ollama.timeout
         self.admins = cfg.matrix.admins
         self.bot_id = "Ollamarama"
+        # Verbose mode: when True, omit brevity clause for new conversations
+        try:
+            self.verbose: bool = bool(getattr(cfg.ollama, "verbose", False))
+        except Exception:
+            self.verbose = False
+        try:
+            self.history.set_verbose(self.verbose)
+        except Exception:
+            pass
         # Tool calling
         self.tools_enabled: bool = True
         self.mcp_client: FastMCPClient | None = None
@@ -283,6 +298,11 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
     # admin commands
     router.register(".model", handle_model, admin=True)
     router.register(".clear", handle_clear, admin=True)
+    try:
+        from .handlers.cmd_verbose import handle_verbose
+        router.register(".verbose", handle_verbose, admin=True)
+    except Exception:
+        pass
 
     ctx.log(f"Model set to {ctx.model}")
     # Load store, login, and initial sync

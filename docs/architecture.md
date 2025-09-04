@@ -4,7 +4,7 @@ The bot is a small, modular async application that wires a Matrix client to the 
 
 ## Modules
 
-- `ollamarama/cli.py`: CLI entry, `--dry-run` validation, starts the app.
+- `ollamarama/cli.py`: CLI entry; validates config at startup and starts the app.
 - `ollamarama/config.py`: Dataclasses, deep‑merge, validation, redacted summaries.
 - `ollamarama/logging_conf.py`: Central logging setup with Rich handler, custom highlighter for Matrix context, and rich tracebacks.
 - `ollamarama/ollama_client.py`: HTTP client for `/api/chat` and health checks.

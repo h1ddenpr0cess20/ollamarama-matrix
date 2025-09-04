@@ -13,21 +13,16 @@ Or run the module directly:
 - `-c, --config PATH`: Path to `config.json` (default: `./config.json`).
 - `-L, --log-level LEVEL`: `DEBUG|INFO|WARNING|ERROR|CRITICAL` (colored Rich logs).
 - `-S, --server-models`: Fetch available models from the Ollama server and use them instead of `ollama.models` from config. If the configured `default_model` is not present on the server, the launcher falls back to the first available model.
-- `-d, --dry-run`: Load, merge overrides, validate config, and exit.
-- `-v, --verbose`: With `--dry-run`, print redacted effective config.
+- `-v, --verbose`: Enable verbose mode (omit brevity clause from system prompt for new conversations).
 - Overrides:
   - `-E, --e2e` / `-N, --no-e2e`
   - `-m, --model`
   - `-s, --store-path`
   - `-u, --ollama-url`
-  - `-M, --no-markdown`
+  
 
 ## Examples
 
-- Validate config:
-  - `ollamarama-matrix --dry-run -v`
-- Validate with overrides:
-  - `ollamarama-matrix --dry-run --model qwen3 --ollama-url http://localhost:11434/api/chat`
 - Fetch models from server:
   - `ollamarama-matrix -S --config config.json`
 - Run with verbose colored logs:

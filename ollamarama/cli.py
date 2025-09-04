@@ -32,7 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="Logging level for the launcher.",
     )
-    # Accept common flags; used only for --dry-run in Phase 2.
+    # Common flags for configuration and runtime overrides.
     parser.add_argument("-c", "--config", help="Path to config.json (default: ./config.json)")
     parser.add_argument("-E", "--e2e", action="store_true", help="Enable end-to-end encryption (overrides config)")
     parser.add_argument("-N", "--no-e2e", action="store_true", help="Disable end-to-end encryption (overrides config)")
@@ -46,17 +46,23 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Fetch available models from the Ollama server",
     )
-    parser.add_argument("-M", "--no-markdown", action="store_true", help="Disable Markdown formatting")
-    parser.add_argument("-d", "--dry-run", action="store_true", help="Validate configuration and exit")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Print effective (redacted) configuration on dry-run")
+    # Runtime behavior flags
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose_mode",
+        action="store_true",
+        help="Enable verbose mode (omit brevity clause from system prompt)",
+    )
+    # Removed: --dry-run and --no-markdown
     return parser
 
 
 def main(argv: Optional[List[str]] = None) -> int:
     """Entry point for the `ollamarama-matrix` CLI.
 
-    Parses arguments, optionally validates configuration in a dry-run, fetches
-    available models when requested, and runs the application.
+    Parses arguments, applies overrides, optionally fetches available models
+    from the server, validates configuration, and runs the application.
 
     Args:
         argv: Optional list of CLI arguments. Defaults to `sys.argv[1:]`.
@@ -71,53 +77,6 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     setup_logging(args.log_level)
 
-    if args.dry_run:
-        overrides = {}
-        if args.ollama_url:
-            overrides.setdefault("ollama", {})["api_url"] = args.ollama_url
-        if args.model:
-            overrides.setdefault("ollama", {})["default_model"] = args.model
-        if args.store_path:
-            overrides.setdefault("matrix", {})["store_path"] = args.store_path
-        if args.e2e:
-            overrides.setdefault("matrix", {})["e2e"] = True
-        if args.no_e2e:
-            overrides.setdefault("matrix", {})["e2e"] = False
-        if args.no_markdown:
-            overrides["markdown"] = False
-        try:
-            cfg = load_config(args.config, overrides=overrides)
-        except FileNotFoundError:
-            print(f"Config file not found: {args.config or 'config.json'}")
-            return 2
-        except Exception as e:
-            print(f"Failed to load config: {e}")
-            return 2
-
-        # Optionally fetch models from server
-        if args.server_models:
-            try:
-                from .ollama_client import OllamaClient
-
-                client = OllamaClient(base_url=cfg.ollama.api_url.rsplit("/", 1)[0], timeout=cfg.ollama.timeout)
-                models = client.list_models()
-                if models:
-                    cfg.ollama.models = models
-            except Exception as e:
-                print(f"Failed to fetch models from server: {e}")
-                return 2
-
-        ok, errs = validate_config(cfg)
-        if not ok:
-            print("Configuration errors:")
-            for e in errs:
-                print(f"- {e}")
-            return 2
-        print("Configuration OK")
-        if args.verbose:
-            print(json.dumps(summarize(cfg), indent=2))
-        return 0
-
     # Run the new app path with CLI overrides applied
     overrides = {}
     if args.ollama_url:
@@ -131,8 +90,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         overrides.setdefault("matrix", {})["e2e"] = True
     if args.no_e2e:
         overrides.setdefault("matrix", {})["e2e"] = False
-    if args.no_markdown:
-        overrides["markdown"] = False
+    if args.verbose_mode:
+        overrides.setdefault("ollama", {})["verbose"] = True
 
     try:
         cfg = load_config(args.config, overrides=overrides or None)
