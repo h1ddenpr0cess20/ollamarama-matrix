@@ -126,7 +126,7 @@ Common commands (see [Commands](docs/commands.md) for the full list):
 | `.model [name]` (admin) | Show/change model | `.model qwen3` |
 | `.clear` (admin) | Reset globally for all users | `.clear` |
 | `.help` | Show inline help | `.help` |
-| `.verbose [on|off|toggle]` (admin) | Control inclusion of brevity clause for new conversations | `.verbose on` |
+| `.verbose [on,off,toggle]` (admin) | Control inclusion of brevity clause for new conversations | `.verbose on` |
 
 ## Encryption Support
 
