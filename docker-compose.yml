@@ -19,9 +19,9 @@ services:
     #         - capabilities: [gpu]
 
   bot:
-    build: .
     image: ollamarama-matrix:latest
     container_name: ollamarama
+    user: "${UID:-1000}:${GID:-1000}"
     depends_on:
       - ollama
     environment:

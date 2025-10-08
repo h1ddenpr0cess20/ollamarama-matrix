@@ -62,6 +62,15 @@ This repo includes a `docker-compose.yml` that starts both Ollama and the bot.
 docker compose up -d --build
 ```
 
+By default the compose file runs the bot container with your host UID and GID for easier file permissions when writing to `./store`.
+If your user is not `1000:1000`, export matching values before starting compose:
+
+```bash
+export UID=$(id -u)
+export GID=$(id -g)
+docker compose up -d --build
+```
+
 3) Follow logs:
 
 ```bash
