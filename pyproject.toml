@@ -26,6 +26,9 @@ include-package-data = true
 [tool.setuptools.packages.find]
 include = ["ollamarama*"]
 
+[tool.setuptools.package-data]
+"ollamarama.tools" = ["schema.json"]
+
 [tool.pytest.ini_options]
 addopts = "-q"
 python_files = ["test_*.py"]

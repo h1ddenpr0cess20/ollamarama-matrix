@@ -46,6 +46,18 @@ docker run --rm -it \
 
 Notes:
 
+- In PowerShell, use backticks (`` ` ``) for line continuation—or place the command on a single line—otherwise the trailing `\` characters above will trigger `docker: invalid reference format`. Example:
+
+```powershell
+docker run --rm -it `
+  --name ollamarama `
+  -v "${PWD}/config.json:/data/config.json:ro" `
+  -v "${PWD}/store:/data/store" `
+  -e OLLAMARAMA_OLLAMA_URL=http://<host>:11434/api/chat `
+  -e OLLAMARAMA_LOG_LEVEL=INFO `
+  ollamarama-matrix:latest
+```
+
 - Replace `<host>` with your Ollama server host if not local.
 - The bot does not expose ports; it connects out to Matrix and Ollama.
 - Persist `/data/store` to retain device keys for E2E rooms.
