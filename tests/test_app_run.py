@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 import ollamarama.app as appmod
+import ollamarama.app_context as app_context
 from ollamarama.config import AppConfig, MatrixConfig, OllamaConfig
 
 
@@ -53,8 +54,8 @@ class FakeMatrixWrapper:
 
 @pytest.mark.asyncio
 async def test_app_run_orchestrates_and_persists_device_id(tmp_path, monkeypatch):
-    # Patch MatrixClientWrapper in the app module to our fake
-    monkeypatch.setattr(appmod, "MatrixClientWrapper", FakeMatrixWrapper)
+    # Patch MatrixClientWrapper used by AppContext to our fake
+    monkeypatch.setattr(app_context, "MatrixClientWrapper", FakeMatrixWrapper)
 
     cfg = AppConfig(
         matrix=MatrixConfig(
@@ -112,4 +113,3 @@ async def test_app_run_orchestrates_and_persists_device_id(tmp_path, monkeypatch
     # Our fake stores calls on the instance accessible only within run, but we can assert persistence and side effects
     data = json.loads(cfg_path.read_text())
     assert data["matrix"]["device_id"] == "DEV"
-
