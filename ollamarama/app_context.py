@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -160,6 +161,15 @@ class AppContext:
                 self.logger.debug("Probing MCP server '%s' for tools", name)
                 client = FastMCPClient({name: cfg_spec})
                 tools = client.list_tools()
+                if not tools:
+                    self.logger.error(
+                        "MCP server '%s' returned no tools. This usually indicates the MCP server failed to start. "
+                        "Spec=%r PATH=%s",
+                        name,
+                        cfg_spec,
+                        os.environ.get("PATH"),
+                    )
+                    continue
                 self.logger.info("MCP server '%s' returned %d tool(s)", name, len(tools))
                 successful[name] = cfg_spec
                 mcp_schema.extend(tools)
@@ -167,8 +177,22 @@ class AppContext:
                     fn = (tool.get("function") or {}).get("name")
                     if isinstance(fn, str):
                         tool_names.add(fn)
-            except Exception:
-                self.logger.exception("Failed to list tools from MCP server '%s'", name)
+            except Exception as exc:
+                self.logger.error(
+                    "Failed to start MCP server '%s'. Spec=%r PATH=%s. Error=%s",
+                    name,
+                    cfg_spec,
+                    os.environ.get("PATH"),
+                    exc,
+                )
+                self.logger.debug("Full exception for MCP server '%s'", name, exc_info=True)
+
+        if cfg.ollama.mcp_servers and not mcp_schema:
+            self.logger.warning(
+                "MCP servers were configured but no MCP tools were loaded. "
+                "When running in Docker, MCP server binaries must be available "
+                "inside the container image."
+            )
 
         if not successful:
             return mcp_schema, tool_names, None
