@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterable, List
 
 import logging
 import shlex
@@ -87,6 +87,43 @@ class FastMCPClient:
                     self._servers[name] = wrapped
                     logger.debug("Wrapped server '%s' command for silent output", name)
 
+    def _iter_transports(self, transport: Any) -> Iterable[Any]:
+        """Yield transport objects, including composite underlying transports."""
+        stack = [transport]
+        seen: set[int] = set()
+        while stack:
+            current = stack.pop()
+            if current is None:
+                continue
+            ident = id(current)
+            if ident in seen:
+                continue
+            seen.add(ident)
+            yield current
+            underlying = getattr(current, "_underlying_transports", None)
+            if isinstance(underlying, list):
+                stack.extend(underlying)
+
+    def _configure_transport(self, transport: Any) -> None:
+        """Tune transports for short-lived MCP sessions."""
+        for current in self._iter_transports(transport):
+            if hasattr(current, "keep_alive"):
+                try:
+                    current.keep_alive = False
+                except Exception:
+                    pass
+
+    def _mark_transport_stopped(self, transport: Any) -> None:
+        """Preempt transport __del__ loop errors by setting stop events."""
+        for current in self._iter_transports(transport):
+            stop_event = getattr(current, "_stop_event", None)
+            if stop_event is None:
+                continue
+            try:
+                stop_event.set()
+            except Exception:
+                pass
+
     async def _list_tools_async(self) -> List[Dict[str, Any]]:
         schema: List[Dict[str, Any]] = []
         for name, cfg in self._servers.items():
@@ -94,6 +131,7 @@ class FastMCPClient:
             # Always pass a mapping {name: spec} for consistency
             spec = cfg
             client = Client({name: spec})
+            self._configure_transport(client.transport)
             try:
                 async with client:
                     tools = await client.list_tools()
@@ -102,6 +140,8 @@ class FastMCPClient:
                 # Offline/misconfigured servers should not crash startup; skip them.
                 logger.error("Failed to list tools from MCP server '%s': %s", name, e)
                 continue
+            finally:
+                self._mark_transport_stopped(client.transport)
             for tool in tools:
                 self._tool_servers[tool.name] = name
                 schema.append(
@@ -154,8 +194,12 @@ class FastMCPClient:
 
     async def _call_tool_async(self, client: Client, name: str, arguments: Dict[str, Any]) -> Any:
         logger.debug("Calling MCP tool '%s' on client", name)
-        async with client:
-            result = await client.call_tool(name, arguments)
+        self._configure_transport(client.transport)
+        try:
+            async with client:
+                result = await client.call_tool(name, arguments)
+        finally:
+            self._mark_transport_stopped(client.transport)
         if result.data is not None:
             logger.debug("Tool '%s' returned 'data' field", name)
             return result.data
