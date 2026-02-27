@@ -123,3 +123,57 @@ async def test_handle_x_resolves_display_name_and_replies():
     body = matrix.sent[-1][1]
     assert body.startswith("**Alice**:\n")
 
+
+@pytest.mark.asyncio
+async def test_handle_x_supports_display_names_with_spaces():
+    room = "!r"
+    sender = "@sender:hs"
+    john = "@john:hs"
+    jane = "@jane:hs"
+    names = {sender: "Sender", john: "John Doe", jane: "Jane"}
+    matrix = FakeMatrix(names=names)
+    ctx = SimpleNamespace(
+        history=HistoryStore("you are ", ".", "helper", max_items=8),
+        matrix=matrix,
+        ollama=FakeOllama("got it"),
+        to_thread=_to_thread,
+        model="qwen3",
+        options={},
+        timeout=10,
+        render=lambda s: None,
+        log=lambda *a, **k: None,
+    )
+    # Seed known participants for resolution
+    ctx.history.add(room, john, "user", "hi")
+    ctx.history.add(room, jane, "user", "hello")
+
+    await handle_x(ctx, room, sender, names[sender], "John Doe hello there")
+
+    assert matrix.sent
+    assert matrix.sent[-1][1] == "**Sender**:\ngot it"
+    assert ctx.history.get(room, john)[-2] == {"role": "user", "content": "hello there"}
+
+
+@pytest.mark.asyncio
+async def test_handle_x_keeps_matrix_id_targeting():
+    room = "!r"
+    sender = "@sender:hs"
+    target = "@target:hs"
+    matrix = FakeMatrix(names={sender: "Sender", target: "Target"})
+    ctx = SimpleNamespace(
+        history=HistoryStore("you are ", ".", "helper", max_items=8),
+        matrix=matrix,
+        ollama=FakeOllama("ok"),
+        to_thread=_to_thread,
+        model="qwen3",
+        options={},
+        timeout=10,
+        render=lambda s: None,
+        log=lambda *a, **k: None,
+    )
+    ctx.history.add(room, target, "user", "init")
+
+    await handle_x(ctx, room, sender, "Sender", "@target:hs hello")
+
+    assert matrix.sent
+    assert ctx.history.get(room, target)[-2] == {"role": "user", "content": "hello"}
