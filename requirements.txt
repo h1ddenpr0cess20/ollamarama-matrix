@@ -3,3 +3,4 @@ markdown
 requests
 rich
 fastmcp
+pytest-asyncio

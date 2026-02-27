@@ -22,26 +22,43 @@ async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, 
     Returns:
         None. Sends a response message to the room if the target is resolved.
     """
-    # Expect: <target_display_name> <message>
-    parts = (args or "").split()
-    if len(parts) < 2:
+    raw = (args or "").strip()
+    if not raw:
         return
-    target_display = parts[0]
-    message = " ".join(parts[1:])
 
-    # Try to resolve target by existing history keys or direct match
     target_user = None
-    # Prefer exact user id if provided
-    if target_display.startswith("@") and ":" in target_display:
-        target_user = target_display
-    else:
-        # Search known users in this room by display name
-        # Note: this is best-effort without room member list
+    target_display = ""
+    message = ""
+
+    # Explicit mxid target: `.x @user:server message`
+    if raw.startswith("@"):
+        parts = raw.split(maxsplit=1)
+        if len(parts) < 2:
+            return
+        possible_user, rest = parts
+        if ":" in possible_user:
+            target_user = possible_user
+            target_display = possible_user
+            message = rest
+
+    # Display-name target (supports spaces): choose the longest matching name
+    if not target_user:
+        candidates = []
         for user in list(ctx.history._messages.get(room_id, {}).keys()):  # type: ignore[attr-defined]
             name = await ctx.matrix.display_name(user)
-            if name == target_display:
-                target_user = user
-                break
+            if not name:
+                continue
+            if raw == name:
+                candidates.append((len(name), user, name, ""))
+            elif raw.startswith(f"{name} "):
+                candidates.append((len(name), user, name, raw[len(name) + 1 :]))
+
+        if not candidates:
+            return
+        _, target_user, target_display, message = max(candidates, key=lambda c: c[0])
+        if not message:
+            return
+
     # Only proceed if the target already has history in this room
     room_hist = getattr(ctx.history, "_messages", {}).get(room_id, {})  # type: ignore[attr-defined]
     if not target_user or target_user not in room_hist:
