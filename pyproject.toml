@@ -10,12 +10,25 @@ readme = "README.md"
 requires-python = ">=3.7"
 authors = [{ name = "Dustin Whyte" }]
 license = { file = "LICENSE" }
+keywords = ["matrix", "chatbot", "ollama", "ai", "llm"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: No Input/Output (Daemon)",
+  "License :: OSI Approved :: GNU Affero General Public License v3",
+  "Programming Language :: Python :: 3",
+  "Topic :: Communications :: Chat",
+]
 dependencies = [
   "matrix-nio[e2e]",
   "markdown",
   "requests",
   "rich",
 ]
+
+[project.urls]
+Homepage = "https://github.com/h1ddenpr0cess20/ollamarama-matrix"
+Repository = "https://github.com/h1ddenpr0cess20/ollamarama-matrix"
+Issues = "https://github.com/h1ddenpr0cess20/ollamarama-matrix/issues"
 
 [project.scripts]
 ollamarama-matrix = "ollamarama.cli:main"
