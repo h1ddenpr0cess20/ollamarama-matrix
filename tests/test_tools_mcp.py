@@ -19,7 +19,7 @@ class FakeTool:
 
 class FakeMCPClient:
     def __init__(self, cfg):
-        pass
+        self.transport = None
 
     async def __aenter__(self):
         return self

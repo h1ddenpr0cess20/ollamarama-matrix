@@ -32,14 +32,14 @@ mkdir -p store
 cp config.json ./config.json  # ensure it contains Matrix creds, rooms, models
 ```
 
-2) Run the container (connects to an existing Ollama server):
+2) Run the container with `--network host` so it can reach Ollama and any local MCP servers on the host:
 
 ```bash
 docker run --rm -it \
   --name ollamarama \
+  --network host \
   -v "$(pwd)/config.json":/data/config.json:ro \
   -v "$(pwd)/store":/data/store \
-  -e OLLAMARAMA_OLLAMA_URL=http://<host>:11434/api/chat \
   -e OLLAMARAMA_LOG_LEVEL=INFO \
   ollamarama-matrix:latest
 ```
@@ -51,14 +51,14 @@ Notes:
 ```powershell
 docker run --rm -it `
   --name ollamarama `
+  --network host `
   -v "${PWD}/config.json:/data/config.json:ro" `
   -v "${PWD}/store:/data/store" `
-  -e OLLAMARAMA_OLLAMA_URL=http://<host>:11434/api/chat `
   -e OLLAMARAMA_LOG_LEVEL=INFO `
   ollamarama-matrix:latest
 ```
 
-- Replace `<host>` with your Ollama server host if not local.
+- `--network host` shares the host's network stack with the container, so `localhost` URLs in your config (Ollama, MCP servers) work directly.
 - The bot does not expose ports; it connects out to Matrix and Ollama.
 - Persist `/data/store` to retain device keys for E2E rooms.
 
@@ -66,7 +66,7 @@ docker run --rm -it `
 
 This repo includes a `docker-compose.yml` that starts both Ollama and the bot.
 
-1) Ensure your `config.json` is present at the repo root and contains Matrix credentials, channels, and model selection. The compose file overrides `ollama.api_url` with `http://ollama:11434/api/chat`.
+1) Ensure your `config.json` is present at the repo root and contains Matrix credentials, channels, and model selection. The compose file uses `network_mode: host` for the bot so localhost URLs (Ollama, MCP servers) work directly.
 
 2) Start services:
 
@@ -103,6 +103,12 @@ docker exec -it ollama ollama pull qwen3
 ### GPU (optional)
 
 If you have NVIDIA GPUs, install the NVIDIA Container Toolkit and uncomment the `deploy.resources.reservations.devices` stanza under the `ollama` service in `docker-compose.yml`.
+
+## MCP Servers
+
+Local MCP servers work in Docker thanks to `--network host` (or `network_mode: host` in Compose), which shares the host's network stack with the container. Any MCP server running on the host and configured with a `localhost` or `127.0.0.1` URL in `config.json` is reachable without extra setup.
+
+For stdio/command‑based MCP servers (e.g. `uvx`, `npx`), the binary must be installed inside the container image. Prefer URL‑based MCP servers when running in Docker.
 
 ## Configuration
 
