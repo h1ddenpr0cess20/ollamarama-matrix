@@ -22,11 +22,10 @@ services:
     image: ollamarama-matrix:latest
     container_name: ollamarama
     user: "${UID:-1000}:${GID:-1000}"
-    depends_on:
-      - ollama
+    network_mode: host
     environment:
       OLLAMARAMA_LOG_LEVEL: INFO
-      OLLAMARAMA_OLLAMA_URL: http://ollama:11434/api/chat
+      OLLAMARAMA_OLLAMA_URL: http://localhost:11434/api/chat
     volumes:
       - ./config.json:/data/config.json:ro
       - ./store:/data/store
@@ -34,4 +33,3 @@ services:
 
 volumes:
   ollama:
-

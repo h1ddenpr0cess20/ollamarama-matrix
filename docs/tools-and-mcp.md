@@ -117,10 +117,15 @@ Behavior notes:
 - Start the bot with `-L DEBUG` to see detailed logs.
 - Look for lines like `MCP server 'name' returned N tool(s)` and subsequent `Tool (MCP)` call logs when the model uses a tool.
 
+### Docker
+
+When running in Docker, use `--network host` so the container can reach MCP servers on localhost. See [Docker](docker.md) for details. Stdio/command‑based MCP servers require the binary to be installed in the container image; prefer URL‑based servers when running in Docker.
+
 ## Troubleshooting
 
 - Model never calls tools: ensure your model supports tool/function calling and that tools appear in logs at startup (or run with `-L DEBUG`).
 - HTTP/network errors from tools: check your environment’s network and any proxies/firewalls. MCP servers must be reachable.
+- MCP tools not loading in Docker: make sure you’re using `--network host`. See [Docker](docker.md).
 - Builtin tool not found: confirm the function name in `schema.json` matches the Python function name and that the module is importable.
 
 ## Security Considerations
