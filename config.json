@@ -30,10 +30,11 @@
         },
         "models":
         {
-            "qwen3": "qwen3",
-            "gpt-oss": "gpt-oss:20b"
+            "qwen3.5": "qwen3.5",
+            "nemotron": "nemotron-3-nano"
+        
         },
-        "default_model": "gpt-oss",
+        "default_model": "qwen3.5",
         "prompt": [
             "you are ",
             ". roleplay and speak in the first person and never break character.",
