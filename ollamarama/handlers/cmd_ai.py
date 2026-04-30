@@ -37,6 +37,9 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
             response_text = data.get("message", {}).get("content", "")
     except Exception as e:
         try:
+            clear_indicator = getattr(ctx, "clear_thinking_indicator", None)
+            if clear_indicator:
+                await clear_indicator()
             await matrix.send_text(room_id, "Something went wrong", html=ctx.render("Something went wrong"))
             ctx.log(e)
         except Exception:
@@ -74,4 +77,7 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
         ctx.log(f"Sending response to {sender_display} in {room_id}: {body}")
     except Exception:
         pass
+    clear_indicator = getattr(ctx, "clear_thinking_indicator", None)
+    if clear_indicator:
+        await clear_indicator()
     await matrix.send_text(room_id, body, html=html)

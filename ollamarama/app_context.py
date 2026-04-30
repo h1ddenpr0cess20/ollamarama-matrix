@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from .config import AppConfig
 from .fastmcp_client import FastMCPClient
 from .history import HistoryStore
+from .markdown_utils import render_markdown
 from .matrix_client import MatrixClientWrapper
 from .ollama_client import OllamaClient
 from .tools import execute_tool, load_schema
@@ -208,6 +209,7 @@ class AppContext:
 
     def _init_tool_calling(self, cfg: AppConfig) -> None:
         """Configure tool calling state and tool schema."""
+        self.thinking_indicator: Optional[asyncio.Task] = None  # type: ignore[type-arg]
         self.tools_enabled = True
         builtin_schema = self._load_builtin_tools_schema()
         mcp_schema, mcp_tool_names, mcp_client = self._probe_mcp_tools(cfg)
@@ -260,15 +262,17 @@ class AppContext:
         """
         if not self.cfg.markdown:
             return None
-        try:
-            import markdown as _md
+        return render_markdown(body)
 
-            return _md.markdown(
-                body,
-                extensions=["extra", "fenced_code", "nl2br", "sane_lists", "tables", "codehilite"],
-            )
-        except Exception:
-            return None
+    async def clear_thinking_indicator(self) -> None:
+        """Cancel and await the active thinking indicator task if one is running."""
+        indicator = self.thinking_indicator
+        if indicator and not indicator.done():
+            indicator.cancel()
+            try:
+                await indicator
+            except asyncio.CancelledError:
+                pass
 
     def _execute_tool(self, name: str, arguments: Dict[str, Any]) -> str:
         """Execute a tool call, preferring MCP tools when available.

@@ -20,11 +20,9 @@ def make_cfg(markdown=True):
 
 
 def test_render_html_success(monkeypatch):
-    class FakeMarkdownMod:
-        def markdown(self, text, extensions=None):
-            return "<p>" + text + "</p>"
+    import ollamarama.markdown_utils as mu
 
-    monkeypatch.setitem(sys.modules, "markdown", FakeMarkdownMod())
+    monkeypatch.setattr(mu, "render_markdown", lambda body: "<p>" + body + "</p>")
     # Patch matrix client deps so AppContext can construct without nio
     class _FakeCfg:
         def __init__(self, **kw):
