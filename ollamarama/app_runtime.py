@@ -48,9 +48,12 @@ async def thinking_indicator(matrix: MatrixClientWrapper, room_id: str, target_e
             await asyncio.sleep(half)
             idx += 1
     except asyncio.CancelledError:
-        for reaction_id in reaction_ids:
-            if reaction_id:
-                await matrix.redact_event(room_id, reaction_id)
+        pending = [rid for rid in reaction_ids if rid]
+        if pending:
+            await asyncio.gather(
+                *(matrix.redact_event(room_id, rid) for rid in pending),
+                return_exceptions=True,
+            )
         raise
 
 
