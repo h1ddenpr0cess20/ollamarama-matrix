@@ -33,6 +33,12 @@ async def _to_thread(fn, *a, **kw):
     return fn(*a, **kw)
 
 
+def _make_send_response(matrix):
+    async def send_response(room_id, body, html=None):
+        await matrix.send_text(room_id, body, html=html)
+    return send_response
+
+
 @pytest.mark.asyncio
 async def test_handle_reset_stock_and_default():
     ctx = SimpleNamespace(
@@ -87,6 +93,7 @@ async def test_handle_persona_and_custom():
         render=lambda s: None,
         log=lambda *a, **k: None,
     )
+    ctx.send_response = _make_send_response(ctx.matrix)
     room = "!r"
     user = "@u"
     await handle_persona(ctx, room, user, "User", "detective")
@@ -116,6 +123,7 @@ async def test_handle_x_resolves_display_name_and_replies():
         render=lambda s: None,
         log=lambda *a, **k: None,
     )
+    ctx.send_response = _make_send_response(ctx.matrix)
     # Seed history for target so handler proceeds
     ctx.history.add(room, target, "user", "hi")
     await handle_x(ctx, room, sender, names[sender], f"{names[target]} what up")
@@ -143,6 +151,7 @@ async def test_handle_x_supports_display_names_with_spaces():
         render=lambda s: None,
         log=lambda *a, **k: None,
     )
+    ctx.send_response = _make_send_response(ctx.matrix)
     # Seed known participants for resolution
     ctx.history.add(room, john, "user", "hi")
     ctx.history.add(room, jane, "user", "hello")
@@ -171,6 +180,7 @@ async def test_handle_x_keeps_matrix_id_targeting():
         render=lambda s: None,
         log=lambda *a, **k: None,
     )
+    ctx.send_response = _make_send_response(ctx.matrix)
     ctx.history.add(room, target, "user", "init")
 
     await handle_x(ctx, room, sender, "Sender", "@target:hs hello")

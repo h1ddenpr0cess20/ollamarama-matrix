@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from .config import AppConfig
 from .fastmcp_client import FastMCPClient
 from .history import HistoryStore
+from .markdown_utils import render_markdown
 from .matrix_client import MatrixClientWrapper
 from .ollama_client import OllamaClient
 from .tools import execute_tool, load_schema
@@ -105,8 +106,10 @@ class AppContext:
     def _expose_config_fields(self, cfg: AppConfig) -> None:
         """Expose frequently used config fields on the context."""
         self.models = cfg.ollama.models
-        self.default_model = cfg.ollama.default_model
-        self.model = cfg.ollama.default_model
+        models = cfg.ollama.models or {}
+        resolved = models.get(cfg.ollama.default_model, cfg.ollama.default_model)
+        self.default_model = resolved
+        self.model = resolved
         self.default_personality = cfg.ollama.personality
         self.personality = cfg.ollama.personality
         self.options = cfg.ollama.options
@@ -208,6 +211,8 @@ class AppContext:
 
     def _init_tool_calling(self, cfg: AppConfig) -> None:
         """Configure tool calling state and tool schema."""
+        self.thinking_placeholder_event_id: Optional[str] = None
+        self.thinking_animation_task: Optional[asyncio.Task] = None  # type: ignore[type-arg]
         self.tools_enabled = True
         builtin_schema = self._load_builtin_tools_schema()
         mcp_schema, mcp_tool_names, mcp_client = self._probe_mcp_tools(cfg)
@@ -260,15 +265,30 @@ class AppContext:
         """
         if not self.cfg.markdown:
             return None
-        try:
-            import markdown as _md
+        return render_markdown(body)
 
-            return _md.markdown(
-                body,
-                extensions=["extra", "fenced_code", "nl2br", "sane_lists", "tables", "codehilite"],
-            )
-        except Exception:
-            return None
+    async def send_response(self, room_id: str, body: str, html: Optional[str] = None) -> None:
+        """Send the response, editing the thinking placeholder if one exists.
+
+        Args:
+            room_id: Target room ID.
+            body: Plain-text message body.
+            html: Optional HTML-formatted body.
+        """
+        task = self.thinking_animation_task
+        self.thinking_animation_task = None
+        if task and not task.done():
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+        placeholder = self.thinking_placeholder_event_id
+        self.thinking_placeholder_event_id = None
+        if placeholder:
+            await self.matrix.edit_message(room_id, placeholder, body, html=html)
+        else:
+            await self.matrix.send_text(room_id, body, html=html)
 
     def _execute_tool(self, name: str, arguments: Dict[str, Any]) -> str:
         """Execute a tool call, preferring MCP tools when available.

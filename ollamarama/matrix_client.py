@@ -64,8 +64,8 @@ class MatrixClientWrapper:
         """
         await self.client.join(room_id)
 
-    async def send_text(self, room_id: str, body: str, html: Optional[str] = None) -> None:
-        """Send a text message to a room.
+    async def send_text(self, room_id: str, body: str, html: Optional[str] = None) -> Optional[str]:
+        """Send a text message to a room and return its event ID, or None on failure.
 
         Args:
             room_id: Target room ID.
@@ -75,7 +75,34 @@ class MatrixClientWrapper:
         content = {"msgtype": "m.text", "body": body}
         if html is not None:
             content.update({"format": "org.matrix.custom.html", "formatted_body": html})
-        await self.client.room_send(room_id=room_id, message_type="m.room.message", content=content, ignore_unverified_devices=True)
+        try:
+            resp = await self.client.room_send(room_id=room_id, message_type="m.room.message", content=content, ignore_unverified_devices=True)
+            return getattr(resp, "event_id", None)
+        except Exception:
+            return None
+
+    async def edit_message(self, room_id: str, event_id: str, body: str, html: Optional[str] = None) -> None:
+        """Edit an existing message in a room using the m.replace relation.
+
+        Args:
+            room_id: Target room ID.
+            event_id: Event ID of the message to replace.
+            body: New plain-text body.
+            html: Optional new HTML body.
+        """
+        new_content: dict = {"msgtype": "m.text", "body": body}
+        if html is not None:
+            new_content.update({"format": "org.matrix.custom.html", "formatted_body": html})
+        content = {
+            **new_content,
+            "body": f"* {body}",
+            "m.relates_to": {"rel_type": "m.replace", "event_id": event_id},
+            "m.new_content": new_content,
+        }
+        try:
+            await self.client.room_send(room_id=room_id, message_type="m.room.message", content=content, ignore_unverified_devices=True)
+        except Exception:
+            pass
 
     async def display_name(self, user_id: str) -> str:
         """Fetch and return the display name for a user, or the ID on failure.
