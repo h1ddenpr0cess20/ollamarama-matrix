@@ -41,10 +41,10 @@ async def thinking_indicator(matrix: MatrixClientWrapper, room_id: str, target_e
             current = reaction_ids[slot]
             if current:
                 await matrix.redact_event(room_id, current)
-                reaction_ids[slot] = None
             await asyncio.sleep(half)
             new_id = await matrix.send_reaction(room_id, target_event_id, _THINKING_EMOJIS[slot])
-            reaction_ids[slot] = new_id
+            if new_id:
+                reaction_ids[slot] = new_id
             await asyncio.sleep(half)
             idx += 1
     except asyncio.CancelledError:
