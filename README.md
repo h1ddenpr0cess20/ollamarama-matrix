@@ -127,6 +127,7 @@ Common commands (see [Commands](docs/commands.md) for the full list):
 | `.clear` (admin) | Reset globally for all users | `.clear` |
 | `.help` | Show inline help | `.help` |
 | `.verbose [on,off,toggle]` (admin) | Control inclusion of brevity clause for new conversations | `.verbose on` |
+| `.thinking [on,off,toggle]` (admin) | Show or hide the thinking placeholder while generating | `.thinking off` |
 
 ## Encryption Support
 

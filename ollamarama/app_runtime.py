@@ -193,7 +193,7 @@ def _make_text_handler(
             except Exception:
                 pass
             user_event_id = getattr(event, "event_id", None)
-            if handler in _GENERATING_HANDLERS and user_event_id:
+            if handler in _GENERATING_HANDLERS and user_event_id and getattr(ctx, "thinking", True):
                 label = f"**{sender_display}**:"
                 initial_body = f"{label}\n{_SPINNER_PREFIX}{_SPINNER_FRAMES[0]}"
                 event_id = await ctx.matrix.send_text(

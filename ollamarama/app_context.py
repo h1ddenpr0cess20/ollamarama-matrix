@@ -127,6 +127,10 @@ class AppContext:
             self.history.set_verbose(self.verbose)
         except Exception:
             pass
+        try:
+            self.thinking = bool(getattr(cfg.ollama, "thinking", True))
+        except Exception:
+            self.thinking = True
 
     def _load_builtin_tools_schema(self) -> List[Dict[str, Any]]:
         """Load builtin tools schema definitions.
