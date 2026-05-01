@@ -10,8 +10,51 @@ from typing import Any, Callable, Optional
 from .app_context import AppContext
 from .app_router import _build_router
 from .config import AppConfig
+from .handlers.cmd_ai import handle_ai
+from .handlers.cmd_prompt import handle_custom, handle_persona
+from .handlers.cmd_x import handle_x
 from .handlers.router import Router
+from .matrix_client import MatrixClientWrapper
 from .security import Security
+
+_THINKING_EMOJIS = ["🤔", "💭", "🧠"]
+_THINKING_INTERVAL = 4.5
+_GENERATING_HANDLERS = {handle_ai, handle_x, handle_persona, handle_custom}
+
+
+async def thinking_indicator(matrix: MatrixClientWrapper, room_id: str, target_event_id: str) -> None:
+    """React to the user's message with cycling emojis while the bot processes.
+
+    Adds emojis one at a time, then cycles them until cancelled, at which point
+    all reactions are redacted.
+    """
+    reaction_ids: list[Optional[str]] = [None] * len(_THINKING_EMOJIS)
+    try:
+        for idx, emoji in enumerate(_THINKING_EMOJIS):
+            reaction_id = await matrix.send_reaction(room_id, target_event_id, emoji)
+            reaction_ids[idx] = reaction_id
+            await asyncio.sleep(_THINKING_INTERVAL)
+        idx = 0
+        half = _THINKING_INTERVAL / 2
+        while True:
+            slot = idx % len(_THINKING_EMOJIS)
+            current = reaction_ids[slot]
+            if current:
+                await matrix.redact_event(room_id, current)
+            await asyncio.sleep(half)
+            new_id = await matrix.send_reaction(room_id, target_event_id, _THINKING_EMOJIS[slot])
+            if new_id:
+                reaction_ids[slot] = new_id
+            await asyncio.sleep(half)
+            idx += 1
+    except asyncio.CancelledError:
+        pending = [rid for rid in reaction_ids if rid]
+        if pending:
+            await asyncio.gather(
+                *(matrix.redact_event(room_id, rid) for rid in pending),
+                return_exceptions=True,
+            )
+        raise
 
 
 async def _persist_device_id_if_needed(ctx: AppContext, cfg: AppConfig, config_path: Optional[str]) -> None:
@@ -169,9 +212,27 @@ def _make_text_handler(
                 await security.allow_devices(sender)
             except Exception:
                 pass
-            res = handler(*args)
-            if asyncio.iscoroutine(res):
-                await res
+            user_event_id = getattr(event, "event_id", None)
+            should_indicate = handler in _GENERATING_HANDLERS and user_event_id
+            if should_indicate:
+                indicator = asyncio.create_task(
+                    thinking_indicator(ctx.matrix, room.room_id, user_event_id)  # type: ignore
+                )
+                ctx.thinking_indicator = indicator
+            else:
+                indicator = None
+            try:
+                res = handler(*args)
+                if asyncio.iscoroutine(res):
+                    await res
+            finally:
+                if indicator:
+                    indicator.cancel()
+                    try:
+                        await indicator
+                    except asyncio.CancelledError:
+                        pass
+                ctx.thinking_indicator = None
         except Exception as e:
             ctx.log(e)
 

@@ -77,6 +77,33 @@ class MatrixClientWrapper:
             content.update({"format": "org.matrix.custom.html", "formatted_body": html})
         await self.client.room_send(room_id=room_id, message_type="m.room.message", content=content, ignore_unverified_devices=True)
 
+    async def send_reaction(self, room_id: str, event_id: str, key: str) -> Optional[str]:
+        """Send a reaction emoji to an event and return its event ID, or None on failure."""
+        content = {
+            "m.relates_to": {
+                "rel_type": "m.annotation",
+                "event_id": event_id,
+                "key": key,
+            }
+        }
+        try:
+            resp = await self.client.room_send(
+                room_id=room_id,
+                message_type="m.reaction",
+                content=content,
+                ignore_unverified_devices=True,
+            )
+            return getattr(resp, "event_id", None)
+        except Exception:
+            return None
+
+    async def redact_event(self, room_id: str, event_id: str) -> None:
+        """Redact (delete) an event by its ID."""
+        try:
+            await self.client.room_redact(room_id=room_id, event_id=event_id)
+        except Exception:
+            pass
+
     async def display_name(self, user_id: str) -> str:
         """Fetch and return the display name for a user, or the ID on failure.
 
