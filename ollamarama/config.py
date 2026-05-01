@@ -32,6 +32,7 @@ class OllamaConfig:
     mcp_servers: Dict[str, Any] = field(default_factory=dict)
     # When True, omit the optional brevity clause (third prompt element) from new conversations
     verbose: bool = False
+    thinking: bool = True
 
 
 @dataclass
@@ -165,6 +166,7 @@ def load_config(
             timeout=360,
             mcp_servers=dict(ollama.get("mcp_servers", {})),
             verbose=bool(ollama.get("verbose", False)),
+            thinking=bool(ollama.get("thinking", True)),
         ),
         markdown=bool(raw.get("markdown", True)),
     )

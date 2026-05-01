@@ -25,3 +25,4 @@ Project: https://github.com/h1ddenpr0cess20/ollamarama-matrix
 | `.model [name or reset]` | No args: show current and available models. With `name`: change model. Use `reset` to restore default. | `.model qwen3` |
 | `.clear` | Reset the bot for everyone in the room(s). | `.clear` |
 | `.verbose [on|off|toggle]` | Control inclusion of the brevity clause for new conversations. | `.verbose on` |
+| `.thinking [on|off|toggle]` | Show or hide the thinking placeholder while the bot is generating a response. | `.thinking off` |

@@ -35,6 +35,12 @@ def _build_router() -> Router:
         router.register(".verbose", handle_verbose, admin=True)
     except Exception:
         pass
+    try:
+        from .handlers.cmd_thinking import handle_thinking
+
+        router.register(".thinking", handle_thinking, admin=True)
+    except Exception:
+        pass
     return router
 
 

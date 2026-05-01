@@ -21,6 +21,7 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
   - history_size: 1–1000 messages retained per user per room
   - options: advanced generation options (e.g., `temperature`, `top_p`, `repeat_penalty`)
   - verbose: boolean, when true omit the optional brevity clause for new conversations
+  - thinking: boolean, when true show an animated thinking placeholder while generating (default: true)
   - mcp_servers: mapping of names to MCP server specs for tool calling (optional)
     - Accepts multiple formats per server:
       - String URL: `"http://localhost:9000"`
