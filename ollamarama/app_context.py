@@ -106,8 +106,10 @@ class AppContext:
     def _expose_config_fields(self, cfg: AppConfig) -> None:
         """Expose frequently used config fields on the context."""
         self.models = cfg.ollama.models
-        self.default_model = cfg.ollama.default_model
-        self.model = cfg.ollama.default_model
+        models = cfg.ollama.models or {}
+        resolved = models.get(cfg.ollama.default_model, cfg.ollama.default_model)
+        self.default_model = resolved
+        self.model = resolved
         self.default_personality = cfg.ollama.personality
         self.personality = cfg.ollama.personality
         self.options = cfg.ollama.options
