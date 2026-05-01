@@ -29,6 +29,12 @@ async def _to_thread(fn, *a, **kw):
     return fn(*a, **kw)
 
 
+def _make_send_response(matrix):
+    async def send_response(room_id, body, html=None):
+        await matrix.send_text(room_id, body, html=html)
+    return send_response
+
+
 @pytest.mark.asyncio
 async def test_handle_model_show_and_set_and_reset():
     ctx = SimpleNamespace(
@@ -69,6 +75,7 @@ async def test_handle_ai_strips_thinking_markers():
         timeout=10,
         log=lambda *a, **k: None,
     )
+    ctx.send_response = _make_send_response(ctx.matrix)
     await handle_ai(ctx, "!r", "@u", "User", "hello")
     # Ensure the sent body does not contain think/thought markers
     sent_body = ctx.matrix.sent[-1][1]
@@ -89,6 +96,7 @@ async def test_handle_ai_trims_whitespace_simple():
         timeout=10,
         log=lambda *a, **k: None,
     )
+    ctx.send_response = _make_send_response(ctx.matrix)
     await handle_ai(ctx, "!r", "@u", "User", "hi")
     sent_body = ctx.matrix.sent[-1][1]
     assert sent_body.endswith("hello world")

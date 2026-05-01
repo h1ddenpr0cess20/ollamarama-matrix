@@ -98,6 +98,12 @@ async def _to_thread(fn, *a, **kw):
     return fn(*a, **kw)
 
 
+def _make_send_response(matrix):
+    async def send_response(room_id, body, html=None):
+        await matrix.send_text(room_id, body, html=html)
+    return send_response
+
+
 @pytest.mark.asyncio
 async def test_handle_ai_with_tools():
     schema = load_schema()
@@ -118,6 +124,7 @@ async def test_handle_ai_with_tools():
     )
     ctx.respond_with_tools = AppContext.respond_with_tools.__get__(ctx)
     ctx._execute_tool = AppContext._execute_tool.__get__(ctx)
+    ctx.send_response = _make_send_response(ctx.matrix)
     await handle_ai(ctx, "!r", "@u", "User", "what is 2+2")
     sent_body = ctx.matrix.sent[-1][1]
     assert "4" in sent_body

@@ -10,8 +10,31 @@ from typing import Any, Callable, Optional
 from .app_context import AppContext
 from .app_router import _build_router
 from .config import AppConfig
+from .handlers.cmd_ai import handle_ai
+from .handlers.cmd_prompt import handle_custom, handle_persona
+from .handlers.cmd_x import handle_x
 from .handlers.router import Router
 from .security import Security
+
+_GENERATING_HANDLERS = {handle_ai, handle_x, handle_persona, handle_custom}
+
+_SPINNER_PREFIX = "Thinking"
+_SPINNER_FRAMES = [".", "..", "...", ".."]
+_SPINNER_INTERVAL = 0.8
+
+
+async def _thinking_animation(matrix: Any, room_id: str, event_id: str, label: str, render_fn: Any) -> None:
+    """Cycle a dot-wave in the thinking placeholder by editing the message."""
+    try:
+        idx = 1  # frame 0 was already sent as the initial placeholder
+        while True:
+            await asyncio.sleep(_SPINNER_INTERVAL)
+            frame = _SPINNER_FRAMES[idx % len(_SPINNER_FRAMES)]
+            body = f"{label}\n{_SPINNER_PREFIX}{frame}"
+            await matrix.edit_message(room_id, event_id, body, html=render_fn(body))
+            idx += 1
+    except asyncio.CancelledError:
+        raise
 
 
 async def _persist_device_id_if_needed(ctx: AppContext, cfg: AppConfig, config_path: Optional[str]) -> None:
@@ -169,6 +192,18 @@ def _make_text_handler(
                 await security.allow_devices(sender)
             except Exception:
                 pass
+            user_event_id = getattr(event, "event_id", None)
+            if handler in _GENERATING_HANDLERS and user_event_id:
+                label = f"**{sender_display}**:"
+                initial_body = f"{label}\n{_SPINNER_PREFIX}{_SPINNER_FRAMES[0]}"
+                event_id = await ctx.matrix.send_text(
+                    room.room_id, initial_body, html=ctx.render(initial_body)  # type: ignore
+                )
+                ctx.thinking_placeholder_event_id = event_id
+                if event_id:
+                    ctx.thinking_animation_task = asyncio.create_task(
+                        _thinking_animation(ctx.matrix, room.room_id, event_id, label, ctx.render)  # type: ignore
+                    )
             res = handler(*args)
             if asyncio.iscoroutine(res):
                 await res

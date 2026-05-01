@@ -29,6 +29,12 @@ async def _to_thread(fn, *a, **kw):
     return fn(*a, **kw)
 
 
+def _make_send_response(matrix):
+    async def send_response(room_id, body, html=None):
+        await matrix.send_text(room_id, body, html=html)
+    return send_response
+
+
 @pytest.mark.asyncio
 async def test_handle_ai_error_path_sends_message():
     ctx = SimpleNamespace(
@@ -42,6 +48,7 @@ async def test_handle_ai_error_path_sends_message():
         timeout=5,
         log=lambda *a, **k: None,
     )
+    ctx.send_response = _make_send_response(ctx.matrix)
     await handle_ai(ctx, "!r", "@u", "User", "hello")
     assert ctx.matrix.sent, "should send error message"
     assert "Something went wrong" in ctx.matrix.sent[-1][1]
@@ -60,6 +67,7 @@ async def test_handle_x_error_path_sends_message():
         timeout=5,
         log=lambda *a, **k: None,
     )
+    ctx.send_response = _make_send_response(ctx.matrix)
     # Seed a target with history so handler proceeds
     ctx.history.add("!r", "@t", "user", "hi")
     await handle_x(ctx, "!r", "@s", "Sender", "@t hello")
