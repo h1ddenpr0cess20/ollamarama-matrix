@@ -13,7 +13,7 @@ class HistoryStore:
         personality: str,
         *,
         prompt_suffix_extra: str = "",
-        max_items: int = 24,
+        max_tokens: int = 8192,
     ) -> None:
         self.prompt_prefix = prompt_prefix
         self.prompt_suffix = prompt_suffix
@@ -21,7 +21,7 @@ class HistoryStore:
         self.prompt_suffix_extra = prompt_suffix_extra
         self._include_extra = True
         self.personality = personality
-        self.max_items = max_items
+        self.max_tokens = max_tokens
         self._messages: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
 
     def set_verbose(self, verbose: bool) -> None:
@@ -98,12 +98,17 @@ class HistoryStore:
         """Remove all rooms and histories."""
         self._messages.clear()
 
+    @staticmethod
+    def count_tokens(msgs: List[Dict[str, str]]) -> int:
+        """Estimate token count for a list of messages using char-length heuristic."""
+        return sum(len(m.get("content", "")) for m in msgs) // 4
+
     def _trim(self, room: str, user: str) -> None:
-        """Trim oldest messages to maintain the configured maximum length."""
+        """Trim oldest messages until estimated token count is within the configured limit."""
         msgs = self._messages[room][user]
-        while len(msgs) > self.max_items:
+        while self.count_tokens(msgs) > self.max_tokens:
             if msgs and msgs[0].get("role") == "system":
-                # Preserve system if present
+                # Preserve system prompt
                 if len(msgs) > 1:
                     msgs.pop(1)
                 else:

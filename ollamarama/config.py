@@ -27,7 +27,7 @@ class OllamaConfig:
     default_model: str = ""
     prompt: List[str] = field(default_factory=lambda: ["you are ", "."]) 
     personality: str = ""
-    history_size: int = 24
+    history_tokens: int = 8192
     timeout: int = 180
     mcp_servers: Dict[str, Any] = field(default_factory=dict)
     # When True, omit the optional brevity clause (third prompt element) from new conversations
@@ -162,7 +162,7 @@ def load_config(
             default_model=ollama.get("default_model", ""),
             prompt=list(ollama.get("prompt", ["you are ", "."])) ,
             personality=ollama.get("personality", ""),
-            history_size=int(ollama.get("history_size", 24)),
+            history_tokens=int(ollama.get("history_tokens", 8192)),
             timeout=360,
             mcp_servers=dict(ollama.get("mcp_servers", {})),
             verbose=bool(ollama.get("verbose", False)),
@@ -235,8 +235,8 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
         errors.append("ollama.prompt must be a list of 2 or 3 strings [prefix, suffix, (optional brevity clause)]")
     if not isinstance(cfg.ollama.personality, str) or not cfg.ollama.personality:
         errors.append("ollama.personality must be a non-empty string")
-    if not (1 <= cfg.ollama.history_size <= 1000):
-        errors.append("ollama.history_size must be between 1 and 1000")
+    if not (256 <= cfg.ollama.history_tokens <= 131072):
+        errors.append("ollama.history_tokens must be between 256 and 131072")
 
     # Options ranges (if present)
     opts = cfg.ollama.options or {}

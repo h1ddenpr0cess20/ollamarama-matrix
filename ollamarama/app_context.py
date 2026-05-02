@@ -100,7 +100,7 @@ class AppContext:
             prompt_suffix=suffix,
             personality=cfg.ollama.personality,
             prompt_suffix_extra=extra,
-            max_items=cfg.ollama.history_size,
+            max_tokens=cfg.ollama.history_tokens,
         )
 
     def _expose_config_fields(self, cfg: AppConfig) -> None:

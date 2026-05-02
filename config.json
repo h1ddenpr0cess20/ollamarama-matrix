@@ -41,7 +41,7 @@
             "  keep your responses brief and to the point."
         ],
         "personality": "an open source AI chatbot named Ollamarama, who runs on Ollama",
-        "history_size": 24,
+        "history_tokens": 8192,
         "mcp_servers": {}
     }
 }

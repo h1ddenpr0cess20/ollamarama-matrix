@@ -79,6 +79,7 @@ async def _respond(ctx: Any, room_id: str, user_id: str, header_display: str) ->
         None. Messages are sent via the Matrix client.
     """
     messages = ctx.history.get(room_id, user_id)
+    ctx.log(f"History tokens for {header_display} ({user_id}): {ctx.history.count_tokens(messages)}/{ctx.history.max_tokens}")
     try:
         data = await ctx.to_thread(
             ctx.ollama.chat, messages=messages, model=ctx.model, options=ctx.options, timeout=ctx.timeout
