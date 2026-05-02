@@ -4,4 +4,4 @@ Provides the CLI and application modules for the Matrix bot.
 """
 
 __all__ = ["__version__"]
-__version__ = "1.3.1"
+__version__ = "1.4.0"

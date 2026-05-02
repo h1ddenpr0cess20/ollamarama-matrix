@@ -65,9 +65,11 @@ async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, 
         return
 
     ctx.history.add(room_id, target_user, "user", message)
+    messages = ctx.history.get(room_id, target_user)
+    ctx.log(f"History tokens for {target_display} ({target_user}): {ctx.history.count_tokens(messages)}/{ctx.history.max_tokens}")
     try:
         data = await ctx.to_thread(
-            ctx.ollama.chat, messages=ctx.history.get(room_id, target_user), model=ctx.model, options=ctx.options, timeout=ctx.timeout
+            ctx.ollama.chat, messages=messages, model=ctx.model, options=ctx.options, timeout=ctx.timeout
         )
     except Exception as e:
         try:

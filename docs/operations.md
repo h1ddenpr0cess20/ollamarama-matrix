@@ -7,6 +7,23 @@
 - Persist the `store/` directory between runs to retain device keys; treat it as sensitive.
 - See also: Device verification steps and behavior in [Verification](verification.md).
 
+## Encrypted History Persistence
+
+By default, conversation history is held in memory and lost on restart. To persist history across restarts, set `history_encryption_key` in `config.json`:
+
+1. Generate a key:
+   ```bash
+   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   ```
+2. Add it to `config.json`:
+   ```json
+   "history_encryption_key": "your-generated-key-here"
+   ```
+
+History is then saved to `store/history.enc` (the same directory as Matrix device keys) after every message and restored on startup. Keep this key secret — losing it means the saved history cannot be decrypted and will be discarded. The `store/` directory should be treated as sensitive and not committed to version control.
+
+If `history_encryption_key` is empty or omitted, behavior is unchanged (in-memory only).
+
 ## Running the Bot
 
 - Start: `ollamarama-matrix --config config.json`

@@ -42,7 +42,7 @@ def _make_send_response(matrix):
 @pytest.mark.asyncio
 async def test_handle_reset_stock_and_default():
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=4),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=FakeMatrix(),
         default_model="qwen3",
         default_personality="helper",
@@ -65,7 +65,7 @@ async def test_handle_reset_stock_and_default():
 @pytest.mark.asyncio
 async def test_handle_clear_global_reset():
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=4),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=FakeMatrix(),
         default_model="m0",
         default_personality="p0",
@@ -83,7 +83,7 @@ async def test_handle_clear_global_reset():
 @pytest.mark.asyncio
 async def test_handle_persona_and_custom():
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=8),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=FakeMatrix(),
         ollama=FakeOllama("hello there"),
         to_thread=_to_thread,
@@ -113,7 +113,7 @@ async def test_handle_x_resolves_display_name_and_replies():
     names = {sender: "Alice", target: "Bob"}
     matrix = FakeMatrix(names=names)
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=8),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=matrix,
         ollama=FakeOllama("ok"),
         to_thread=_to_thread,
@@ -141,7 +141,7 @@ async def test_handle_x_supports_display_names_with_spaces():
     names = {sender: "Sender", john: "John Doe", jane: "Jane"}
     matrix = FakeMatrix(names=names)
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=8),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=matrix,
         ollama=FakeOllama("got it"),
         to_thread=_to_thread,
@@ -170,7 +170,7 @@ async def test_handle_x_keeps_matrix_id_targeting():
     target = "@target:hs"
     matrix = FakeMatrix(names={sender: "Sender", target: "Target"})
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=8),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=matrix,
         ollama=FakeOllama("ok"),
         to_thread=_to_thread,

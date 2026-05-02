@@ -51,7 +51,7 @@ Create or edit `config.json` at the repo root:
     "default_model": "qwen3",
     "prompt": ["you are ", "."],
     "personality": "a helpful assistant",
-    "history_size": 24,
+    "history_tokens": 8192,
     "options": {"temperature": 0.8, "top_p": 1, "repeat_penalty": 1}
   },
   "markdown": true

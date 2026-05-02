@@ -29,7 +29,7 @@ def base_cfg() -> dict:
             "default_model": "qwen3",
             "prompt": ["you are ", "."],
             "personality": "a helpful assistant",
-            "history_size": 24,
+            "history_tokens": 8192,
             "timeout": 60,
         },
         "markdown": True,

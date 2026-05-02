@@ -108,7 +108,7 @@ def _make_send_response(matrix):
 async def test_handle_ai_with_tools():
     schema = load_schema()
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=8),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=FakeMatrix(),
         ollama=FakeOllama(),
         to_thread=_to_thread,
