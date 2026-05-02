@@ -42,6 +42,7 @@
         ],
         "personality": "an open source AI chatbot named Ollamarama, who runs on Ollama",
         "history_tokens": 8192,
+        "history_encryption_key": "",
         "mcp_servers": {}
     }
 }

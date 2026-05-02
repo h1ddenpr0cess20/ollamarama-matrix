@@ -28,6 +28,7 @@ class OllamaConfig:
     prompt: List[str] = field(default_factory=lambda: ["you are ", "."]) 
     personality: str = ""
     history_tokens: int = 8192
+    history_encryption_key: str = ""
     timeout: int = 180
     mcp_servers: Dict[str, Any] = field(default_factory=dict)
     # When True, omit the optional brevity clause (third prompt element) from new conversations
@@ -163,6 +164,7 @@ def load_config(
             prompt=list(ollama.get("prompt", ["you are ", "."])) ,
             personality=ollama.get("personality", ""),
             history_tokens=int(ollama.get("history_tokens", 8192)),
+            history_encryption_key=str(ollama.get("history_encryption_key", "")),
             timeout=360,
             mcp_servers=dict(ollama.get("mcp_servers", {})),
             verbose=bool(ollama.get("verbose", False)),

@@ -27,7 +27,7 @@ Set the Ollama Chat API URL and default model in `config.json`:
     "default_model": "qwen3",
     "prompt": ["you are ", ".", "  keep your responses brief and to the point."],
     "personality": "a helpful assistant",
-    "history_size": 24
+    "history_tokens": 8192
   }
 }
 ```

@@ -18,7 +18,8 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
   - default_model: selected model (must match a key or ID)
   - prompt: two strings `[prefix, suffix]` used around personality; optionally a third string for a brevity clause `[prefix, suffix, brevity]`
   - personality: non‑empty default personality text
-  - history_size: 1–1000 messages retained per user per room
+  - history_tokens: token budget for retained history per user per room (default: 8192, range: 256–131072); uses a chars÷4 heuristic
+  - history_encryption_key: optional Fernet key for encrypted history persistence; when set, history is saved to `store/history.enc` and restored on startup; generate with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
   - options: advanced generation options (e.g., `temperature`, `top_p`, `repeat_penalty`)
   - verbose: boolean, when true omit the optional brevity clause for new conversations
   - thinking: boolean, when true show an animated thinking placeholder while generating (default: true)
@@ -56,4 +57,5 @@ Validation checks:
 - `ollama.default_model` is non‑empty and present by key or ID
 - `ollama.prompt` is a list of 2 or 3 strings
 - Bounds on `options` (temperature 0–2, top_p 0–1, repeat_penalty 0.5–2)
- - `ollama.mcp_servers` must be a mapping if provided
+- `ollama.history_tokens` must be between 256 and 131072
+- `ollama.mcp_servers` must be a mapping if provided
