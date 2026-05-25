@@ -65,7 +65,7 @@ async def test_handle_ai_strips_thinking_markers():
         " <|begin_of_solution|>final answer<|end_of_solution|>"
     )
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=8),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=FakeMatrix(),
         ollama=FakeOllama(content),
         to_thread=_to_thread,
@@ -86,7 +86,7 @@ async def test_handle_ai_strips_thinking_markers():
 @pytest.mark.asyncio
 async def test_handle_ai_trims_whitespace_simple():
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=8),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=FakeMatrix(),
         ollama=FakeOllama("   hello world  \n\n"),
         to_thread=_to_thread,

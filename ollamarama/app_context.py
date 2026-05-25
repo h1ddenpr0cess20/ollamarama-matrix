@@ -100,7 +100,9 @@ class AppContext:
             prompt_suffix=suffix,
             personality=cfg.ollama.personality,
             prompt_suffix_extra=extra,
-            max_items=cfg.ollama.history_size,
+            max_tokens=cfg.ollama.history_tokens,
+            store_path=cfg.matrix.store_path or None,
+            encryption_key=cfg.ollama.history_encryption_key or None,
         )
 
     def _expose_config_fields(self, cfg: AppConfig) -> None:
@@ -350,9 +352,12 @@ class AppContext:
             for m in messages
             if not (m.get("role") == "tool" or (isinstance(m, dict) and m.get("tool_calls")))
         ]
-        if len(messages) > 24:
+        while self.history.count_tokens(messages) > self.history.max_tokens:
             if messages and messages[0].get("role") == "system":
-                messages.pop(1)
+                if len(messages) > 1:
+                    messages.pop(1)
+                else:
+                    break
             else:
                 messages.pop(0)
 

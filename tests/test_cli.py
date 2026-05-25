@@ -22,7 +22,7 @@ def write_cfg(tmp_path: Path) -> Path:
             "default_model": "qwen3",
             "prompt": ["you are ", "."],
             "personality": "a helpful assistant",
-            "history_size": 24,
+            "history_tokens": 8192,
             "timeout": 30,
             "options": {"temperature": 0.5},
         },
@@ -57,7 +57,7 @@ def test_cli_invalid_config_fails_validation(tmp_path, capsys):
             "default_model": "",  # invalid
             "prompt": ["you are ", "."],
             "personality": "",
-            "history_size": 0,
+            "history_tokens": 0,
             "timeout": 30,
         },
         "markdown": True,

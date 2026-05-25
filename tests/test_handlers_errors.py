@@ -38,7 +38,7 @@ def _make_send_response(matrix):
 @pytest.mark.asyncio
 async def test_handle_ai_error_path_sends_message():
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=4),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=FakeMatrix(),
         ollama=FailingOllama(),
         to_thread=_to_thread,
@@ -57,7 +57,7 @@ async def test_handle_ai_error_path_sends_message():
 @pytest.mark.asyncio
 async def test_handle_x_error_path_sends_message():
     ctx = SimpleNamespace(
-        history=HistoryStore("you are ", ".", "helper", max_items=4),
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
         matrix=FakeMatrix(),
         ollama=FailingOllama(),
         to_thread=_to_thread,

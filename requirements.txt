@@ -4,3 +4,4 @@ requests
 rich
 fastmcp
 pytest-asyncio
+cryptography

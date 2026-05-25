@@ -28,6 +28,7 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
     if args:
         history.add(room_id, sender_id, "user", args)
     messages = history.get(room_id, sender_id)
+    ctx.log(f"History tokens for {sender_display} ({sender_id}): {history.count_tokens(messages)}/{history.max_tokens}")
 
     try:
         if getattr(ctx, "tools_enabled", False):
