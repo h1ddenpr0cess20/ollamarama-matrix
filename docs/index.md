@@ -3,7 +3,7 @@
 Ollamarama is a Matrix chatbot powered by local LLMs via the Ollama Chat API. It brings fast, private AI assistance to your Matrix rooms with per‑user history, switchable models, and dynamic personalities.
 
 - Source: <https://github.com/h1ddenpr0cess20/ollamarama-matrix>
-- License: AGPL‑3.0
+- License: Apache-2.0
 
 ## Highlights
 

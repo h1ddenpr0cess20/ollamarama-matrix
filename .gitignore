@@ -2,3 +2,4 @@ __pycache__
 config_test.json
 *.db
 /store
+ollamarama_matrix.egg-info/

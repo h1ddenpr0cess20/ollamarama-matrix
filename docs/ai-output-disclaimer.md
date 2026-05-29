@@ -2,7 +2,7 @@
 
 Effective date: 2025-09-01
 
-This document explains the limits of responsibility for the Ollamarama Matrix bot ("the App"). It is informational and not legal advice. It supplements, and does not replace, the AGPL‑3.0 License and any Terms of Service included in this repository or user interface.
+This document explains the limits of responsibility for the Ollamarama Matrix bot ("the App"). It is informational and not legal advice. It supplements, and does not replace, the Apache-2.0 License and any Terms of Service included in this repository or user interface.
 
 ## 1) Purpose and Scope
 

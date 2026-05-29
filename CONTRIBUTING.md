@@ -55,4 +55,4 @@ Thanks for your interest. This repository is primarily a learning project. Small
 
 ## License
 
-- By contributing, you agree that your contributions are licensed under AGPL‑3.0, consistent with this repository’s LICENSE.
+- By contributing, you agree that your contributions are licensed under Apache-2.0, consistent with this repository’s LICENSE.
