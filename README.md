@@ -1,6 +1,6 @@
 # ollamarama-matrix
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Matrix Protocol](https://img.shields.io/badge/chat-Matrix-green.svg)](https://matrix.org/)
 [![Ollama](https://img.shields.io/badge/AI-Ollama-orange.svg)](https://ollama.com/)
@@ -146,4 +146,4 @@ Common commands (see [Commands](docs/commands.md) for the full list):
 
 ## License
 
-AGPL‑3.0 — see [LICENSE](LICENSE) for details.
+Apache-2.0 — see [LICENSE](LICENSE) for details.
