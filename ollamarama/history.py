@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set, Tuple
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -36,6 +36,8 @@ class HistoryStore:
         self.personality = personality
         self.max_tokens = max_tokens
         self._messages: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
+        # Set of (room, user) pairs that have history disabled.
+        self._no_history: Set[Tuple[str, str]] = set()
 
         # Encrypted persistence
         self._store_file: Optional[Path] = None
@@ -85,6 +87,28 @@ class HistoryStore:
             ]
         self._save()
 
+    def set_no_history(self, room: str, user: str, disabled: bool) -> None:
+        """Enable or disable per-user history for a room/user pair.
+
+        When disabled, messages are cleared down to just the system prompt
+        after each assistant response so the next exchange starts fresh.
+
+        Args:
+            room: Matrix room identifier.
+            user: Matrix user identifier.
+            disabled: True to disable history; False to re-enable it.
+        """
+        key = (room, user)
+        if disabled:
+            self._no_history.add(key)
+        else:
+            self._no_history.discard(key)
+        self._save()
+
+    def get_no_history(self, room: str, user: str) -> bool:
+        """Return True if history is disabled for this room/user."""
+        return (room, user) in self._no_history
+
     def add(self, room: str, user: str, role: str, content: str) -> None:
         """Append a message to the conversation and trim history.
 
@@ -96,7 +120,10 @@ class HistoryStore:
         """
         self._ensure(room, user)
         self._messages[room][user].append({"role": role, "content": content})
-        self._trim(room, user)
+        if role == "assistant" and (room, user) in self._no_history:
+            self._clear_to_system(room, user)
+        else:
+            self._trim(room, user)
         self._save()
 
     def get(self, room: str, user: str) -> List[Dict[str, str]]:
@@ -129,6 +156,14 @@ class HistoryStore:
         """Estimate token count for a list of messages using char-length heuristic."""
         return sum(len(m.get("content", "")) for m in msgs) // 4
 
+    def _clear_to_system(self, room: str, user: str) -> None:
+        """Keep only the system prompt for a room/user, discarding all other messages."""
+        msgs = self._messages[room][user]
+        if msgs and msgs[0].get("role") == "system":
+            del msgs[1:]
+        else:
+            msgs.clear()
+
     def _trim(self, room: str, user: str) -> None:
         """Trim oldest messages until estimated token count is within the configured limit."""
         msgs = self._messages[room][user]
@@ -149,7 +184,11 @@ class HistoryStore:
         if not self._fernet or not self._store_file:
             return
         try:
-            data = json.dumps(self._messages, separators=(",", ":")).encode()
+            payload = {
+                "messages": self._messages,
+                "no_history": list(self._no_history),
+            }
+            data = json.dumps(payload, separators=(",", ":")).encode()
             self._store_file.write_bytes(self._fernet.encrypt(data))
         except Exception:
             logger.exception("Failed to save encrypted history")
@@ -161,7 +200,13 @@ class HistoryStore:
         try:
             encrypted = self._store_file.read_bytes()
             data = self._fernet.decrypt(encrypted)
-            self._messages = json.loads(data)
+            payload = json.loads(data)
+            # Support both old format (plain messages dict) and new format.
+            if isinstance(payload, dict) and "messages" in payload:
+                self._messages = payload["messages"]
+                self._no_history = {tuple(pair) for pair in payload.get("no_history", [])}
+            else:
+                self._messages = payload
         except InvalidToken:
             logger.error(
                 "Failed to decrypt history file — wrong key or corrupted data. "

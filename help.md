@@ -12,6 +12,7 @@ Use these commands in any room the bot has joined. You can address the bot with 
 | `.custom <prompt>` | Set a custom system prompt (replaces the roleplay prompt). | `.custom You are a coding tutor.` |
 | `.reset` | Clear your history and reset to the default personality. | `.reset` |
 | `.stock` | Clear your history and run without a system prompt. | `.stock` |
+| `.history [on|off|toggle]` | Enable or disable conversation history. When OFF, context is cleared after each response. | `.history off` |
 | `.help` | Show this help message. | `.help` |
 
 Project: https://github.com/h1ddenpr0cess20/ollamarama-matrix
