@@ -38,6 +38,8 @@ class HistoryStore:
         self._messages: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
         # Set of (room, user) pairs that have history disabled.
         self._no_history: Set[Tuple[str, str]] = set()
+        # Global history disable flag — overrides per-user settings when True.
+        self._global_no_history: bool = False
 
         # Encrypted persistence
         self._store_file: Optional[Path] = None
@@ -106,8 +108,21 @@ class HistoryStore:
         self._save()
 
     def get_no_history(self, room: str, user: str) -> bool:
-        """Return True if history is disabled for this room/user."""
-        return (room, user) in self._no_history
+        """Return True if history is disabled for this room/user (or globally)."""
+        return self._global_no_history or (room, user) in self._no_history
+
+    def set_global_no_history(self, disabled: bool) -> None:
+        """Enable or disable history globally for all users.
+
+        Args:
+            disabled: True to disable history for everyone; False to re-enable.
+        """
+        self._global_no_history = disabled
+        self._save()
+
+    def get_global_no_history(self) -> bool:
+        """Return True if history is globally disabled."""
+        return self._global_no_history
 
     def add(self, room: str, user: str, role: str, content: str) -> None:
         """Append a message to the conversation and trim history.
@@ -120,7 +135,7 @@ class HistoryStore:
         """
         self._ensure(room, user)
         self._messages[room][user].append({"role": role, "content": content})
-        if role == "assistant" and (room, user) in self._no_history:
+        if role == "assistant" and self.get_no_history(room, user):
             self._clear_to_system(room, user)
         else:
             self._trim(room, user)
@@ -187,6 +202,7 @@ class HistoryStore:
             payload = {
                 "messages": self._messages,
                 "no_history": list(self._no_history),
+                "global_no_history": self._global_no_history,
             }
             data = json.dumps(payload, separators=(",", ":")).encode()
             self._store_file.write_bytes(self._fernet.encrypt(data))
@@ -205,6 +221,7 @@ class HistoryStore:
             if isinstance(payload, dict) and "messages" in payload:
                 self._messages = payload["messages"]
                 self._no_history = {tuple(pair) for pair in payload.get("no_history", [])}
+                self._global_no_history = bool(payload.get("global_no_history", False))
             else:
                 self._messages = payload
         except InvalidToken:

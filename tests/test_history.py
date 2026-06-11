@@ -1,3 +1,4 @@
+import pytest
 from ollamarama.history import HistoryStore
 
 
@@ -89,4 +90,131 @@ def test_no_history_different_users_isolated():
     assert len(msgs_a) == 1 and msgs_a[0]["role"] == "system"
     # user_b has history on — full exchange preserved
     assert len(msgs_b) == 3  # system + user + assistant
+
+
+def test_global_no_history_toggle():
+    hs = HistoryStore("you are ", ".", "helper", max_tokens=8192)
+    assert hs.get_global_no_history() is False
+    hs.set_global_no_history(True)
+    assert hs.get_global_no_history() is True
+    hs.set_global_no_history(False)
+    assert hs.get_global_no_history() is False
+
+
+def test_global_no_history_overrides_per_user():
+    hs = HistoryStore("you are ", ".", "helper", max_tokens=8192)
+    room = "!r:server"
+    user = "@u:server"
+
+    # user has history on (default), but global disables it
+    hs.set_global_no_history(True)
+    hs.add(room, user, "user", "Hello")
+    hs.add(room, user, "assistant", "Hi there!")
+    msgs = hs.get(room, user)
+    assert len(msgs) == 1 and msgs[0]["role"] == "system"
+
+
+def test_global_no_history_affects_all_users():
+    hs = HistoryStore("you are ", ".", "helper", max_tokens=8192)
+    room = "!r:server"
+    user_a = "@a:server"
+    user_b = "@b:server"
+
+    hs.set_global_no_history(True)
+
+    for user in (user_a, user_b):
+        hs.add(room, user, "user", "Hello")
+        hs.add(room, user, "assistant", "Hi")
+
+    for user in (user_a, user_b):
+        msgs = hs.get(room, user)
+        assert len(msgs) == 1 and msgs[0]["role"] == "system"
+
+
+def test_global_no_history_get_no_history_returns_true():
+    hs = HistoryStore("you are ", ".", "helper", max_tokens=8192)
+    room = "!r:server"
+    user = "@u:server"
+
+    # Per-user has history enabled, but global flag makes get_no_history True
+    assert hs.get_no_history(room, user) is False
+    hs.set_global_no_history(True)
+    assert hs.get_no_history(room, user) is True
+
+
+@pytest.mark.asyncio
+async def test_handle_history_global_admin_only():
+    from unittest.mock import AsyncMock, MagicMock
+    from ollamarama.handlers.cmd_history import handle_history
+
+    ctx = MagicMock()
+    ctx.admins = ["Admin"]
+    ctx.history.get_global_no_history.return_value = False
+    ctx.render = lambda b: b
+    ctx.matrix.send_text = AsyncMock()
+
+    room = "!r:server"
+    sender_id = "@user:server"
+
+    # Non-admin trying global — should be denied
+    await handle_history(ctx, room, sender_id, "User", "global on")
+    ctx.matrix.send_text.assert_called_once()
+    body = ctx.matrix.send_text.call_args[0][1]
+    assert "admin" in body.lower()
+    ctx.history.set_global_no_history.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_handle_history_global_admin_sets():
+    from unittest.mock import AsyncMock, MagicMock
+    from ollamarama.handlers.cmd_history import handle_history
+
+    ctx = MagicMock()
+    ctx.admins = ["Admin"]
+    ctx.history.get_global_no_history.return_value = False
+    ctx.render = lambda b: b
+    ctx.matrix.send_text = AsyncMock()
+
+    room = "!r:server"
+    sender_id = "@admin:server"
+
+    # Admin turns global off
+    await handle_history(ctx, room, sender_id, "Admin", "global off")
+    ctx.history.set_global_no_history.assert_called_once_with(True)
+    body = ctx.matrix.send_text.call_args[0][1]
+    assert "OFF" in body
+
+
+@pytest.mark.asyncio
+async def test_handle_history_global_status():
+    from unittest.mock import AsyncMock, MagicMock
+    from ollamarama.handlers.cmd_history import handle_history
+
+    ctx = MagicMock()
+    ctx.admins = ["Admin"]
+    ctx.history.get_global_no_history.return_value = True
+    ctx.render = lambda b: b
+    ctx.matrix.send_text = AsyncMock()
+
+    await handle_history(ctx, "!r:server", "@admin:server", "Admin", "global status")
+    body = ctx.matrix.send_text.call_args[0][1]
+    assert "OFF" in body
+
+
+@pytest.mark.asyncio
+async def test_handle_history_per_user_shows_global_override_note():
+    from unittest.mock import AsyncMock, MagicMock
+    from ollamarama.handlers.cmd_history import handle_history
+
+    ctx = MagicMock()
+    ctx.admins = []
+    # get_no_history returns True (due to global), get_global_no_history True
+    ctx.history.get_no_history.return_value = True
+    ctx.history.get_global_no_history.return_value = True
+    ctx.render = lambda b: b
+    ctx.matrix.send_text = AsyncMock()
+
+    await handle_history(ctx, "!r:server", "@u:server", "User", "status")
+    body = ctx.matrix.send_text.call_args[0][1]
+    assert "global" in body.lower()
 

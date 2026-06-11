@@ -27,3 +27,4 @@ Project: https://github.com/h1ddenpr0cess20/ollamarama-matrix
 | `.clear` | Reset the bot for everyone in the room(s). | `.clear` |
 | `.verbose [on|off|toggle]` | Control inclusion of the brevity clause for new conversations. | `.verbose on` |
 | `.thinking [on|off|toggle]` | Show or hide the thinking placeholder while the bot is generating a response. | `.thinking off` |
+| `.history global [on|off|toggle]` | Enable or disable history globally for all users. Overrides per-user settings. | `.history global off` |
