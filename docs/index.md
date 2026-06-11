@@ -8,7 +8,8 @@ Ollamarama is a Matrix chatbot powered by local LLMs via the Ollama Chat API. It
 ## Highlights
 
 - Dynamic personalities and custom prompts per user
-- Per‑room and per‑user conversation histories
+- Per‑room and per‑user conversation histories with optional persistence
+- Per-user history toggle; admin global history toggle
 - Admin model switching and global resets
 - Optional Markdown rendering for rich replies
 - Secure by default: no secrets in repo, E2E‑ready with matrix‑nio
@@ -27,7 +28,6 @@ Ollamarama is a Matrix chatbot powered by local LLMs via the Ollama Chat API. It
 - [Not a Companion — Please Read](not-a-companion.md)
 - [Development Guide](development.md)
 - [Migration Notes](migration.md)
-- [Refactor Blueprint (historic)](refactor-plan.md)
 - [Legacy → New Map](legacy-map.md)
 
 ## Overview
@@ -36,7 +36,7 @@ Ollamarama connects a Matrix client (matrix‑nio) to the Ollama Chat API. Incom
 
 ## Supported Environments
 
-- Python 3.8+
+- Python 3.10+
 - Ollama running locally or reachable on your network
 - Optional E2E encryption via `matrix-nio[e2e]` (requires libolm)
 
