@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   ollama:
     image: ollama/ollama:latest
@@ -19,9 +17,11 @@ services:
     #         - capabilities: [gpu]
 
   bot:
+    build: .
     image: ollamarama-matrix:latest
     container_name: ollamarama
     user: "${UID:-1000}:${GID:-1000}"
+    # host networking lets the bot reach Ollama on localhost:11434
     network_mode: host
     environment:
       OLLAMARAMA_LOG_LEVEL: INFO
