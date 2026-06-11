@@ -4,8 +4,7 @@ __pycache__
 .venv
 .env
 
-# config with credentials
-config.json
+# local test config
 config_test.json
 
 # runtime state

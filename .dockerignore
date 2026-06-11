@@ -9,7 +9,6 @@ __pycache__
 tests
 legacy
 store
-config.json
 *.enc
 *.log
 *.tmp
