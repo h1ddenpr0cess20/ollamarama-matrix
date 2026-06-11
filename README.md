@@ -1,7 +1,7 @@
 # ollamarama-matrix
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Matrix Protocol](https://img.shields.io/badge/chat-Matrix-green.svg)](https://matrix.org/)
 [![Ollama](https://img.shields.io/badge/AI-Ollama-orange.svg)](https://ollama.com/)
 [![GitHub](https://img.shields.io/github/stars/h1ddenpr0cess20/ollamarama-matrix?style=social)](https://github.com/h1ddenpr0cess20/ollamarama-matrix)

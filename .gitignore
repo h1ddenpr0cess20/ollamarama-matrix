@@ -1,5 +1,20 @@
 __pycache__
+*.py[cod]
+*.egg-info/
+.venv
+.env
+
+# local test config
 config_test.json
-*.db
+
+# runtime state
 /store
-ollamarama_matrix.egg-info/
+*.db
+*.enc
+
+# test/build artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+dist/
+build/

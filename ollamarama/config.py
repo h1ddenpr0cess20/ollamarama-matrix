@@ -25,7 +25,7 @@ class OllamaConfig:
     options: Dict[str, Any] = field(default_factory=dict)
     models: Dict[str, str] = field(default_factory=dict)
     default_model: str = ""
-    prompt: List[str] = field(default_factory=lambda: ["you are ", "."]) 
+    prompt: List[str] = field(default_factory=lambda: ["you are ", "."])
     personality: str = ""
     history_tokens: int = 8192
     history_encryption_key: str = ""

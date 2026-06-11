@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 
-import pytest
 
 from ollamarama.config import load_config, validate_config
 

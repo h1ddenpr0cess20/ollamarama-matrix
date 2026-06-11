@@ -22,7 +22,6 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
         None. Sends a response message to the room.
     """
     history = ctx.history
-    matrix = ctx.matrix
     ollama = ctx.ollama
 
     if args:

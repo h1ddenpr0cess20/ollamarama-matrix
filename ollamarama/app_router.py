@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .handlers.cmd_ai import handle_ai
 from .handlers.cmd_help import handle_help
+from .handlers.cmd_history import handle_history
 from .handlers.cmd_model import handle_model
 from .handlers.cmd_prompt import handle_custom, handle_persona
 from .handlers.cmd_reset import handle_clear, handle_reset
@@ -25,6 +26,7 @@ def _build_router() -> Router:
     router.register(".custom", handle_custom)
     router.register(".reset", handle_reset)
     router.register(".stock", lambda c, r, s, d, a: handle_reset(c, r, s, d, "stock"))
+    router.register(".history", handle_history)
     router.register(".help", handle_help)
     # admin commands
     router.register(".model", handle_model, admin=True)

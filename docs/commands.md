@@ -5,11 +5,12 @@ Users can interact with the bot using dot‑commands or by mentioning the bot na
 ## User Commands
 
 - `.ai <message>` or `BotName: <message>` — Chat with the AI (calls tools automatically when configured).
-- `.x <display_name|@user:server> <message>` — Continue another user’s conversation.
+- `.x <display_name|@user:server> <message>` — Continue another user's conversation.
 - `.persona <text>` — Set or change your personality for the system prompt.
 - `.custom <prompt>` — Replace the system prompt with a custom one.
 - `.reset` — Clear your history and reset to the default personality.
 - `.stock` — Clear your history and run without a system prompt.
+- `.history [on|off|toggle]` — Enable or disable conversation history. When OFF, context is cleared after each response so the next message starts fresh.
 - `.help` — Show help text (admin section shown only to admins).
 
 ## Admin Commands
@@ -18,5 +19,6 @@ Users can interact with the bot using dot‑commands or by mentioning the bot na
 - `.clear` — Reset the bot globally for all users.
 - `.verbose [on|off|toggle]` — Omit or include the brevity clause for new conversations.
 - `.thinking [on|off|toggle]` — Show or hide the thinking placeholder while the bot is generating a response.
+- `.history global [on|off|toggle]` — Disable or enable history for all users at once. Overrides per-user settings.
 
 Tip: Admin privileges are based on the sender display name matching one of the configured `matrix.admins` entries.

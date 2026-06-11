@@ -17,11 +17,7 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# Install Python deps first for better layer caching
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy project and install as a package to get the console script
+# Install package and all dependencies in one layer
 COPY pyproject.toml README.md LICENSE ./
 COPY ollamarama ./ollamarama
 RUN pip install --no-cache-dir .
