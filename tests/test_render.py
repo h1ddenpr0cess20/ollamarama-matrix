@@ -1,5 +1,3 @@
-import sys
-from types import SimpleNamespace
 
 from ollamarama.app import AppContext
 import ollamarama.matrix_client as mc

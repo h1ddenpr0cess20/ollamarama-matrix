@@ -6,6 +6,22 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint
+        run: ruff check .
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -21,8 +37,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt pytest
+      - name: Install package and test deps
+        run: pip install -e ".[test]"
 
-      - name: Run tests
-        run: python -m pytest tests/
+      - name: Run tests with coverage
+        run: python -m pytest tests/ --tb=short -q --cov=ollamarama --cov-report=term-missing

@@ -7,7 +7,7 @@ name = "ollamarama-matrix"
 version = "1.4.1"
 description = "Matrix chatbot powered by Ollama"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 authors = [{ name = "Dustin Whyte" }]
 license = { file = "LICENSE" }
 keywords = ["matrix", "chatbot", "ollama", "ai", "llm"]
@@ -23,6 +23,15 @@ dependencies = [
   "markdown",
   "requests",
   "rich",
+  "fastmcp",
+  "cryptography>=42",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+  "pytest-asyncio",
+  "pytest-cov",
 ]
 
 [project.urls]
@@ -41,6 +50,13 @@ include = ["ollamarama*"]
 
 [tool.setuptools.package-data]
 "ollamarama.tools" = ["schema.json"]
+
+[tool.ruff]
+exclude = ["legacy"]
+line-length = 130
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
 
 [tool.pytest.ini_options]
 addopts = "-q"

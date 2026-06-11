@@ -76,7 +76,9 @@ class MatrixClientWrapper:
         if html is not None:
             content.update({"format": "org.matrix.custom.html", "formatted_body": html})
         try:
-            resp = await self.client.room_send(room_id=room_id, message_type="m.room.message", content=content, ignore_unverified_devices=True)
+            resp = await self.client.room_send(
+                room_id=room_id, message_type="m.room.message", content=content, ignore_unverified_devices=True
+            )
             return getattr(resp, "event_id", None)
         except Exception:
             return None
@@ -100,7 +102,9 @@ class MatrixClientWrapper:
             "m.new_content": new_content,
         }
         try:
-            await self.client.room_send(room_id=room_id, message_type="m.room.message", content=content, ignore_unverified_devices=True)
+            await self.client.room_send(
+                room_id=room_id, message_type="m.room.message", content=content, ignore_unverified_devices=True
+            )
         except Exception:
             pass
 

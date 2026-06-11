@@ -3,5 +3,4 @@ markdown
 requests
 rich
 fastmcp
-pytest-asyncio
-cryptography
+cryptography>=42
