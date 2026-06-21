@@ -19,9 +19,12 @@ from .tools import execute_tool, load_schema
 
 
 class AppContext:
-    """Holds application-wide dependencies for handlers.
+    """Central runtime object holding application-wide dependencies.
 
-    Not yet used by the runtime path; prepared for future integration.
+    Constructed once in :func:`ollamarama.app_runtime.run` and passed to every
+    command handler. Owns the Matrix and Ollama clients, the history store,
+    the tool-calling state, and mutable runtime settings (model, personality,
+    verbose/thinking flags).
     """
 
     def __init__(self, cfg: AppConfig, executor: Optional[ThreadPoolExecutor] = None) -> None:

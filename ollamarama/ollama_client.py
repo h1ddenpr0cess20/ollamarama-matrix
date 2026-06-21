@@ -46,7 +46,9 @@ class OllamaClient:
             model: Model name or ID to use.
             options: Optional model-specific parameters.
             timeout: Optional request timeout override in seconds.
-            stream: Whether to request a streaming response (kept for API compatibility).
+            stream: Forwarded to the server. The response is always parsed as a
+                single JSON object, so streaming (``True``) is not supported and
+                will fail to parse; leave it ``False``.
 
         Returns:
             Parsed JSON response from the Ollama server.
