@@ -110,3 +110,31 @@ async def test_matrix_client_wrapper_basic(monkeypatch):
     w.add_to_device_callback(lambda *a, **k: None, None)
     assert w.client._to_device_callbacks, "to-device callback not registered"
 
+
+@pytest.mark.asyncio
+async def test_display_name_falls_back_to_user_id_when_none(monkeypatch):
+    monkeypatch.setattr(mc, "AsyncClient", FakeAsyncClient)
+    monkeypatch.setattr(mc, "AsyncClientConfig", FakeAsyncClientConfig)
+    w = mc.MatrixClientWrapper(server="https://e.org", username="@bot:e.org", password="pw")
+
+    # User with no display name set: nio response has displayname == None
+    async def no_name(user_id):
+        return SimpleNamespace(displayname=None)
+
+    w.client.get_displayname = no_name
+    assert await w.display_name("@u:e.org") == "@u:e.org"
+
+
+@pytest.mark.asyncio
+async def test_display_name_falls_back_on_error_response(monkeypatch):
+    monkeypatch.setattr(mc, "AsyncClient", FakeAsyncClient)
+    monkeypatch.setattr(mc, "AsyncClientConfig", FakeAsyncClientConfig)
+    w = mc.MatrixClientWrapper(server="https://e.org", username="@bot:e.org", password="pw")
+
+    # Error responses have no displayname attribute at all
+    async def err(user_id):
+        return SimpleNamespace(message="not found")
+
+    w.client.get_displayname = err
+    assert await w.display_name("@u:e.org") == "@u:e.org"
+

@@ -119,7 +119,9 @@ class MatrixClientWrapper:
         """
         try:
             res = await self.client.get_displayname(user_id)
-            return getattr(res, "displayname", user_id)
+            # nio returns a response whose ``displayname`` is None when the user
+            # has no display name set; fall back to the user_id in that case.
+            return getattr(res, "displayname", None) or user_id
         except Exception:
             return user_id
 
