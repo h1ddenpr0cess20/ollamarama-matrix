@@ -39,6 +39,16 @@ class MatrixClientWrapper:
         store_path: str = "store",
         encryption_enabled: bool = True,
     ) -> None:
+        """Construct the wrapper and underlying nio ``AsyncClient``.
+
+        Args:
+            server: Homeserver URL.
+            username: Fully qualified Matrix user ID.
+            password: Account password used at login.
+            device_id: Optional device ID to reuse across sessions.
+            store_path: Directory for the nio encryption store.
+            encryption_enabled: Whether to enable end-to-end encryption.
+        """
         cfg = AsyncClientConfig(encryption_enabled=encryption_enabled, store_sync_tokens=True)
         self.client = AsyncClient(server, username, device_id=device_id or None, store_path=store_path, config=cfg)
         try:
@@ -162,6 +172,7 @@ class MatrixClientWrapper:
             handler: Coroutine function receiving `(room, event)`.
         """
         async def _cb(room: MatrixRoom, event: RoomMessageText) -> None:  # type: ignore
+            """Forward a text event to the registered handler."""
             await handler(room, event)
 
         self.client.add_event_callback(_cb, RoomMessageText)  # type: ignore
@@ -177,6 +188,7 @@ class MatrixClientWrapper:
             event_type: nio event class (or tuple of classes) to filter on.
         """
         async def _cb(room: Any, event: Any) -> None:
+            """Forward an event to the registered handler."""
             await handler(room, event)
 
         self.client.add_event_callback(_cb, event_type)  # type: ignore

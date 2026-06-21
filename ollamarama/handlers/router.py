@@ -15,6 +15,7 @@ class Router:
     """
 
     def __init__(self) -> None:
+        """Initialize empty user and admin command tables."""
         self._handlers: Dict[str, Callable] = {}
         self._admin_handlers: Dict[str, Callable] = {}
 

@@ -15,7 +15,20 @@ logger = logging.getLogger(__name__)
 
 
 class FastMCPClient:
+    """Adapter around ``fastmcp`` for listing and calling MCP server tools.
+
+    Normalizes a variety of server spec formats (URL strings, shell strings,
+    argv lists, and dicts) into fastmcp client configs, and bridges fastmcp's
+    async API into synchronous calls usable from the rest of the app.
+    """
+
     def __init__(self, servers: Dict[str, Any]) -> None:
+        """Normalize and store MCP server specifications.
+
+        Args:
+            servers: Mapping of server name to spec (URL string, shell string,
+                argv list, or config dict).
+        """
         self._servers: Dict[str, Any] = {}
         logger.debug("FastMCPClient init with servers: %s", list(servers.keys()))
         for name, spec in servers.items():
@@ -117,6 +130,13 @@ class FastMCPClient:
                 pass
 
     async def _list_tools_async(self) -> List[Dict[str, Any]]:
+        """Connect to each configured server and collect tool schemas.
+
+        Offline or misconfigured servers are logged and skipped.
+
+        Returns:
+            A list of OpenAI-style function tool definitions.
+        """
         schema: List[Dict[str, Any]] = []
         for name, cfg in self._servers.items():
             logger.debug("Listing tools from MCP server '%s'", name)
@@ -152,6 +172,21 @@ class FastMCPClient:
         return schema
 
     def _run(self, coro):
+        """Run a coroutine to completion from synchronous code.
+
+        Uses ``asyncio.run`` when no loop is running; otherwise runs the
+        coroutine on a fresh loop in a dedicated thread so it does not clash
+        with an already-running event loop.
+
+        Args:
+            coro: The coroutine to execute.
+
+        Returns:
+            The coroutine's result.
+
+        Raises:
+            Exception: Re-raises any exception raised by the coroutine.
+        """
         try:
             asyncio.get_running_loop()
         except RuntimeError:
@@ -160,6 +195,7 @@ class FastMCPClient:
         result: Dict[str, Any] = {}
 
         def runner() -> None:
+            """Run the coroutine on a new event loop in this thread."""
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
@@ -179,9 +215,21 @@ class FastMCPClient:
         return result.get("value")
 
     def list_tools(self) -> List[Dict[str, Any]]:
+        """Return tool schemas from all configured MCP servers (synchronous)."""
         return self._run(self._list_tools_async())
 
     async def _call_tool_async(self, client: Client, name: str, arguments: Dict[str, Any]) -> Any:
+        """Call a tool on a server and normalize its result.
+
+        Args:
+            client: The fastmcp client connected to the target server.
+            name: The tool name to call.
+            arguments: Arguments to pass to the tool.
+
+        Returns:
+            The tool's structured data, structured content, or aggregated
+            text wrapped as ``{"result": str}``.
+        """
         logger.debug("Calling MCP tool '%s' on client", name)
         self._configure_transport(client.transport)
         try:
@@ -204,6 +252,16 @@ class FastMCPClient:
         return {"result": aggregated}
 
     def call_tool(self, name: str, arguments: Dict[str, Any]) -> str:
+        """Call an MCP tool by name and return a JSON string result.
+
+        Args:
+            name: The tool name (resolved to its owning server).
+            arguments: Arguments to pass to the tool.
+
+        Returns:
+            A JSON string with the tool result, or a JSON error object if the
+            tool is unknown or execution fails.
+        """
         server_name = self._tool_servers.get(name)
         if server_name is None:
             logger.warning("Attempted to call unknown MCP tool '%s'", name)

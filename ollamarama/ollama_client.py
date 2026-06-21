@@ -20,6 +20,13 @@ class OllamaClient:
         timeout: int = 180,
         session: Optional[requests.Session] = None,
     ) -> None:
+        """Initialize the Ollama HTTP client.
+
+        Args:
+            base_url: Base URL of the Ollama API (without a trailing slash).
+            timeout: Default request timeout in seconds.
+            session: Optional ``requests.Session`` to reuse for connections.
+        """
         self.base_url = base_url.rstrip("/")
         self.timeout = int(timeout)
         self._session = session or requests.Session()
@@ -80,6 +87,23 @@ class OllamaClient:
         tool_choice: Optional[str] = "auto",
         timeout: Optional[int] = None,
     ) -> Dict[str, Any]:
+        """Send a chat request with tool definitions and return the response.
+
+        Args:
+            messages: Conversation messages in ChatML-like format.
+            model: Model name or ID to use.
+            options: Optional model-specific parameters.
+            tools: Tool/function schema definitions to expose to the model.
+            tool_choice: Optional tool choice strategy (e.g., ``"auto"``).
+            timeout: Optional request timeout override in seconds.
+
+        Returns:
+            Parsed JSON response from the Ollama server.
+
+        Raises:
+            NetworkError: If the HTTP request fails.
+            RuntimeFailure: If the response body is not valid JSON.
+        """
         payload: Dict[str, Any] = {
             "model": model,
             "messages": messages,

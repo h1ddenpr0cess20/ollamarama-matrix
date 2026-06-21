@@ -31,6 +31,12 @@ class Security:
     """
 
     def __init__(self, matrix_client, logger: Optional[logging.Logger] = None) -> None:
+        """Initialize the security helper.
+
+        Args:
+            matrix_client: The Matrix client wrapper exposing ``.client``.
+            logger: Optional logger; defaults to this module's logger.
+        """
         self.matrix = matrix_client
         self.logger = logger or logging.getLogger(__name__)
 

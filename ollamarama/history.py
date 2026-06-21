@@ -28,6 +28,18 @@ class HistoryStore:
         store_path: Optional[str] = None,
         encryption_key: Optional[str] = None,
     ) -> None:
+        """Initialize the history store and optionally restore from disk.
+
+        Args:
+            prompt_prefix: Text prepended to the personality in the system prompt.
+            prompt_suffix: Text appended to the personality in the system prompt.
+            personality: Default personality text.
+            prompt_suffix_extra: Optional extra suffix (e.g., a brevity clause)
+                included unless verbose mode is enabled.
+            max_tokens: Token budget for retained history per room/user.
+            store_path: Optional directory for encrypted persistence.
+            encryption_key: Optional Fernet key enabling encrypted persistence.
+        """
         self.prompt_prefix = prompt_prefix
         self.prompt_suffix = prompt_suffix
         self.prompt_suffix_extra = prompt_suffix_extra
@@ -55,6 +67,7 @@ class HistoryStore:
         self._include_extra = not bool(verbose)
 
     def _full_suffix(self) -> str:
+        """Return the prompt suffix, including the extra clause when enabled."""
         return f"{self.prompt_suffix}{self.prompt_suffix_extra if self._include_extra and self.prompt_suffix_extra else ''}"
 
     def _ensure(self, room: str, user: str) -> None:

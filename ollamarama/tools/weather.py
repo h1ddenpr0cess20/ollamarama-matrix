@@ -6,6 +6,14 @@ import requests
 
 
 def _units_map(units: str) -> Dict[str, str]:
+    """Map a unit system name to Open-Meteo unit parameters.
+
+    Args:
+        units: ``"metric"``/``"imperial"`` (``"us"`` is treated as imperial).
+
+    Returns:
+        A mapping with ``temperature_unit`` and ``windspeed_unit`` values.
+    """
     u = (units or "metric").lower()
     if u in ("imperial", "us"):
         return {"temperature_unit": "fahrenheit", "windspeed_unit": "mph"}
@@ -13,6 +21,14 @@ def _units_map(units: str) -> Dict[str, str]:
 
 
 def _code_desc(code: int) -> str:
+    """Translate a WMO weather code into a human-readable description.
+
+    Args:
+        code: The numeric WMO weather code from Open-Meteo.
+
+    Returns:
+        A short description, or ``"code <n>"`` if the code is unknown.
+    """
     mapping = {
         0: "clear sky",
         1: "mainly clear",
@@ -40,6 +56,18 @@ def _code_desc(code: int) -> str:
 
 
 def get_weather(city: str, units: str = "metric") -> Dict[str, Any]:
+    """Look up current weather for a city via the Open-Meteo API.
+
+    Geocodes the city name, then fetches current conditions.
+
+    Args:
+        city: The city name to look up.
+        units: ``"metric"`` or ``"imperial"``. Defaults to ``"metric"``.
+
+    Returns:
+        A mapping of weather details (location, temperature, windspeed,
+        description, etc.) on success, or ``{"error": str}`` on failure.
+    """
     if not city or not isinstance(city, str):
         return {"error": "Invalid 'city' argument; expected a non-empty string."}
 

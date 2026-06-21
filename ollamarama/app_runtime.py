@@ -160,6 +160,15 @@ def _make_text_handler(
     """
 
     async def on_text(room, event) -> None:
+        """Handle an incoming text event: filter, dispatch, and respond.
+
+        Args:
+            room: The room the message arrived in.
+            event: The text message event.
+
+        Returns:
+            None. Ignores the bot's own messages and events predating join.
+        """
         try:
             message_time = getattr(event, "server_timestamp", 0) / 1000.0
             message_time = _dt.datetime.fromtimestamp(message_time)

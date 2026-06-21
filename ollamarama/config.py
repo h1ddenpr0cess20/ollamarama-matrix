@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Tuple, Optional
 
 @dataclass
 class MatrixConfig:
+    """Matrix connection and behavior settings."""
+
     server: str
     username: str
     password: str
@@ -25,6 +27,8 @@ class MatrixConfig:
 
 @dataclass
 class OllamaConfig:
+    """Ollama endpoint, model, prompt, history, and tool settings."""
+
     api_url: str = "http://localhost:11434/api/chat"
     options: Dict[str, Any] = field(default_factory=dict)
     models: Dict[str, str] = field(default_factory=dict)
@@ -41,6 +45,8 @@ class OllamaConfig:
 
 @dataclass
 class AppConfig:
+    """Top-level application configuration."""
+
     matrix: MatrixConfig
     ollama: OllamaConfig
     markdown: bool = True
