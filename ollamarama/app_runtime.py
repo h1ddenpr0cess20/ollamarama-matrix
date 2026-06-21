@@ -228,6 +228,15 @@ def _make_invite_handler(ctx: AppContext, cfg: AppConfig) -> Callable[[Any, Any]
     """
 
     async def on_invite(room, event) -> None:
+        """Reject an invite for the bot by joining, replying, then leaving.
+
+        Args:
+            room: The invited room (``MatrixInvitedRoom``).
+            event: The ``InviteMemberEvent`` describing the membership change.
+
+        Returns:
+            None. Ignores invites that are not for the bot.
+        """
         try:
             invitee = getattr(event, "state_key", None)
             if invitee and invitee != cfg.matrix.username:
@@ -263,6 +272,15 @@ def _make_undecrypted_handler(ctx: AppContext) -> Callable[[Any, Any], Any]:
     """
 
     async def on_undecrypted(room, event) -> None:
+        """Request the Megolm session key for an undecryptable message.
+
+        Args:
+            room: The room the event arrived in.
+            event: The ``MegolmEvent`` that could not be decrypted.
+
+        Returns:
+            None.
+        """
         try:
             room_id = getattr(room, "room_id", None)
             await ctx.matrix.request_room_key(event)
