@@ -165,7 +165,7 @@ def load_config(
             personality=ollama.get("personality", ""),
             history_tokens=int(ollama.get("history_tokens", 8192)),
             history_encryption_key=str(ollama.get("history_encryption_key", "")),
-            timeout=360,
+            timeout=int(ollama.get("timeout", 180)),
             mcp_servers=dict(ollama.get("mcp_servers", {})),
             verbose=bool(ollama.get("verbose", False)),
             thinking=bool(ollama.get("thinking", True)),

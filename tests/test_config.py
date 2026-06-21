@@ -39,6 +39,21 @@ def test_load_and_validate(tmp_path):
     assert ok, errs
 
 
+def test_timeout_is_read_from_config(tmp_path):
+    p = write_tmp_config(tmp_path)
+    cfg = load_config(str(p))
+    assert cfg.ollama.timeout == 60
+
+
+def test_timeout_defaults_when_absent(tmp_path):
+    p = write_tmp_config(tmp_path)
+    data = json.loads(Path(p).read_text())
+    del data["ollama"]["timeout"]
+    Path(p).write_text(json.dumps(data))
+    cfg = load_config(str(p))
+    assert cfg.ollama.timeout == 180
+
+
 def test_invalid_server(tmp_path):
     p = write_tmp_config(tmp_path)
     data = json.loads(Path(p).read_text())
