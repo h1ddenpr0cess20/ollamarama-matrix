@@ -213,6 +213,67 @@ def _make_text_handler(
     return on_text
 
 
+def _make_invite_handler(ctx: AppContext, cfg: AppConfig) -> Callable[[Any, Any], Any]:
+    """Build a handler that rejects room invites with a parting message.
+
+    When invited to a room, the bot joins briefly, sends the configured
+    ``matrix.invite_reply`` (addressed to the inviter), then leaves.
+
+    Args:
+        ctx: Application context.
+        cfg: Application configuration.
+
+    Returns:
+        Async callback handling ``InviteMemberEvent`` events.
+    """
+
+    async def on_invite(room, event) -> None:
+        try:
+            # Only react to the bot's own invite, not other members' state.
+            invitee = getattr(event, "state_key", None)
+            if invitee and invitee != cfg.matrix.username:
+                return
+            if getattr(event, "membership", "invite") != "invite":
+                return
+            room_id = getattr(room, "room_id", None) or getattr(event, "room_id", None)
+            if not room_id:
+                return
+            inviter = getattr(event, "sender", "") or ""
+            inviter_name = await ctx.matrix.display_name(inviter) if inviter else "stranger"
+            try:
+                await ctx.matrix.join(room_id)
+                body = cfg.matrix.invite_reply.format(name=inviter_name)
+                await ctx.matrix.send_text(room_id, body, html=ctx.render(body))
+            finally:
+                await ctx.matrix.leave(room_id)
+            ctx.log(f"Rejected invite from {inviter_name} ({inviter}) to {room_id}")
+        except Exception as e:
+            ctx.log(e)
+
+    return on_invite
+
+
+def _make_undecrypted_handler(ctx: AppContext) -> Callable[[Any, Any], Any]:
+    """Build a handler that re-requests keys for undecryptable messages.
+
+    Args:
+        ctx: Application context.
+
+    Returns:
+        Async callback handling ``MegolmEvent`` events.
+    """
+
+    async def on_undecrypted(room, event) -> None:
+        try:
+            room_id = getattr(room, "room_id", None)
+            await ctx.matrix.request_room_key(event)
+            ctx.log(f"Requested room key for undecryptable message in {room_id}")
+        except Exception as e:
+            ctx.log(e)
+
+    return on_undecrypted
+
+
 async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
     """Start the Matrix bot using the provided configuration.
 
@@ -255,6 +316,8 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
 
     join_time = _dt.datetime.now()
     ctx.matrix.add_text_handler(_make_text_handler(ctx, cfg, router, security, join_time))
+    ctx.matrix.add_invite_handler(_make_invite_handler(ctx, cfg))
+    ctx.matrix.add_megolm_handler(_make_undecrypted_handler(ctx))
 
     stop = _setup_stop_event()
     try:

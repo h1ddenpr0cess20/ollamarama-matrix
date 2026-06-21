@@ -17,6 +17,12 @@ class MatrixConfig:
     device_id: str = ""
     store_path: str = "store"
     e2e: bool = True
+    # Message sent to anyone who invites the bot to a room before it leaves.
+    # The placeholder ``{name}`` is replaced with the inviter's display name.
+    invite_reply: str = (
+        "No thanks, {name}. I don't show up to rooms I wasn't built for. "
+        "Don't invite me again. 🙄"
+    )
 
 
 @dataclass
@@ -155,6 +161,7 @@ def load_config(
             device_id=matrix.get("device_id", ""),
             store_path=matrix.get("store_path", "store"),
             e2e=bool(matrix.get("e2e", True)),
+            invite_reply=str(matrix.get("invite_reply", MatrixConfig.invite_reply)),
         ),
         ollama=OllamaConfig(
             api_url=ollama.get("api_url", "http://localhost:11434/api/chat"),

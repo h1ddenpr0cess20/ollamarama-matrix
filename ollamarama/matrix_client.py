@@ -4,11 +4,20 @@ import asyncio
 from typing import Any, Awaitable, Callable, Optional
 
 try:
-    from nio import AsyncClient, AsyncClientConfig, MatrixRoom, RoomMessageText
+    from nio import (
+        AsyncClient,
+        AsyncClientConfig,
+        InviteMemberEvent,
+        MatrixRoom,
+        MegolmEvent,
+        RoomMessageText,
+    )
 except Exception:  # pragma: no cover - allow import in environments without nio
     AsyncClient = object  # type: ignore
     AsyncClientConfig = object  # type: ignore
+    InviteMemberEvent = object  # type: ignore
     MatrixRoom = object  # type: ignore
+    MegolmEvent = object  # type: ignore
     RoomMessageText = object  # type: ignore
 
 
@@ -63,6 +72,30 @@ class MatrixClientWrapper:
             room_id: Room ID or alias to join.
         """
         await self.client.join(room_id)
+
+    async def leave(self, room_id: str) -> None:
+        """Leave (or reject an invite to) the specified Matrix room.
+
+        Args:
+            room_id: Room ID to leave.
+        """
+        await self.client.room_leave(room_id)
+
+    async def request_room_key(self, event: Any) -> None:
+        """Request the Megolm session key for an undecryptable message.
+
+        Best-effort: silently ignores clients/events that don't support it.
+
+        Args:
+            event: The `MegolmEvent` that could not be decrypted.
+        """
+        request = getattr(self.client, "request_room_key", None)
+        if request is None:
+            return
+        try:
+            await request(event)
+        except Exception:
+            pass
 
     async def send_text(self, room_id: str, body: str, html: Optional[str] = None) -> Optional[str]:
         """Send a text message to a room and return its event ID, or None on failure.
@@ -135,6 +168,29 @@ class MatrixClientWrapper:
             await handler(room, event)
 
         self.client.add_event_callback(_cb, RoomMessageText)  # type: ignore
+
+    def add_event_handler(self, handler: TextHandler, event_type: Any) -> None:
+        """Register a callback for an arbitrary room event type.
+
+        Works for both joined-room timeline events and invited-room state
+        events (e.g. ``InviteMemberEvent``).
+
+        Args:
+            handler: Coroutine function receiving `(room, event)`.
+            event_type: nio event class (or tuple of classes) to filter on.
+        """
+        async def _cb(room: Any, event: Any) -> None:
+            await handler(room, event)
+
+        self.client.add_event_callback(_cb, event_type)  # type: ignore
+
+    def add_invite_handler(self, handler: TextHandler) -> None:
+        """Register a callback for room invite events (`InviteMemberEvent`)."""
+        self.add_event_handler(handler, InviteMemberEvent)
+
+    def add_megolm_handler(self, handler: TextHandler) -> None:
+        """Register a callback for undecryptable encrypted events (`MegolmEvent`)."""
+        self.add_event_handler(handler, MegolmEvent)
 
     def add_to_device_callback(self, callback, event_types=None) -> None:
         """Register a to-device event callback if supported by the client."""

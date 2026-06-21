@@ -12,6 +12,7 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
   - device_id: optional; persisted after first login
   - store_path: directory for Matrix store (default: `store`)
   - e2e: boolean, enable end‑to‑end encryption (default: true)
+  - invite_reply: message sent to anyone who invites the bot to a room before it leaves; the bot does not stay in rooms it is invited to. Supports a `{name}` placeholder for the inviter's display name.
 - ollama:
   - api_url: Chat endpoint (default: `http://localhost:11434/api/chat`)
   - models: mapping of friendly names to model IDs (e.g., `{ "qwen3": "qwen3" }`)
