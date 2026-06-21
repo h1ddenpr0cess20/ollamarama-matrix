@@ -78,7 +78,7 @@ async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, 
         except Exception:
             pass
         return
-    response_text = data.get("message", {}).get("content", "")
+    response_text = data.get("message", {}).get("content") or ""
     # Log thinking markers
     if "</think>" in response_text and "<think>" in response_text:
         try:

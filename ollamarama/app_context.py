@@ -427,7 +427,7 @@ class AppContext:
             iterations += 1
 
         final = result.get("message", {})
-        content = final.get("content", "").strip()
+        content = (final.get("content") or "").strip()
         messages.append({"role": "assistant", "content": content})
         AppContext._prune_tool_messages(self, messages)
         log.debug("Responded with %d characters after %d iteration(s)", len(content), iterations)

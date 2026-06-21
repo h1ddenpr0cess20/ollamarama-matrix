@@ -34,7 +34,7 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
             response_text = await ctx.to_thread(ctx.respond_with_tools, messages)
         else:
             data = await ctx.to_thread(ollama.chat, messages=messages, model=ctx.model, options=ctx.options, timeout=ctx.timeout)
-            response_text = data.get("message", {}).get("content", "")
+            response_text = data.get("message", {}).get("content") or ""
     except Exception as e:
         try:
             await ctx.send_response(room_id, "Something went wrong", html=ctx.render("Something went wrong"))

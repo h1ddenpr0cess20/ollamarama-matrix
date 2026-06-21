@@ -103,6 +103,26 @@ async def test_handle_ai_trims_whitespace_simple():
 
 
 @pytest.mark.asyncio
+async def test_handle_ai_handles_null_content():
+    # Some models/servers return {"content": null}; must not crash on .strip()/in checks
+    ctx = SimpleNamespace(
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
+        matrix=FakeMatrix(),
+        ollama=FakeOllama(None),
+        to_thread=_to_thread,
+        render=lambda s: None,
+        model="qwen3",
+        options={},
+        timeout=10,
+        log=lambda *a, **k: None,
+    )
+    ctx.send_response = _make_send_response(ctx.matrix)
+    await handle_ai(ctx, "!r", "@u", "User", "hi")
+    sent_body = ctx.matrix.sent[-1][1]
+    assert sent_body.startswith("**User**:")
+
+
+@pytest.mark.asyncio
 async def test_handle_help_splits_admin_section():
     ctx = SimpleNamespace(
         matrix=FakeMatrix(),

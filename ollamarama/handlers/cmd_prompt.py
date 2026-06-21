@@ -91,7 +91,7 @@ async def _respond(ctx: Any, room_id: str, user_id: str, header_display: str) ->
         except Exception:
             pass
         return
-    response_text = data.get("message", {}).get("content", "")
+    response_text = data.get("message", {}).get("content") or ""
     # Log any thinking markers and ALWAYS strip from output
     if "</think>" in response_text and "<think>" in response_text:
         try:
