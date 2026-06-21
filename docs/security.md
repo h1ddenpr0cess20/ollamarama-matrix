@@ -11,7 +11,7 @@ This guide provides practical steps to deploy the bot more safely in real rooms.
 
 ## Rooms, Permissions, and Scope
 
-- Invite the bot only to rooms where it is needed; prefer private rooms for testing.
+- Add the bot only to rooms where it is needed by listing them in `matrix.channels`; prefer private rooms for testing. The bot rejects unsolicited invites (it joins, replies with `matrix.invite_reply`, and leaves), so it cannot be pulled into rooms it was not configured for.
 - Restrict who can use admin‑only commands (e.g., model changes) via room access controls and bot configuration.
 - Consider read‑only rooms or rate limits for high‑traffic spaces.
 

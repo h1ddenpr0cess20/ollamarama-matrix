@@ -76,6 +76,7 @@ python -m ollamarama --config config.json
 
 ## Verify
 
-- The bot logs in and joins configured rooms
+- The bot logs in and joins the rooms listed in `matrix.channels`
 - Send `.ai hello` or `BotName: hello` in a joined room
 - The bot replies and maintains per‑user history
+- Invites to other rooms are declined automatically (the bot replies with `matrix.invite_reply` and leaves)

@@ -108,9 +108,10 @@ python -m ollamarama --config config.json
 
 ### 4) Try It
 
-- The bot logs in and joins configured rooms
+- The bot logs in and joins the rooms listed in `matrix.channels`
 - Send `.ai hello` or `BotName: hello` in a joined room
 - The bot replies and maintains per‑user history
+- Invites to other rooms are declined automatically (the bot replies and leaves)
 
 ## Usage Guide
 
@@ -123,6 +124,7 @@ Common commands (see [Commands](docs/commands.md) for the full list):
 | `.persona <text>` | Change your personality | `.persona helpful librarian` |
 | `.custom <prompt>` | Use a custom system prompt | `.custom You are a coding expert` |
 | `.reset` / `.stock` | Clear history (default/stock prompt) | `.reset` |
+| `.history [on,off,toggle]` | Enable or disable your conversation history | `.history off` |
 | `.model [name]` (admin) | Show/change model | `.model qwen3` |
 | `.clear` (admin) | Reset globally for all users | `.clear` |
 | `.help` | Show inline help | `.help` |
