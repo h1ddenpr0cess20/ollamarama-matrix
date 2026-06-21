@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, Optional
 
@@ -135,33 +136,64 @@ class Security:
         """Trust devices for the given user to prevent send failures.
 
         Strategy:
-        - Query devices (if API available).
+        - Refresh device keys from the server (best-effort).
         - Mark unverified devices as verified (best-effort) to avoid blocking.
+
+        Notes on the nio API:
+        - ``AsyncClient.keys_query()`` takes no arguments (it queries every user
+          flagged for a key query); there is no ``query_keys`` method.
+        - ``AsyncClient.verify_device(device)`` is synchronous and accepts a
+          single ``OlmDevice``; it is not a coroutine and does not take
+          ``(user_id, device_id)``.
         """
         c = getattr(self.matrix, "client", None)
         if c is None:
             return
         try:
-            # Query device list to populate store, if available
-            if hasattr(c, "query_keys"):
-                await c.query_keys([user_id])  # type: ignore
+            # Refresh device list/keys from the server, if supported.
+            if hasattr(c, "keys_query"):
+                await c.keys_query()  # type: ignore[func-returns-value]
         except Exception:
             pass
         try:
-            store = getattr(c, "device_store", None)
-            devices = {}
-            if store is not None:
-                devices = getattr(store, "devices", {}).get(user_id, {})
-            for device_id, dev in dict(devices).items():
-                # dev.verified may exist; if not, attempt verify anyway
+            for device in self._user_devices(c, user_id):
                 try:
-                    if getattr(dev, "verified", False):
+                    if getattr(device, "verified", False):
                         continue
-                    if hasattr(c, "verify_device"):
-                        await c.verify_device(user_id, device_id)  # type: ignore
-                        self.logger.info("verified device %s for %s", device_id, user_id)
+                    verify = getattr(c, "verify_device", None)
+                    if verify is None:
+                        continue
+                    # verify_device is synchronous in nio, but tolerate async mocks.
+                    result = verify(device)
+                    if asyncio.iscoroutine(result):
+                        await result
+                    dev_id = getattr(device, "device_id", None) or getattr(device, "id", "?")
+                    self.logger.info("verified device %s for %s", dev_id, user_id)
                 except Exception:
                     # Ignore failures; sending uses ignore_unverified_devices=True
                     pass
         except Exception:
             pass
+
+    @staticmethod
+    def _user_devices(client: Any, user_id: str) -> list:
+        """Return the list of OlmDevice objects known for a user.
+
+        Prefers the public ``device_store.active_user_devices`` iterator and
+        falls back to the raw ``device_store.devices`` mapping for older APIs.
+        """
+        store = getattr(client, "device_store", None)
+        if store is None:
+            return []
+        active = getattr(store, "active_user_devices", None)
+        if callable(active):
+            try:
+                return list(active(user_id))
+            except Exception:
+                pass
+        # Fallback: {user_id: {device_id: OlmDevice}} mapping
+        devices = getattr(store, "devices", {})
+        try:
+            return list(devices.get(user_id, {}).values())
+        except Exception:
+            return []
