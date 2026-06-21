@@ -9,7 +9,20 @@ from typing import Any, Dict, List, Tuple, Optional
 
 @dataclass
 class MatrixConfig:
-    """Matrix connection and behavior settings."""
+    """Matrix connection and behavior settings (the ``matrix`` config section).
+
+    Attributes:
+        server: Homeserver URL.
+        username: Fully qualified bot user ID.
+        password: Account password.
+        channels: Rooms to join at startup (aliases or IDs).
+        admins: Display names allowed to run admin commands.
+        device_id: Device ID; persisted after first login when empty.
+        store_path: Directory for the encryption/sync store.
+        e2e: Whether end-to-end encryption is enabled.
+        invite_reply: Message sent to anyone who invites the bot before it
+            leaves; ``{name}`` is replaced with the inviter's display name.
+    """
 
     server: str
     username: str
@@ -27,7 +40,25 @@ class MatrixConfig:
 
 @dataclass
 class OllamaConfig:
-    """Ollama endpoint, model, prompt, history, and tool settings."""
+    """Ollama endpoint, model, prompt, history, and tool settings.
+
+    Mirrors the ``ollama`` config section.
+
+    Attributes:
+        api_url: Chat endpoint URL.
+        options: Generation options (e.g., temperature, top_p).
+        models: Mapping of friendly names to model IDs.
+        default_model: Selected model (key or ID present in ``models``).
+        prompt: ``[prefix, suffix]`` or ``[prefix, suffix, brevity]`` strings
+            wrapped around the personality to form the system prompt.
+        personality: Default personality text.
+        history_tokens: Per-room/user history token budget.
+        history_encryption_key: Optional Fernet key enabling encrypted history.
+        timeout: Per-request timeout in seconds for Ollama calls.
+        mcp_servers: Optional MCP server specs for tool calling.
+        verbose: When True, omit the optional brevity clause for new chats.
+        thinking: When True, show an animated thinking placeholder.
+    """
 
     api_url: str = "http://localhost:11434/api/chat"
     options: Dict[str, Any] = field(default_factory=dict)
@@ -45,7 +76,13 @@ class OllamaConfig:
 
 @dataclass
 class AppConfig:
-    """Top-level application configuration."""
+    """Top-level application configuration.
+
+    Attributes:
+        matrix: Matrix connection and behavior settings.
+        ollama: Ollama endpoint, model, and prompt settings.
+        markdown: Whether to render replies as Markdown/HTML.
+    """
 
     matrix: MatrixConfig
     ollama: OllamaConfig

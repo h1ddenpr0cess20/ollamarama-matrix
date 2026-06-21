@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..thinking import split_thinking
+
 
 async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, args: str) -> None:
     """Send a message on behalf of one user to another.
@@ -76,24 +78,9 @@ async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, 
             pass
         return
     response_text = data.get("message", {}).get("content") or ""
-    if "</think>" in response_text and "<think>" in response_text:
-        try:
-            thinking, rest = response_text.split("</think>", 1)
-            thinking = thinking.replace("<think>", "").strip()
-            ctx.log(f"Model thinking for {target_display} ({target_user}): {thinking}")
-            response_text = rest
-        except Exception:
-            pass
-    if "<|begin_of_thought|>" in response_text and "<|end_of_thought|>" in response_text:
-        try:
-            parts = response_text.split("<|end_of_thought|>")
-            if len(parts) > 1:
-                thinking = parts[0].replace("<|begin_of_thought|>", "").replace("<|end_of_thought|>", "").strip()
-                ctx.log(f"Model thinking for {target_display} ({target_user}): {thinking}")
-                response_text = parts[1]
-        except Exception:
-            pass
-    response_text = response_text.strip()
+    response_text, thinking = split_thinking(response_text)
+    if thinking:
+        ctx.log(f"Model thinking for {target_display} ({target_user}): {thinking}")
     ctx.history.add(room_id, target_user, "assistant", response_text)
     body = f"**{sender_display}**:\n{response_text}"
     html = ctx.render(body)
