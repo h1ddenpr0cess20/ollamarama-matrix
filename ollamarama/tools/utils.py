@@ -10,7 +10,6 @@ def get_time(timezone_name: str = "UTC") -> Dict[str, Any]:
         return {"datetime": datetime.now(timezone.utc).isoformat(), "timezone": "UTC"}
     if tz.lower() == "local":
         return {"datetime": datetime.now().isoformat(), "timezone": "local"}
-    # Try ZoneInfo if available (Python 3.9+), else fallback
     try:
         from zoneinfo import ZoneInfo  # type: ignore
 

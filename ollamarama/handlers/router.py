@@ -70,7 +70,6 @@ class Router:
             return None, tuple()
         cmd = parts[0]
         args = " ".join(parts[1:])
-        # Bot mention form: "Botname: message"
         if bot_name and cmd == f"{bot_name}:":
             return self._handlers.get(".ai"), (ctx, room_id, sender_id, sender_display, args)
 

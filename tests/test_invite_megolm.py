@@ -57,7 +57,7 @@ async def test_invite_joins_replies_and_leaves():
     assert matrix.left == ["!new:m.org"]
     assert len(matrix.sent) == 1
     body = matrix.sent[0][1]
-    assert "DN:@rude:m.org" in body  # inviter name interpolated into {name}
+    assert "DN:@rude:m.org" in body
 
 
 @pytest.mark.asyncio
@@ -66,7 +66,6 @@ async def test_invite_ignores_other_members_invites():
     handler = _make_invite_handler(_ctx(matrix), _cfg())
 
     room = SimpleNamespace(room_id="!new:m.org")
-    # Invite is for a different user, not the bot
     event = SimpleNamespace(state_key="@someone:m.org", membership="invite", sender="@x:m.org")
     await handler(room, event)
 
@@ -85,7 +84,6 @@ async def test_invite_still_leaves_when_send_fails():
     event = SimpleNamespace(state_key="@bot:m.org", membership="invite", sender="@r:m.org")
     await handler(room, event)
 
-    # The finally clause must still leave the room even if the message fails
     assert matrix.left == ["!new:m.org"]
 
 

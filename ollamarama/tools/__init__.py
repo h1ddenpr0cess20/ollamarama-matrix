@@ -9,7 +9,6 @@ from pathlib import Path
 import logging
 
 
-# Lazily built registry mapping tool/function names to callables.
 _TOOL_REGISTRY: Dict[str, Callable[..., str]] | None = None
 logger = logging.getLogger(__name__)
 
@@ -86,7 +85,6 @@ def execute_tool(name: str, arguments: Dict[str, Any]) -> str:
         logger.warning("Unknown builtin tool '%s'", name)
         return f"Unknown tool: {name}"
     try:
-        # Log with parameters (truncated for readability); styling handled by Rich highlighter
         try:
             _args_str = json.dumps(arguments or {}, ensure_ascii=False, default=str)
         except Exception:
@@ -95,17 +93,14 @@ def execute_tool(name: str, arguments: Dict[str, Any]) -> str:
             _args_str = _args_str[:800] + "…"
         logger.info("Tool (builtin): %s args=%s", name, _args_str)
         result = func(**(arguments or {}))
-        # Ensure JSON string output
         if isinstance(result, (dict, list, int, float, bool)) or result is None:
             return json.dumps(result, ensure_ascii=False)
         if isinstance(result, str):
             try:
-                # Pass through if already JSON
                 json.loads(result)
                 return result
             except Exception:
                 return json.dumps({"result": result}, ensure_ascii=False)
-        # Fallback: stringify
         return json.dumps({"result": str(result)}, ensure_ascii=False)
     except TypeError as e:
         logger.exception("Invalid arguments for builtin tool '%s'", name)

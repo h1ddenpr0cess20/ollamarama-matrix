@@ -30,7 +30,6 @@ async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, 
     target_display = ""
     message = ""
 
-    # Explicit mxid target: `.x @user:server message`
     if raw.startswith("@"):
         parts = raw.split(maxsplit=1)
         if len(parts) < 2:
@@ -41,7 +40,6 @@ async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, 
             target_display = possible_user
             message = rest
 
-    # Display-name target (supports spaces): choose the longest matching name
     if not target_user:
         candidates = []
         for user in list(ctx.history._messages.get(room_id, {}).keys()):  # type: ignore[attr-defined]
@@ -59,7 +57,6 @@ async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, 
         if not message:
             return
 
-    # Only proceed if the target already has history in this room
     room_hist = getattr(ctx.history, "_messages", {}).get(room_id, {})  # type: ignore[attr-defined]
     if not target_user or target_user not in room_hist:
         return
@@ -79,12 +76,10 @@ async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, 
             pass
         return
     response_text = data.get("message", {}).get("content") or ""
-    # Log thinking markers
     if "</think>" in response_text and "<think>" in response_text:
         try:
             thinking, rest = response_text.split("</think>", 1)
             thinking = thinking.replace("<think>", "").strip()
-            # Use provided target display name if available
             ctx.log(f"Model thinking for {target_display} ({target_user}): {thinking}")
             response_text = rest
         except Exception:

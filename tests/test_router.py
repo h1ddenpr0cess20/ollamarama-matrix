@@ -11,7 +11,6 @@ def test_router_dispatch_ai():
     r.register(".ai", h)
     fn, args = r.dispatch(object(), "!r", "@u", "User", ".ai hello world", False, bot_name="Bot")
     assert fn is h
-    # args = (ctx, room_id, sender_id, sender_display, args)
     assert args[-1] == "hello world"
 
 

@@ -42,7 +42,6 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
         except Exception:
             pass
         return
-    # Strip think tags if present
     if "</think>" in response_text and "<think>" in response_text:
         try:
             thinking, rest = response_text.split("</think>", 1)

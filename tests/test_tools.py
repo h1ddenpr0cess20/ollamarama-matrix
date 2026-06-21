@@ -6,8 +6,6 @@ from ollamarama.tools.utils import get_time
 from ollamarama.tools import web, weather
 
 
-# -- math: arithmetic + safety -------------------------------------------------
-
 def test_calculate_basic_arithmetic():
     assert calculate_expression("2 + 3 * 4")["result"] == 14.0
     assert calculate_expression("-2 ** 2")["result"] == -4.0
@@ -27,15 +25,12 @@ def test_calculate_basic_arithmetic():
     ],
 )
 def test_calculate_rejects_non_arithmetic(expr):
-    # The AST evaluator must refuse anything that isn't pure arithmetic.
     assert calculate_expression(expr) == {"error": "Invalid arithmetic expression."}
 
 
 def test_calculate_division_by_zero_is_handled():
     assert "error" in calculate_expression("1/0")
 
-
-# -- text ----------------------------------------------------------------------
 
 def test_text_stats_counts():
     out = text_stats("Hello world. How are you?")
@@ -48,8 +43,6 @@ def test_text_stats_empty():
     assert text_stats("   ") == {"words": 0, "characters": 0, "sentences": 0}
 
 
-# -- utils (time) --------------------------------------------------------------
-
 def test_get_time_utc():
     out = get_time("UTC")
     assert out["timezone"] == "UTC"
@@ -59,8 +52,6 @@ def test_get_time_utc():
 def test_get_time_invalid_timezone():
     assert "error" in get_time("Not/AZone")
 
-
-# -- web (mocked network) ------------------------------------------------------
 
 def test_fetch_url_truncates(monkeypatch):
     class Resp:
@@ -84,8 +75,6 @@ def test_fetch_url_request_error(monkeypatch):
     monkeypatch.setattr(web.requests, "get", boom)
     assert "error" in web.fetch_url("http://example.com")
 
-
-# -- weather (mocked network) --------------------------------------------------
 
 def test_get_weather_invalid_city():
     assert "error" in weather.get_weather("")

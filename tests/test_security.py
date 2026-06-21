@@ -21,7 +21,6 @@ class FakeDeviceStore:
         self._by_user = by_user
 
     def active_user_devices(self, user_id):
-        # Mirrors nio.crypto.DeviceStore.active_user_devices: yields OlmDevice
         return iter(self._by_user.get(user_id, []))
 
 
@@ -38,11 +37,11 @@ class FakeClient:
         self.key_verifications = {"t1": FakeSas()}
         self.device_id = "BOT"
 
-    async def keys_query(self):  # nio: no args
+    async def keys_query(self):
         self.keys_queried += 1
         return None
 
-    def verify_device(self, device):  # nio: synchronous, takes an OlmDevice
+    def verify_device(self, device):
         self.verified.append(device.device_id)
         return True
 
@@ -72,14 +71,12 @@ async def test_security_allow_devices_verifies_unverified():
     fake = SimpleNamespace(client=FakeClient())
     sec = Security(fake)
     await sec.allow_devices("@u")
-    # Should refresh keys and verify only the unverified device (D1), not D2
     assert fake.client.keys_queried == 1
     assert fake.client.verified == ["D1"]
 
 
 @pytest.mark.asyncio
 async def test_security_allow_devices_supports_legacy_devices_mapping():
-    # Older nio exposed device_store.devices as {user: {device_id: OlmDevice}}
     fake = SimpleNamespace(client=FakeClient())
     fake.client.device_store = SimpleNamespace(
         devices={"@u": {"D1": FakeDevice("D1", False), "D2": FakeDevice("D2", True)}}
@@ -110,7 +107,7 @@ async def test_emoji_verification_callback_flow():
     start = KeyVerificationStart({}, "@u", "t1", "DEVX", "m.sas.v1", [], [], [], ["emoji"])  # type: ignore[arg-type]
     await sec.emoji_verification_callback(start)
     assert fake.client.accepted == ["t1"]
-    assert fake.client.sent  # share_key message sent
+    assert fake.client.sent
 
     key = KeyVerificationKey({}, "@u", "t1", "key")  # type: ignore[arg-type]
     await sec.emoji_verification_callback(key)

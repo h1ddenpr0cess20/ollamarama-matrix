@@ -3,23 +3,16 @@ from ollamarama.history import HistoryStore
 
 
 def test_history_prompt_and_trim():
-    # ~4 chars per token; each message "m{i}" ≈ 2 chars = 0 tokens by integer div.
-    # Use longer content so tokens accumulate: 100-char messages ≈ 25 tokens each.
-    # Limit to 50 tokens → keep at most ~2 non-system messages.
     hs = HistoryStore("you are ", ".", "helper", max_tokens=50)
     room = "!r:server"
     user = "@u:server"
-    # init
     msgs = hs.get(room, user)
     assert msgs[0]["role"] == "system"
-    # add messages beyond token budget
     for i in range(10):
         hs.add(room, user, "user", "x" * 100)
     msgs = hs.get(room, user)
-    # token budget of 50 means at most a couple messages survive
     total_tokens = sum(len(m.get("content", "")) for m in msgs) // 4
     assert total_tokens <= 50
-    # ensure system preserved at index 0 when present
     assert msgs[0]["role"] in ("system", "user")
 
 
@@ -31,14 +24,11 @@ def test_no_history_clears_after_assistant():
     hs.set_no_history(room, user, True)
     assert hs.get_no_history(room, user) is True
 
-    # Simulate a full exchange
     hs.add(room, user, "user", "Hello")
-    # User message should still be present (needed for AI to respond)
     msgs = hs.get(room, user)
     assert any(m["role"] == "user" for m in msgs)
 
     hs.add(room, user, "assistant", "Hi there!")
-    # After assistant response, only system prompt should remain
     msgs = hs.get(room, user)
     assert len(msgs) == 1
     assert msgs[0]["role"] == "system"
@@ -67,7 +57,7 @@ def test_no_history_history_accumulates_normally_when_enabled():
     hs.add(room, user, "assistant", "resp2")
 
     msgs = hs.get(room, user)
-    assert len(msgs) == 5  # system + 2 user + 2 assistant
+    assert len(msgs) == 5
 
 
 def test_no_history_different_users_isolated():
@@ -86,10 +76,8 @@ def test_no_history_different_users_isolated():
     msgs_a = hs.get(room, user_a)
     msgs_b = hs.get(room, user_b)
 
-    # user_a has history off — only system prompt remains
     assert len(msgs_a) == 1 and msgs_a[0]["role"] == "system"
-    # user_b has history on — full exchange preserved
-    assert len(msgs_b) == 3  # system + user + assistant
+    assert len(msgs_b) == 3
 
 
 def test_global_no_history_toggle():
@@ -106,7 +94,6 @@ def test_global_no_history_overrides_per_user():
     room = "!r:server"
     user = "@u:server"
 
-    # user has history on (default), but global disables it
     hs.set_global_no_history(True)
     hs.add(room, user, "user", "Hello")
     hs.add(room, user, "assistant", "Hi there!")
@@ -136,7 +123,6 @@ def test_global_no_history_get_no_history_returns_true():
     room = "!r:server"
     user = "@u:server"
 
-    # Per-user has history enabled, but global flag makes get_no_history True
     assert hs.get_no_history(room, user) is False
     hs.set_global_no_history(True)
     assert hs.get_no_history(room, user) is True
@@ -156,7 +142,6 @@ async def test_handle_history_global_admin_only():
     room = "!r:server"
     sender_id = "@user:server"
 
-    # Non-admin trying global — should be denied
     await handle_history(ctx, room, sender_id, "User", "global on")
     ctx.matrix.send_text.assert_called_once()
     body = ctx.matrix.send_text.call_args[0][1]
@@ -178,7 +163,6 @@ async def test_handle_history_global_admin_sets():
     room = "!r:server"
     sender_id = "@admin:server"
 
-    # Admin turns global off
     await handle_history(ctx, room, sender_id, "Admin", "global off")
     ctx.history.set_global_no_history.assert_called_once_with(True)
     body = ctx.matrix.send_text.call_args[0][1]
@@ -208,7 +192,6 @@ async def test_handle_history_per_user_shows_global_override_note():
 
     ctx = MagicMock()
     ctx.admins = []
-    # get_no_history returns True (due to global), get_global_no_history True
     ctx.history.get_no_history.return_value = True
     ctx.history.get_global_no_history.return_value = True
     ctx.render = lambda b: b

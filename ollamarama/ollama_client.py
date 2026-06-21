@@ -24,7 +24,6 @@ class OllamaClient:
         self.timeout = int(timeout)
         self._session = session or requests.Session()
 
-    # ---- Public API ----
     def chat(
         self,
         messages: List[Dict[str, str]],
@@ -57,7 +56,6 @@ class OllamaClient:
         }
         if options is not None:
             payload["options"] = options
-        # Some servers accept a 'timeout' field in the body; preserve compatibility
         if timeout is not None:
             payload["timeout"] = int(timeout)
         try:
@@ -119,7 +117,6 @@ class OllamaClient:
                 return True
         except requests.RequestException:
             pass
-        # Fallback
         try:
             r = self._session.head(f"{self.base_url}/chat", timeout=5)
             return r.ok

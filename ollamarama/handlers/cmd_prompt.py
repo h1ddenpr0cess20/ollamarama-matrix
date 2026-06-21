@@ -28,7 +28,6 @@ async def handle_persona(ctx: Any, room_id: str, sender_id: str, sender_display:
         ctx.log(f"System prompt for {sender_display} ({sender_id}) set to '{prompt}'")
     except Exception:
         pass
-    # Introduce self to seed the conversation
     ctx.history.add(room_id, sender_id, "user", "introduce yourself")
     await _respond(ctx, room_id, sender_id, sender_display)
 
@@ -92,7 +91,6 @@ async def _respond(ctx: Any, room_id: str, user_id: str, header_display: str) ->
             pass
         return
     response_text = data.get("message", {}).get("content") or ""
-    # Log any thinking markers and ALWAYS strip from output
     if "</think>" in response_text and "<think>" in response_text:
         try:
             thinking, rest = response_text.split("</think>", 1)

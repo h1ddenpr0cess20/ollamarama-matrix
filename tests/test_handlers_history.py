@@ -19,8 +19,6 @@ def _last_body(ctx):
     return ctx.matrix.send_text.call_args[0][1]
 
 
-# -- per-user toggle -----------------------------------------------------------
-
 @pytest.mark.asyncio
 async def test_per_user_off():
     ctx = _ctx()
@@ -39,7 +37,7 @@ async def test_per_user_on():
 
 @pytest.mark.asyncio
 async def test_per_user_toggle_flips_current_state():
-    ctx = _ctx(user_off=True)  # currently disabled → toggle should enable
+    ctx = _ctx(user_off=True)
     await handle_history(ctx, "!r", "@u", "User", "toggle")
     ctx.history.set_no_history.assert_called_once_with("!r", "@u", False)
 
@@ -66,8 +64,6 @@ async def test_per_user_on_warns_when_global_override_active():
     await handle_history(ctx, "!r", "@u", "User", "on")
     assert "global override is ON" in _last_body(ctx)
 
-
-# -- global toggle (admin) -----------------------------------------------------
 
 @pytest.mark.asyncio
 async def test_global_toggle_flips_state():

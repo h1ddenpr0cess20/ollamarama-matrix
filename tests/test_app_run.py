@@ -10,7 +10,6 @@ from ollamarama.config import AppConfig, MatrixConfig, OllamaConfig
 
 class FakeMatrixWrapper:
     def __init__(self, server, username, password, device_id, store_path, encryption_enabled=True):
-        # mimic underlying client attributes accessed by app
         self.client = SimpleNamespace(device_id="DEV", should_upload_keys=False)
         self.username = username
         self.calls = []
@@ -62,13 +61,11 @@ class FakeMatrixWrapper:
         self._to_device.append((cb, event_types))
 
     async def sync_forever(self, timeout_ms: int = 30000):
-        # end immediately so app.run returns
         self.calls.append("sync_forever")
 
 
 @pytest.mark.asyncio
 async def test_app_run_orchestrates_and_persists_device_id(tmp_path, monkeypatch):
-    # Patch MatrixClientWrapper used by AppContext to our fake
     monkeypatch.setattr(app_context, "MatrixClientWrapper", FakeMatrixWrapper)
 
     cfg = AppConfig(
@@ -93,7 +90,6 @@ async def test_app_run_orchestrates_and_persists_device_id(tmp_path, monkeypatch
         ),
         markdown=False,
     )
-    # Prepare config file for device_id persistence
     cfg_path = tmp_path / "config.json"
     cfg_path.write_text(
         json.dumps(
@@ -124,6 +120,5 @@ async def test_app_run_orchestrates_and_persists_device_id(tmp_path, monkeypatch
 
     await appmod.run(cfg, config_path=str(cfg_path))
 
-    # Our fake stores calls on the instance accessible only within run, but we can assert persistence and side effects
     data = json.loads(cfg_path.read_text())
     assert data["matrix"]["device_id"] == "DEV"

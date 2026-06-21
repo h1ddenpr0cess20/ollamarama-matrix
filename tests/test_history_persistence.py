@@ -26,7 +26,6 @@ def test_persistence_round_trip(tmp_path):
     hs.set_no_history(room, user, True)
     hs.set_global_no_history(True)
 
-    # A fresh store pointed at the same dir/key should restore everything
     hs2 = _new_store(tmp_path, key)
     msgs = hs2.get(room, user)
     assert [m["content"] for m in msgs if m["role"] != "system"] == ["remember this", "ok"]
@@ -41,7 +40,6 @@ def test_persistence_file_is_encrypted(tmp_path):
 
     raw = (tmp_path / "history.enc").read_bytes()
     assert b"super secret phrase" not in raw
-    # And it decrypts back to the plaintext with the right key
     assert b"super secret phrase" in Fernet(key.encode()).decrypt(raw)
 
 
@@ -52,7 +50,6 @@ def test_wrong_key_starts_empty_without_crashing(tmp_path):
 
     other_key = Fernet.generate_key().decode()
     hs2 = _new_store(tmp_path, other_key)
-    # Undecryptable file → empty history, no exception
     assert hs2.get("!r:server", "@u:server")[0]["role"] == "system"
     assert len(hs2.get("!r:server", "@u:server")) == 1
 
@@ -72,7 +69,6 @@ def test_loads_legacy_plain_messages_format(tmp_path):
 
 
 def test_no_persistence_without_key(tmp_path):
-    # store_path but no key → in-memory only, no file written
     hs = HistoryStore("you are ", ".", "helper", store_path=str(tmp_path))
     hs.add("!r:server", "@u:server", "user", "hi")
     assert not (tmp_path / "history.enc").exists()

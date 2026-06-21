@@ -16,7 +16,6 @@ async def handle_history(ctx: Any, room_id: str, sender_id: str, sender_display:
     parts = (args or "").strip().lower().split()
     is_admin = sender_display in ctx.admins
 
-    # Global subcommand — admins only
     if parts and parts[0] == "global":
         if not is_admin:
             body = "Only admins can use `.history global`"
@@ -52,7 +51,6 @@ async def handle_history(ctx: Any, room_id: str, sender_id: str, sender_display:
         await ctx.matrix.send_text(room_id, body, html=ctx.render(body))
         return
 
-    # Per-user subcommand
     arg = parts[0] if parts else ""
     if arg in ("", "status"):
         state = "OFF" if ctx.history.get_no_history(room_id, sender_id) else "ON"

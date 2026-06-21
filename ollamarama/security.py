@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Any, Optional
 
-try:  # best-effort imports; code degrades gracefully if nio not present
+try:
     from nio import (
         KeyVerificationEvent,
         KeyVerificationStart,
@@ -53,7 +53,6 @@ class Security:
         else:
             self.logger.info("to-device event: %s", etype)
 
-        # Respond to verification requests so the emoji flow can proceed
         if getattr(event, "type", None) == "m.key.verification.request":
             try:
                 txn_id = event.source["content"]["transaction_id"]  # type: ignore[index]
@@ -77,7 +76,7 @@ class Security:
             except Exception:
                 self.logger.info("Failed to send verification ready message.")
 
-    async def emoji_verification_callback(self, event: Any) -> None:  # KeyVerificationEvent
+    async def emoji_verification_callback(self, event: Any) -> None:
         """Handle SAS emoji verification events.
 
         Args:
@@ -103,7 +102,6 @@ class Security:
                 await client.confirm_short_auth_string(event.transaction_id)
             elif isinstance(event, KeyVerificationMac):
                 sas = client.key_verifications[event.transaction_id]
-                # Prefer sending our MAC (more correct SAS completion) when available.
                 try:
                     if hasattr(sas, "get_mac"):
                         await client.to_device(sas.get_mac())
@@ -112,10 +110,8 @@ class Security:
                     elif hasattr(client, "send_sas_mac"):
                         await client.send_sas_mac(event.transaction_id)  # type: ignore[attr-defined]
                 except Exception:
-                    # Fallback to just sending done if MAC helpers are unavailable
                     pass
 
-                # Always send `done` to conclude the flow; harmless if already sent.
                 try:
                     done = ToDeviceMessage(
                         "m.key.verification.done",
@@ -150,7 +146,6 @@ class Security:
         if c is None:
             return
         try:
-            # Refresh device list/keys from the server, if supported.
             if hasattr(c, "keys_query"):
                 await c.keys_query()  # type: ignore[func-returns-value]
         except Exception:
@@ -163,14 +158,12 @@ class Security:
                     verify = getattr(c, "verify_device", None)
                     if verify is None:
                         continue
-                    # verify_device is synchronous in nio, but tolerate async mocks.
                     result = verify(device)
                     if asyncio.iscoroutine(result):
                         await result
                     dev_id = getattr(device, "device_id", None) or getattr(device, "id", "?")
                     self.logger.info("verified device %s for %s", dev_id, user_id)
                 except Exception:
-                    # Ignore failures; sending uses ignore_unverified_devices=True
                     pass
         except Exception:
             pass
@@ -191,7 +184,6 @@ class Security:
                 return list(active(user_id))
             except Exception:
                 pass
-        # Fallback: {user_id: {device_id: OlmDevice}} mapping
         devices = getattr(store, "devices", {})
         try:
             return list(devices.get(user_id, {}).values())

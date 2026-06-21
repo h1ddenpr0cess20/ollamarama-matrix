@@ -30,18 +30,14 @@ class HistoryStore:
     ) -> None:
         self.prompt_prefix = prompt_prefix
         self.prompt_suffix = prompt_suffix
-        # Optional extra suffix (e.g., brevity clause). Included unless verbose mode is enabled.
         self.prompt_suffix_extra = prompt_suffix_extra
         self._include_extra = True
         self.personality = personality
         self.max_tokens = max_tokens
         self._messages: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
-        # Set of (room, user) pairs that have history disabled.
         self._no_history: Set[Tuple[str, str]] = set()
-        # Global history disable flag — overrides per-user settings when True.
         self._global_no_history: bool = False
 
-        # Encrypted persistence
         self._store_file: Optional[Path] = None
         self._fernet: Optional[Fernet] = None
         if store_path and encryption_key:
@@ -184,7 +180,6 @@ class HistoryStore:
         msgs = self._messages[room][user]
         while self.count_tokens(msgs) > self.max_tokens:
             if msgs and msgs[0].get("role") == "system":
-                # Preserve system prompt
                 if len(msgs) > 1:
                     msgs.pop(1)
                 else:
@@ -192,7 +187,6 @@ class HistoryStore:
             else:
                 msgs.pop(0)
 
-    # -- Encrypted persistence -------------------------------------------------
 
     def _save(self) -> None:
         """Encrypt and write history to disk. No-op if persistence is not configured."""
@@ -217,7 +211,6 @@ class HistoryStore:
             encrypted = self._store_file.read_bytes()
             data = self._fernet.decrypt(encrypted)
             payload = json.loads(data)
-            # Support both old format (plain messages dict) and new format.
             if isinstance(payload, dict) and "messages" in payload:
                 self._messages = payload["messages"]
                 self._no_history = {tuple(pair) for pair in payload.get("no_history", [])}

@@ -41,7 +41,6 @@ class MatrixClientWrapper:
     ) -> None:
         cfg = AsyncClientConfig(encryption_enabled=encryption_enabled, store_sync_tokens=True)
         self.client = AsyncClient(server, username, device_id=device_id or None, store_path=store_path, config=cfg)
-        # Set user_id for convenience (matches original behavior)
         try:
             self.client.user_id = username  # type: ignore[attr-defined]
         except Exception:
@@ -152,8 +151,6 @@ class MatrixClientWrapper:
         """
         try:
             res = await self.client.get_displayname(user_id)
-            # nio returns a response whose ``displayname`` is None when the user
-            # has no display name set; fall back to the user_id in that case.
             return getattr(res, "displayname", None) or user_id
         except Exception:
             return user_id
@@ -197,7 +194,6 @@ class MatrixClientWrapper:
         try:
             self.client.add_to_device_callback(callback, event_types)
         except Exception:
-            # nio not available or crypto not initialized
             pass
 
     async def initial_sync(self, timeout_ms: int = 3000) -> None:
@@ -218,7 +214,6 @@ class MatrixClientWrapper:
 
     async def shutdown(self) -> None:
         """Best-effort logout/close of the underlying client."""
-        # Logout is optional; close is the important bit to end sync loop connections
         try:
             if hasattr(self.client, "logout"):
                 await self.client.logout()  # type: ignore[arg-type]

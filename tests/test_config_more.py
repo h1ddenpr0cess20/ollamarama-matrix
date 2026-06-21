@@ -37,7 +37,6 @@ def base_cfg() -> dict:
 
 def test_validate_bounds_and_default_model(tmp_path):
     data = base_cfg()
-    # Invalid bounds
     data["ollama"]["options"]["temperature"] = 3
     p = write_cfg(tmp_path, data)
     cfg = load_config(str(p))
@@ -45,7 +44,6 @@ def test_validate_bounds_and_default_model(tmp_path):
     assert not ok
     assert any("temperature" in e for e in errs)
 
-    # Default model not in mapping
     data = base_cfg()
     data["ollama"]["default_model"] = "missing"
     p = write_cfg(tmp_path, data)

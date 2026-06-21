@@ -21,7 +21,6 @@ def test_summarize_redacts_password():
 
 def test_summarize_keeps_username_domain_for_context():
     out = summarize(_cfg())
-    # Localpart masked, domain preserved
     assert out["matrix"]["username"] == "***:matrix.org"
 
 

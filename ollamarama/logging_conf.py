@@ -25,7 +25,6 @@ class MatrixHighlighter:
     _sys_prompt_re = re.compile(r"System prompt for\s+(?P<who>.+?)\s+\(.*?\)\s+set to\s+'(?P<prompt>.*)'")
     _verified_re = re.compile(r"\bverified device\s+(?P<dev>\S+)")
     _persist_re = re.compile(r"\bPersisted device_id to\s+(?P<path>\S+)")
-    # Tool-call lines: "Tool (MCP|builtin): <name> args=<json>"
     _tool_call_re = re.compile(r"(?P<tool>Tool)\s+\((?P<origin>MCP|builtin)\):\s+(?P<name>\S+)\s+args=(?P<args>.*)")
 
     def __call__(self, value):
@@ -49,7 +48,7 @@ class MatrixHighlighter:
         self.highlight(text)
         return text
 
-    def highlight(self, text) -> None:  # rich.text.Text-like interface
+    def highlight(self, text) -> None:
         """Apply highlighting to a Rich `Text` object in place.
 
         Args:
@@ -74,21 +73,18 @@ class MatrixHighlighter:
             span = m.span("msg")
             text.stylize("white", span[0], span[1])
 
-        # Sender line with display name and id
         for m in self._sent_line_re.finditer(s):
             dspan = m.span("display")
             rsp = m.span("room")
             text.stylize("bold cyan", dspan[0], dspan[1])
             text.stylize("magenta", rsp[0], rsp[1])
 
-        # Bot joined room: color bot display name and room id
         for m in self._joined_re.finditer(s):
             bspan = m.span("bot")
             rsp = m.span("room")
             text.stylize("bold cyan", bspan[0], bspan[1])
             text.stylize("magenta", rsp[0], rsp[1])
 
-        # Sending response: color recipient name; bold only the response text (after first newline)
         for m in self._sending_resp_re.finditer(s):
             nspan = m.span("name")
             text.stylize("bold cyan", nspan[0], nspan[1])
@@ -96,19 +92,16 @@ class MatrixHighlighter:
             body_text = s[bsp[0]:bsp[1]]
             nl = body_text.find("\n")
             if nl >= 0:
-                # Only bold the response payload after the header line
                 text.stylize("bold", bsp[0] + nl + 1, bsp[1])
             else:
                 text.stylize("bold", bsp[0], bsp[1])
 
-        # Thinking lines: color who and dim italicize the thinking content
         for m in self._thinking_re.finditer(s):
             wsp = m.span("who")
             tsp = m.span("thinking")
             text.stylize("bold cyan", wsp[0], wsp[1])
             text.stylize("dim italic", tsp[0], tsp[1])
 
-        # System prompt changes: color who for visibility
         for m in self._sys_prompt_re.finditer(s):
             wsp = m.span("who")
             text.stylize("bold cyan", wsp[0], wsp[1])
@@ -121,7 +114,6 @@ class MatrixHighlighter:
             span = m.span("path")
             text.stylize("green", span[0], span[1])
 
-        # Tool-call coloring
         for m in self._tool_call_re.finditer(s):
             tsp = m.span("tool")
             osp = m.span("origin")
@@ -149,22 +141,18 @@ def setup_logging(level: str = "INFO", json: bool = False) -> None:
     """
     lvl = getattr(logging, level.upper(), logging.INFO)
 
-    # Silence any previously configured handlers, mirroring prior behavior
     logging.config.dictConfig({
         "version": 1,
         "disable_existing_loggers": True,
     })
 
     try:
-        # Prefer Rich if installed
         from rich.console import Console
         from rich.logging import RichHandler
         from rich.traceback import install as rich_traceback_install
 
-        # Better tracebacks in the console
         rich_traceback_install(show_locals=False)
 
-        # Disable generic syntax highlighting; we apply targeted styles via a custom highlighter
         console = Console(highlight=False)
         highlighter = MatrixHighlighter()
         handler = RichHandler(
@@ -176,13 +164,11 @@ def setup_logging(level: str = "INFO", json: bool = False) -> None:
             show_path=False,
             highlighter=highlighter,
         )
-        # Use message-only format; Rich renders time/level
         datefmt = "[%X]"
         fmt = "%(message)s"
         if json:
             fmt = "%(name)s - %(message)s"
 
-        # Route only our package logs to the handler; silence others at root
         root = logging.getLogger()
         root.handlers = []
         root.setLevel(logging.ERROR)
@@ -190,13 +176,10 @@ def setup_logging(level: str = "INFO", json: bool = False) -> None:
         pkg_logger = logging.getLogger("ollamarama")
         pkg_logger.handlers = []
         pkg_logger.setLevel(lvl)
-        # Manually build a Formatter for non-Rich fallback of message formatting inside RichHandler
-        # RichHandler ignores the formatter for message, but keeps datefmt for legacy; safe to set basicConfig-like state
         logging.Formatter(fmt=fmt, datefmt=datefmt)
         pkg_logger.addHandler(handler)
         pkg_logger.propagate = False
     except Exception:
-        # Fallback to plain logging
         fmt = (
             "%(asctime)s %(levelname)s %(name)s %(message)s"
             if json

@@ -26,7 +26,7 @@ _SPINNER_INTERVAL = 0.8
 async def _thinking_animation(matrix: Any, room_id: str, event_id: str, label: str, render_fn: Any) -> None:
     """Cycle a dot-wave in the thinking placeholder by editing the message."""
     try:
-        idx = 1  # frame 0 was already sent as the initial placeholder
+        idx = 1
         while True:
             await asyncio.sleep(_SPINNER_INTERVAL)
             frame = _SPINNER_FRAMES[idx % len(_SPINNER_FRAMES)]
@@ -229,7 +229,6 @@ def _make_invite_handler(ctx: AppContext, cfg: AppConfig) -> Callable[[Any, Any]
 
     async def on_invite(room, event) -> None:
         try:
-            # Only react to the bot's own invite, not other members' state.
             invitee = getattr(event, "state_key", None)
             if invitee and invitee != cfg.matrix.username:
                 return
@@ -302,7 +301,6 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
     await ctx.matrix.ensure_keys()
     await ctx.matrix.initial_sync()
 
-    # Determine bot display name
     try:
         ctx.bot_id = await ctx.matrix.display_name(cfg.matrix.username)
     except Exception:
@@ -323,13 +321,11 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
     try:
         await _run_until_stopped(ctx, stop)
     finally:
-        # Best-effort client shutdown and background cleanup
         try:
             if hasattr(ctx.matrix, "shutdown"):
                 await ctx.matrix.shutdown()
         except Exception:
             pass
-        # Stop background executor threads
         try:
             ctx.executor.shutdown(wait=False, cancel_futures=True)
         except Exception:

@@ -17,8 +17,6 @@ class MatrixConfig:
     device_id: str = ""
     store_path: str = "store"
     e2e: bool = True
-    # Message sent to anyone who invites the bot to a room before it leaves.
-    # The placeholder ``{name}`` is replaced with the inviter's display name.
     invite_reply: str = (
         "No thanks, {name}. I don't show up to rooms I wasn't built for. "
         "Don't invite me again. 🙄"
@@ -37,7 +35,6 @@ class OllamaConfig:
     history_encryption_key: str = ""
     timeout: int = 180
     mcp_servers: Dict[str, Any] = field(default_factory=dict)
-    # When True, omit the optional brevity clause (third prompt element) from new conversations
     verbose: bool = False
     thinking: bool = True
 
@@ -80,10 +77,8 @@ def _asdict_redacted(cfg: AppConfig) -> dict:
         A dictionary representation with credentials masked.
     """
     d = asdict(cfg)
-    # Redact sensitive values
     if "matrix" in d:
         d["matrix"]["password"] = "***"
-        # Username can be sensitive too; keep domain for context
         user = d["matrix"].get("username", "")
         if isinstance(user, str) and ":" in user:
             name, domain = user.split(":", 1)
@@ -118,7 +113,6 @@ def load_config(
     with open(cfg_path, "r") as f:
         raw = json.load(f)
 
-    # Apply ENV overrides (selected keys only to avoid surprises)
     env_over = {}
     if env.get("OLLAMARAMA_OLLAMA_URL"):
         env_over.setdefault("ollama", {})["api_url"] = env["OLLAMARAMA_OLLAMA_URL"]
@@ -133,19 +127,17 @@ def load_config(
     if overrides:
         raw = _deep_update(raw, overrides)
 
-    # Back-compat: allow top-level "mcp_servers" and merge into ollama section
     try:
         if isinstance(raw.get("mcp_servers"), dict):
             raw.setdefault("ollama", {})
             existing = raw["ollama"].get("mcp_servers")
             if not isinstance(existing, dict):
-                raw["ollama"]["mcp_servers"] = dict(raw["mcp_servers"])  # copy
+                raw["ollama"]["mcp_servers"] = dict(raw["mcp_servers"])
             else:
                 merged = dict(existing)
-                merged.update(raw["mcp_servers"])  # top-level wins
+                merged.update(raw["mcp_servers"])
                 raw["ollama"]["mcp_servers"] = merged
     except Exception:
-        # Non-fatal; validation will surface bad types later
         pass
 
     matrix = raw.get("matrix", {})
@@ -197,7 +189,6 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
     """
     errors: List[str] = []
 
-    # Matrix
     if not cfg.matrix.server or not _URL_RE.search(cfg.matrix.server):
         errors.append("matrix.server must be a valid http(s) URL")
     if not cfg.matrix.username:
@@ -217,7 +208,6 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
     if not isinstance(cfg.matrix.e2e, bool):
         errors.append("matrix.e2e must be a boolean")
 
-    # Ollama
     if not cfg.ollama.api_url or not _URL_RE.search(cfg.ollama.api_url):
         errors.append("ollama.api_url must be a valid http(s) URL")
     if not isinstance(cfg.ollama.models, dict):
@@ -225,7 +215,6 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
     if not isinstance(cfg.ollama.default_model, str) or not cfg.ollama.default_model:
         errors.append("ollama.default_model must be a non-empty string")
     else:
-        # If models mapping is provided, ensure default is present (by key or id)
         try:
             models = cfg.ollama.models or {}
             if isinstance(models, dict) and (
@@ -235,7 +224,6 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
                 errors.append("ollama.default_model must match a key or id in ollama.models")
         except Exception:
             pass
-    # Allow 2-element [prefix, suffix] or 3-element with optional brevity clause as [prefix, suffix, brevity]
     if (
         not isinstance(cfg.ollama.prompt, list)
         or len(cfg.ollama.prompt) not in (2, 3)
@@ -247,7 +235,6 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
     if not (256 <= cfg.ollama.history_tokens <= 131072):
         errors.append("ollama.history_tokens must be between 256 and 131072")
 
-    # Options ranges (if present)
     opts = cfg.ollama.options or {}
     temp = opts.get("temperature")
     if temp is not None and not (0 <= float(temp) <= 2):

@@ -18,10 +18,6 @@ def _ctx(**kwargs):
     return ctx
 
 
-# ---------------------------------------------------------------------------
-# .thinking
-# ---------------------------------------------------------------------------
-
 @pytest.mark.asyncio
 async def test_thinking_status_on():
     ctx = _ctx(thinking=True)
@@ -69,12 +65,8 @@ async def test_thinking_invalid_arg():
     await handle_thinking(ctx, "!r", "@u", "User", "blah")
     body = ctx.matrix.send_text.call_args[0][1]
     assert "Usage" in body
-    assert ctx.thinking is True  # unchanged
+    assert ctx.thinking is True
 
-
-# ---------------------------------------------------------------------------
-# .verbose
-# ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
 async def test_verbose_status_off():
@@ -123,7 +115,7 @@ async def test_verbose_invalid_arg():
     await handle_verbose(ctx, "!r", "@u", "User", "bad")
     body = ctx.matrix.send_text.call_args[0][1]
     assert "Usage" in body
-    assert ctx.verbose is False  # unchanged
+    assert ctx.verbose is False
 
 
 @pytest.mark.asyncio
