@@ -9,6 +9,21 @@ from typing import Any, Dict, List, Tuple, Optional
 
 @dataclass
 class MatrixConfig:
+    """Matrix connection and behavior settings (the ``matrix`` config section).
+
+    Attributes:
+        server: Homeserver URL.
+        username: Fully qualified bot user ID.
+        password: Account password.
+        channels: Rooms to join at startup (aliases or IDs).
+        admins: Display names allowed to run admin commands.
+        device_id: Device ID; persisted after first login when empty.
+        store_path: Directory for the encryption/sync store.
+        e2e: Whether end-to-end encryption is enabled.
+        invite_reply: Message sent to anyone who invites the bot before it
+            leaves; ``{name}`` is replaced with the inviter's display name.
+    """
+
     server: str
     username: str
     password: str
@@ -17,10 +32,34 @@ class MatrixConfig:
     device_id: str = ""
     store_path: str = "store"
     e2e: bool = True
+    invite_reply: str = (
+        "No thanks, {name}. I don't show up to rooms I wasn't built for. "
+        "Don't invite me again. 🙄"
+    )
 
 
 @dataclass
 class OllamaConfig:
+    """Ollama endpoint, model, prompt, history, and tool settings.
+
+    Mirrors the ``ollama`` config section.
+
+    Attributes:
+        api_url: Chat endpoint URL.
+        options: Generation options (e.g., temperature, top_p).
+        models: Mapping of friendly names to model IDs.
+        default_model: Selected model (key or ID present in ``models``).
+        prompt: ``[prefix, suffix]`` or ``[prefix, suffix, brevity]`` strings
+            wrapped around the personality to form the system prompt.
+        personality: Default personality text.
+        history_tokens: Per-room/user history token budget.
+        history_encryption_key: Optional Fernet key enabling encrypted history.
+        timeout: Per-request timeout in seconds for Ollama calls.
+        mcp_servers: Optional MCP server specs for tool calling.
+        verbose: When True, omit the optional brevity clause for new chats.
+        thinking: When True, show an animated thinking placeholder.
+    """
+
     api_url: str = "http://localhost:11434/api/chat"
     options: Dict[str, Any] = field(default_factory=dict)
     models: Dict[str, str] = field(default_factory=dict)
@@ -31,13 +70,20 @@ class OllamaConfig:
     history_encryption_key: str = ""
     timeout: int = 180
     mcp_servers: Dict[str, Any] = field(default_factory=dict)
-    # When True, omit the optional brevity clause (third prompt element) from new conversations
     verbose: bool = False
     thinking: bool = True
 
 
 @dataclass
 class AppConfig:
+    """Top-level application configuration.
+
+    Attributes:
+        matrix: Matrix connection and behavior settings.
+        ollama: Ollama endpoint, model, and prompt settings.
+        markdown: Whether to render replies as Markdown/HTML.
+    """
+
     matrix: MatrixConfig
     ollama: OllamaConfig
     markdown: bool = True
@@ -74,10 +120,8 @@ def _asdict_redacted(cfg: AppConfig) -> dict:
         A dictionary representation with credentials masked.
     """
     d = asdict(cfg)
-    # Redact sensitive values
     if "matrix" in d:
         d["matrix"]["password"] = "***"
-        # Username can be sensitive too; keep domain for context
         user = d["matrix"].get("username", "")
         if isinstance(user, str) and ":" in user:
             name, domain = user.split(":", 1)
@@ -112,7 +156,6 @@ def load_config(
     with open(cfg_path, "r") as f:
         raw = json.load(f)
 
-    # Apply ENV overrides (selected keys only to avoid surprises)
     env_over = {}
     if env.get("OLLAMARAMA_OLLAMA_URL"):
         env_over.setdefault("ollama", {})["api_url"] = env["OLLAMARAMA_OLLAMA_URL"]
@@ -127,19 +170,17 @@ def load_config(
     if overrides:
         raw = _deep_update(raw, overrides)
 
-    # Back-compat: allow top-level "mcp_servers" and merge into ollama section
     try:
         if isinstance(raw.get("mcp_servers"), dict):
             raw.setdefault("ollama", {})
             existing = raw["ollama"].get("mcp_servers")
             if not isinstance(existing, dict):
-                raw["ollama"]["mcp_servers"] = dict(raw["mcp_servers"])  # copy
+                raw["ollama"]["mcp_servers"] = dict(raw["mcp_servers"])
             else:
                 merged = dict(existing)
-                merged.update(raw["mcp_servers"])  # top-level wins
+                merged.update(raw["mcp_servers"])
                 raw["ollama"]["mcp_servers"] = merged
     except Exception:
-        # Non-fatal; validation will surface bad types later
         pass
 
     matrix = raw.get("matrix", {})
@@ -155,6 +196,7 @@ def load_config(
             device_id=matrix.get("device_id", ""),
             store_path=matrix.get("store_path", "store"),
             e2e=bool(matrix.get("e2e", True)),
+            invite_reply=str(matrix.get("invite_reply", MatrixConfig.invite_reply)),
         ),
         ollama=OllamaConfig(
             api_url=ollama.get("api_url", "http://localhost:11434/api/chat"),
@@ -165,7 +207,7 @@ def load_config(
             personality=ollama.get("personality", ""),
             history_tokens=int(ollama.get("history_tokens", 8192)),
             history_encryption_key=str(ollama.get("history_encryption_key", "")),
-            timeout=360,
+            timeout=int(ollama.get("timeout", 180)),
             mcp_servers=dict(ollama.get("mcp_servers", {})),
             verbose=bool(ollama.get("verbose", False)),
             thinking=bool(ollama.get("thinking", True)),
@@ -190,7 +232,6 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
     """
     errors: List[str] = []
 
-    # Matrix
     if not cfg.matrix.server or not _URL_RE.search(cfg.matrix.server):
         errors.append("matrix.server must be a valid http(s) URL")
     if not cfg.matrix.username:
@@ -210,7 +251,6 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
     if not isinstance(cfg.matrix.e2e, bool):
         errors.append("matrix.e2e must be a boolean")
 
-    # Ollama
     if not cfg.ollama.api_url or not _URL_RE.search(cfg.ollama.api_url):
         errors.append("ollama.api_url must be a valid http(s) URL")
     if not isinstance(cfg.ollama.models, dict):
@@ -218,7 +258,6 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
     if not isinstance(cfg.ollama.default_model, str) or not cfg.ollama.default_model:
         errors.append("ollama.default_model must be a non-empty string")
     else:
-        # If models mapping is provided, ensure default is present (by key or id)
         try:
             models = cfg.ollama.models or {}
             if isinstance(models, dict) and (
@@ -228,7 +267,6 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
                 errors.append("ollama.default_model must match a key or id in ollama.models")
         except Exception:
             pass
-    # Allow 2-element [prefix, suffix] or 3-element with optional brevity clause as [prefix, suffix, brevity]
     if (
         not isinstance(cfg.ollama.prompt, list)
         or len(cfg.ollama.prompt) not in (2, 3)
@@ -240,7 +278,6 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
     if not (256 <= cfg.ollama.history_tokens <= 131072):
         errors.append("ollama.history_tokens must be between 256 and 131072")
 
-    # Options ranges (if present)
     opts = cfg.ollama.options or {}
     temp = opts.get("temperature")
     if temp is not None and not (0 <= float(temp) <= 2):

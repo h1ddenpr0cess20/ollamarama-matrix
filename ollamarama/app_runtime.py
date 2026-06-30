@@ -26,7 +26,7 @@ _SPINNER_INTERVAL = 0.8
 async def _thinking_animation(matrix: Any, room_id: str, event_id: str, label: str, render_fn: Any) -> None:
     """Cycle a dot-wave in the thinking placeholder by editing the message."""
     try:
-        idx = 1  # frame 0 was already sent as the initial placeholder
+        idx = 1
         while True:
             await asyncio.sleep(_SPINNER_INTERVAL)
             frame = _SPINNER_FRAMES[idx % len(_SPINNER_FRAMES)]
@@ -160,6 +160,15 @@ def _make_text_handler(
     """
 
     async def on_text(room, event) -> None:
+        """Handle an incoming text event: filter, dispatch, and respond.
+
+        Args:
+            room: The room the message arrived in.
+            event: The text message event.
+
+        Returns:
+            None. Ignores the bot's own messages and events predating join.
+        """
         try:
             message_time = getattr(event, "server_timestamp", 0) / 1000.0
             message_time = _dt.datetime.fromtimestamp(message_time)
@@ -213,6 +222,84 @@ def _make_text_handler(
     return on_text
 
 
+def _make_invite_handler(ctx: AppContext, cfg: AppConfig) -> Callable[[Any, Any], Any]:
+    """Build a handler that rejects room invites with a parting message.
+
+    When invited to a room, the bot joins briefly, sends the configured
+    ``matrix.invite_reply`` (addressed to the inviter), then leaves.
+
+    Args:
+        ctx: Application context.
+        cfg: Application configuration.
+
+    Returns:
+        Async callback handling ``InviteMemberEvent`` events.
+    """
+
+    async def on_invite(room, event) -> None:
+        """Reject an invite for the bot by joining, replying, then leaving.
+
+        Args:
+            room: The invited room (``MatrixInvitedRoom``).
+            event: The ``InviteMemberEvent`` describing the membership change.
+
+        Returns:
+            None. Ignores invites that are not for the bot.
+        """
+        try:
+            invitee = getattr(event, "state_key", None)
+            if invitee and invitee != cfg.matrix.username:
+                return
+            if getattr(event, "membership", "invite") != "invite":
+                return
+            room_id = getattr(room, "room_id", None) or getattr(event, "room_id", None)
+            if not room_id:
+                return
+            inviter = getattr(event, "sender", "") or ""
+            inviter_name = await ctx.matrix.display_name(inviter) if inviter else "stranger"
+            try:
+                await ctx.matrix.join(room_id)
+                body = cfg.matrix.invite_reply.format(name=inviter_name)
+                await ctx.matrix.send_text(room_id, body, html=ctx.render(body))
+            finally:
+                await ctx.matrix.leave(room_id)
+            ctx.log(f"Rejected invite from {inviter_name} ({inviter}) to {room_id}")
+        except Exception as e:
+            ctx.log(e)
+
+    return on_invite
+
+
+def _make_undecrypted_handler(ctx: AppContext) -> Callable[[Any, Any], Any]:
+    """Build a handler that re-requests keys for undecryptable messages.
+
+    Args:
+        ctx: Application context.
+
+    Returns:
+        Async callback handling ``MegolmEvent`` events.
+    """
+
+    async def on_undecrypted(room, event) -> None:
+        """Request the Megolm session key for an undecryptable message.
+
+        Args:
+            room: The room the event arrived in.
+            event: The ``MegolmEvent`` that could not be decrypted.
+
+        Returns:
+            None.
+        """
+        try:
+            room_id = getattr(room, "room_id", None)
+            await ctx.matrix.request_room_key(event)
+            ctx.log(f"Requested room key for undecryptable message in {room_id}")
+        except Exception as e:
+            ctx.log(e)
+
+    return on_undecrypted
+
+
 async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
     """Start the Matrix bot using the provided configuration.
 
@@ -241,7 +328,6 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
     await ctx.matrix.ensure_keys()
     await ctx.matrix.initial_sync()
 
-    # Determine bot display name
     try:
         ctx.bot_id = await ctx.matrix.display_name(cfg.matrix.username)
     except Exception:
@@ -255,18 +341,18 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
 
     join_time = _dt.datetime.now()
     ctx.matrix.add_text_handler(_make_text_handler(ctx, cfg, router, security, join_time))
+    ctx.matrix.add_invite_handler(_make_invite_handler(ctx, cfg))
+    ctx.matrix.add_megolm_handler(_make_undecrypted_handler(ctx))
 
     stop = _setup_stop_event()
     try:
         await _run_until_stopped(ctx, stop)
     finally:
-        # Best-effort client shutdown and background cleanup
         try:
             if hasattr(ctx.matrix, "shutdown"):
                 await ctx.matrix.shutdown()
         except Exception:
             pass
-        # Stop background executor threads
         try:
             ctx.executor.shutdown(wait=False, cancel_futures=True)
         except Exception:

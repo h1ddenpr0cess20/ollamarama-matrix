@@ -20,7 +20,6 @@ async def handle_help(ctx: Any, room_id: str, sender_id: str, sender_display: st
     Returns:
         None. Sends one or two messages containing the help content.
     """
-    # Prefer Markdown help; fall back to legacy txt if needed
     help_menu = ""
     for path in ("help.md", "help.txt"):
         try:
@@ -31,7 +30,6 @@ async def handle_help(ctx: Any, room_id: str, sender_id: str, sender_display: st
             continue
     if not help_menu:
         help_menu = "See README for usage."
-    # Split on ~~~ if present and send admin section only to admins
     parts = help_menu.split("~~~")
     body = parts[0]
     html = ctx.render(body)

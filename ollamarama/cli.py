@@ -29,7 +29,6 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="Logging level for the launcher.",
     )
-    # Common flags for configuration and runtime overrides.
     parser.add_argument("-c", "--config", help="Path to config.json (default: ./config.json)")
     parser.add_argument("-E", "--e2e", action="store_true", help="Enable end-to-end encryption (overrides config)")
     parser.add_argument("-N", "--no-e2e", action="store_true", help="Disable end-to-end encryption (overrides config)")
@@ -43,7 +42,6 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Fetch available models from the Ollama server",
     )
-    # Runtime behavior flags
     parser.add_argument(
         "-v",
         "--verbose",
@@ -51,7 +49,6 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Enable verbose mode (omit brevity clause from system prompt)",
     )
-    # Removed: --dry-run and --no-markdown
     return parser
 
 
@@ -74,7 +71,6 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     setup_logging(args.log_level)
 
-    # Run the new app path with CLI overrides applied
     overrides = {}
     if args.ollama_url:
         overrides.setdefault("ollama", {})["api_url"] = args.ollama_url
@@ -82,7 +78,6 @@ def main(argv: Optional[List[str]] = None) -> int:
         overrides.setdefault("ollama", {})["default_model"] = args.model
     if args.store_path:
         overrides.setdefault("matrix", {})["store_path"] = args.store_path
-    # timeout is fixed internally; no CLI override
     if args.e2e:
         overrides.setdefault("matrix", {})["e2e"] = True
     if args.no_e2e:
@@ -95,7 +90,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     except FileNotFoundError:
         print(f"Config file not found: {args.config or 'config.json'}")
         return 2
-    # Optionally fetch models from server for runtime
     if args.server_models:
         try:
             from .ollama_client import OllamaClient

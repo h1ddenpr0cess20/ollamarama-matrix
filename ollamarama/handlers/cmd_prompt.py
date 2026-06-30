@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..thinking import split_thinking
+
 
 async def handle_persona(ctx: Any, room_id: str, sender_id: str, sender_display: str, args: str) -> None:
     """Set a persona for the conversation and introduce the bot.
@@ -28,7 +30,6 @@ async def handle_persona(ctx: Any, room_id: str, sender_id: str, sender_display:
         ctx.log(f"System prompt for {sender_display} ({sender_id}) set to '{prompt}'")
     except Exception:
         pass
-    # Introduce self to seed the conversation
     ctx.history.add(room_id, sender_id, "user", "introduce yourself")
     await _respond(ctx, room_id, sender_id, sender_display)
 
@@ -91,32 +92,13 @@ async def _respond(ctx: Any, room_id: str, user_id: str, header_display: str) ->
         except Exception:
             pass
         return
-    response_text = data.get("message", {}).get("content", "")
-    # Log any thinking markers and ALWAYS strip from output
-    if "</think>" in response_text and "<think>" in response_text:
+    response_text = data.get("message", {}).get("content") or ""
+    response_text, thinking = split_thinking(response_text)
+    if thinking:
         try:
-            thinking, rest = response_text.split("</think>", 1)
-            thinking = thinking.replace("<think>", "").strip()
-            response_text = rest
-            try:
-                ctx.log(f"Model thinking for {header_display} ({user_id}): {thinking}")
-            except Exception:
-                pass
+            ctx.log(f"Model thinking for {header_display} ({user_id}): {thinking}")
         except Exception:
             pass
-    if "<|begin_of_thought|>" in response_text and "<|end_of_thought|>" in response_text:
-        try:
-            parts = response_text.split("<|end_of_thought|>")
-            if len(parts) > 1:
-                thinking = parts[0].replace("<|begin_of_thought|>", "").replace("<|end_of_thought|>", "").strip()
-                response_text = parts[1]
-                try:
-                    ctx.log(f"Model thinking for {header_display} ({user_id}): {thinking}")
-                except Exception:
-                    pass
-        except Exception:
-            pass
-    response_text = response_text.strip()
     ctx.history.add(room_id, user_id, "assistant", response_text)
     body = f"**{header_display}**:\n{response_text}"
     html = ctx.render(body)

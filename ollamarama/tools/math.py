@@ -17,6 +17,17 @@ _ALLOWED_OPERATORS = {
 }
 
 def _eval(node: ast.AST) -> float:
+    """Recursively evaluate a parsed arithmetic AST node.
+
+    Args:
+        node: An AST node from a parsed expression.
+
+    Returns:
+        The numeric result as a float.
+
+    Raises:
+        ValueError: If the node is not a supported arithmetic construct.
+    """
     if isinstance(node, ast.Expression):
         return _eval(node.body)
     if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
@@ -31,6 +42,18 @@ def _eval(node: ast.AST) -> float:
     raise ValueError("Unsupported expression")
 
 def calculate_expression(expression: str) -> Dict[str, Any]:
+    """Safely evaluate a basic arithmetic expression.
+
+    Only supports the arithmetic operators in ``_ALLOWED_OPERATORS``; any other
+    construct (names, calls, attribute access, etc.) is rejected.
+
+    Args:
+        expression: The arithmetic expression to evaluate.
+
+    Returns:
+        ``{"result": float}`` on success, or ``{"error": str}`` if the
+        expression is invalid or cannot be evaluated.
+    """
     try:
         parsed = ast.parse(expression, mode="eval")
         result = _eval(parsed)

@@ -15,6 +15,7 @@ class Router:
     """
 
     def __init__(self) -> None:
+        """Initialize empty user and admin command tables."""
         self._handlers: Dict[str, Callable] = {}
         self._admin_handlers: Dict[str, Callable] = {}
 
@@ -65,14 +66,18 @@ class Router:
             A tuple of (handler, args). If no handler matches, returns
             (None, ()).
         """
-        parts = text.strip().split()
-        if not parts:
+        stripped = text.strip()
+        if not stripped:
             return None, tuple()
+        if bot_name:
+            mention = f"{bot_name}:"
+            if stripped == mention or stripped.startswith(f"{mention} "):
+                args = stripped[len(mention):].strip()
+                return self._handlers.get(".ai"), (ctx, room_id, sender_id, sender_display, args)
+
+        parts = stripped.split()
         cmd = parts[0]
         args = " ".join(parts[1:])
-        # Bot mention form: "Botname: message"
-        if bot_name and cmd == f"{bot_name}:":
-            return self._handlers.get(".ai"), (ctx, room_id, sender_id, sender_display, args)
 
         if cmd in self._handlers:
             return self._handlers[cmd], (ctx, room_id, sender_id, sender_display, args)

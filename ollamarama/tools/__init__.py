@@ -9,16 +9,27 @@ from pathlib import Path
 import logging
 
 
-# Lazily built registry mapping tool/function names to callables.
 _TOOL_REGISTRY: Dict[str, Callable[..., str]] | None = None
 logger = logging.getLogger(__name__)
 
 
 def _schema_path() -> Path:
+    """Return the path to the bundled builtin tools ``schema.json``."""
     return Path(__file__).resolve().parent / "schema.json"
 
 
 def load_schema(path: str | None = None) -> List[Dict[str, Any]]:
+    """Load the builtin tools schema from disk.
+
+    Args:
+        path: Optional path to a schema file; defaults to the bundled one.
+
+    Returns:
+        A list of tool definition dictionaries.
+
+    Raises:
+        ValueError: If the file does not contain a JSON array.
+    """
     p = Path(path) if path else _schema_path()
     logger.debug("Loading tools schema from %s", p)
     with p.open("r", encoding="utf-8") as f:
@@ -59,6 +70,14 @@ def _discover_functions(names: Iterable[str]) -> Dict[str, Callable[..., str]]:
 
 
 def _build_registry_from_schema(schema: List[Dict[str, Any]]) -> Dict[str, Callable[..., str]]:
+    """Build a name→callable registry from a tools schema.
+
+    Args:
+        schema: A list of tool definition dictionaries.
+
+    Returns:
+        A mapping of tool/function names to their Python callables.
+    """
     names: List[str] = []
     for tool in schema:
         fn = (tool.get("function") or {}).get("name")
@@ -68,6 +87,11 @@ def _build_registry_from_schema(schema: List[Dict[str, Any]]) -> Dict[str, Calla
 
 
 def _get_registry() -> Dict[str, Callable[..., str]]:
+    """Return the lazily-built, cached tool registry.
+
+    Returns:
+        A mapping of tool/function names to their Python callables.
+    """
     global _TOOL_REGISTRY
     if _TOOL_REGISTRY is None:
         try:
@@ -80,13 +104,22 @@ def _get_registry() -> Dict[str, Callable[..., str]]:
 
 
 def execute_tool(name: str, arguments: Dict[str, Any]) -> str:
+    """Execute a builtin tool by name and return a JSON string result.
+
+    Args:
+        name: The tool/function name to invoke.
+        arguments: Keyword arguments to pass to the tool.
+
+    Returns:
+        A JSON string with the tool result, or a JSON error object if the
+        tool is unknown, the arguments are invalid, or execution fails.
+    """
     registry = _get_registry()
     func = registry.get(name)
     if func is None:
         logger.warning("Unknown builtin tool '%s'", name)
         return f"Unknown tool: {name}"
     try:
-        # Log with parameters (truncated for readability); styling handled by Rich highlighter
         try:
             _args_str = json.dumps(arguments or {}, ensure_ascii=False, default=str)
         except Exception:
@@ -95,17 +128,14 @@ def execute_tool(name: str, arguments: Dict[str, Any]) -> str:
             _args_str = _args_str[:800] + "…"
         logger.info("Tool (builtin): %s args=%s", name, _args_str)
         result = func(**(arguments or {}))
-        # Ensure JSON string output
         if isinstance(result, (dict, list, int, float, bool)) or result is None:
             return json.dumps(result, ensure_ascii=False)
         if isinstance(result, str):
             try:
-                # Pass through if already JSON
                 json.loads(result)
                 return result
             except Exception:
                 return json.dumps({"result": result}, ensure_ascii=False)
-        # Fallback: stringify
         return json.dumps({"result": str(result)}, ensure_ascii=False)
     except TypeError as e:
         logger.exception("Invalid arguments for builtin tool '%s'", name)

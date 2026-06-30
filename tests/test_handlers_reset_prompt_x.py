@@ -52,10 +52,8 @@ async def test_handle_reset_stock_and_default():
     room = "!r"
     user = "@u"
     name = "User"
-    # non-stock
     await handle_reset(ctx, room, user, name, "")
     assert any("reset to default" in body for _, body, _ in ctx.matrix.sent)
-    # stock
     ctx.matrix.sent.clear()
     await handle_reset(ctx, room, user, name, "stock")
     assert any("Stock settings" in body for _, body, _ in ctx.matrix.sent)
@@ -98,7 +96,6 @@ async def test_handle_persona_and_custom():
     await handle_persona(ctx, room, user, "User", "detective")
     msgs = ctx.history.get(room, user)
     assert msgs[0]["role"] == "system" and "detective" in msgs[0]["content"]
-    # custom overrides persona format
     await handle_custom(ctx, room, user, "User", "You are strict.")
     msgs = ctx.history.get(room, user)
     assert msgs[0]["content"].startswith("You are strict.")
@@ -123,7 +120,6 @@ async def test_handle_x_resolves_display_name_and_replies():
         log=lambda *a, **k: None,
     )
     ctx.send_response = _make_send_response(ctx.matrix)
-    # Seed history for target so handler proceeds
     ctx.history.add(room, target, "user", "hi")
     await handle_x(ctx, room, sender, names[sender], f"{names[target]} what up")
     assert matrix.sent, "should send a reply to room"
@@ -151,7 +147,6 @@ async def test_handle_x_supports_display_names_with_spaces():
         log=lambda *a, **k: None,
     )
     ctx.send_response = _make_send_response(ctx.matrix)
-    # Seed known participants for resolution
     ctx.history.add(room, john, "user", "hi")
     ctx.history.add(room, jane, "user", "hello")
 

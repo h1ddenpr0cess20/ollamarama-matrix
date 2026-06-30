@@ -44,21 +44,17 @@ async def test_handle_model_show_and_set_and_reset():
         matrix=FakeMatrix(),
         log=lambda *a, **k: None,
     )
-    # No args → show current and available
     await handle_model(ctx, "!r", "@u", "Admin", "")
     assert "Current model" in ctx.matrix.sent[-1][1]
     assert "Available models" in ctx.matrix.sent[-1][1]
-    # Set by key
     await handle_model(ctx, "!r", "@u", "Admin", "qwen")
     assert ctx.model == "qwen3"
-    # Reset
     await handle_model(ctx, "!r", "@u", "Admin", "reset")
     assert ctx.model == ctx.default_model
 
 
 @pytest.mark.asyncio
 async def test_handle_ai_strips_thinking_markers():
-    # Include all supported markers in a single response
     content = (
         "<think>plan</think> Hello <|begin_of_thought|>inner<|end_of_thought|>"
         " <|begin_of_solution|>final answer<|end_of_solution|>"
@@ -76,7 +72,6 @@ async def test_handle_ai_strips_thinking_markers():
     )
     ctx.send_response = _make_send_response(ctx.matrix)
     await handle_ai(ctx, "!r", "@u", "User", "hello")
-    # Ensure the sent body does not contain think/thought markers
     sent_body = ctx.matrix.sent[-1][1]
     assert "<think>" not in sent_body and "<|begin_of_thought|>" not in sent_body
     assert "final answer" in sent_body or "Hello" in sent_body
@@ -103,19 +98,35 @@ async def test_handle_ai_trims_whitespace_simple():
 
 
 @pytest.mark.asyncio
+async def test_handle_ai_handles_null_content():
+    ctx = SimpleNamespace(
+        history=HistoryStore("you are ", ".", "helper", max_tokens=2048),
+        matrix=FakeMatrix(),
+        ollama=FakeOllama(None),
+        to_thread=_to_thread,
+        render=lambda s: None,
+        model="qwen3",
+        options={},
+        timeout=10,
+        log=lambda *a, **k: None,
+    )
+    ctx.send_response = _make_send_response(ctx.matrix)
+    await handle_ai(ctx, "!r", "@u", "User", "hi")
+    sent_body = ctx.matrix.sent[-1][1]
+    assert sent_body.startswith("**User**:")
+
+
+@pytest.mark.asyncio
 async def test_handle_help_splits_admin_section():
     ctx = SimpleNamespace(
         matrix=FakeMatrix(),
         admins=["Admin"],
         render=lambda s: None,
     )
-    # Non‑admin sees only first section
     await handle_help(ctx, "!r", "@u", "User", "")
     assert len(ctx.matrix.sent) == 1
-    # Admin sees both sections when separator is present
     ctx.matrix.sent.clear()
     await handle_help(ctx, "!r", "@u", "Admin", "")
     assert len(ctx.matrix.sent) >= 1
-    # If repo help.txt has the admin section, there should be 2 messages
     if "~~~" in open("help.md").read():
         assert len(ctx.matrix.sent) == 2

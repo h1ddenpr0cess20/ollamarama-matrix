@@ -40,7 +40,6 @@ def test_cli_missing_config_file(capsys):
 
 
 def test_cli_invalid_config_fails_validation(tmp_path, capsys):
-    # Write an invalid config (missing required fields)
     bad = {
         "matrix": {
             "server": "not-a-url",
@@ -53,7 +52,7 @@ def test_cli_invalid_config_fails_validation(tmp_path, capsys):
         "ollama": {
             "api_url": "http://localhost:11434/api/chat",
             "models": {},
-            "default_model": "",  # invalid
+            "default_model": "",
             "prompt": ["you are ", "."],
             "personality": "",
             "history_tokens": 0,

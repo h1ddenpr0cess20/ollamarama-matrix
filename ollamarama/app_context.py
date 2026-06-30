@@ -19,9 +19,12 @@ from .tools import execute_tool, load_schema
 
 
 class AppContext:
-    """Holds application-wide dependencies for handlers.
+    """Central runtime object holding application-wide dependencies.
 
-    Not yet used by the runtime path; prepared for future integration.
+    Constructed once in :func:`ollamarama.app_runtime.run` and passed to every
+    command handler. Owns the Matrix and Ollama clients, the history store,
+    the tool-calling state, and mutable runtime settings (model, personality,
+    verbose/thinking flags).
     """
 
     def __init__(self, cfg: AppConfig, executor: Optional[ThreadPoolExecutor] = None) -> None:
@@ -34,7 +37,6 @@ class AppContext:
         self.cfg = cfg
         self.executor = executor or ThreadPoolExecutor(max_workers=4, thread_name_prefix="ollama")
         self.logger = logging.getLogger(__name__)
-        # Convenience: info-level callable
         self.log = self.logger.info
         self._suppress_noisy_logs()
         self.matrix = self._build_matrix_client(cfg)
@@ -90,7 +92,6 @@ class AppContext:
         Returns:
             HistoryStore configured for system prompt formatting.
         """
-        # Support optional third prompt element used as a brevity clause
         prompt_parts = list(cfg.ollama.prompt or ["you are ", "."])
         prefix = prompt_parts[0] if len(prompt_parts) >= 1 else "you are "
         suffix = prompt_parts[1] if len(prompt_parts) >= 2 else "."
@@ -307,12 +308,10 @@ class AppContext:
             Tool result as a string.
         """
         log = getattr(self, "logger", logging.getLogger(__name__))
-        # Prepare concise, safe parameter logging
         try:
             _args_str = json.dumps(arguments or {}, ensure_ascii=False, default=str)
         except Exception:
             _args_str = str(arguments)
-        # Truncate for readability
         if len(_args_str) > 800:
             _args_str = _args_str[:800] + "..."
         if self.mcp_client is not None and name in self._mcp_tool_names:
@@ -427,7 +426,7 @@ class AppContext:
             iterations += 1
 
         final = result.get("message", {})
-        content = final.get("content", "").strip()
+        content = (final.get("content") or "").strip()
         messages.append({"role": "assistant", "content": content})
         AppContext._prune_tool_messages(self, messages)
         log.debug("Responded with %d characters after %d iteration(s)", len(content), iterations)

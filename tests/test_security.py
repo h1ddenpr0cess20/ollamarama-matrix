@@ -11,25 +11,39 @@ except Exception:  # pragma: no cover - library missing
 
 
 class FakeDevice:
-    def __init__(self, verified=False):
+    def __init__(self, device_id, verified=False):
+        self.device_id = device_id
         self.verified = verified
+
+
+class FakeDeviceStore:
+    def __init__(self, by_user):
+        self._by_user = by_user
+
+    def active_user_devices(self, user_id):
+        return iter(self._by_user.get(user_id, []))
 
 
 class FakeClient:
     def __init__(self):
         self.verified = []
-        self.device_store = SimpleNamespace(devices={"@u": {"D1": FakeDevice(False), "D2": FakeDevice(True)}})
+        self.device_store = FakeDeviceStore(
+            {"@u": [FakeDevice("D1", False), FakeDevice("D2", True)]}
+        )
+        self.keys_queried = 0
         self.accepted = []
         self.confirmed = []
         self.sent = []
         self.key_verifications = {"t1": FakeSas()}
         self.device_id = "BOT"
 
-    async def query_keys(self, users):  # pragma: no cover - behavior not asserted
+    async def keys_query(self):
+        self.keys_queried += 1
         return None
 
-    async def verify_device(self, user_id, device_id):
-        self.verified.append((user_id, device_id))
+    def verify_device(self, device):
+        self.verified.append(device.device_id)
+        return True
 
     async def accept_key_verification(self, txn_id):
         self.accepted.append(txn_id)
@@ -57,8 +71,19 @@ async def test_security_allow_devices_verifies_unverified():
     fake = SimpleNamespace(client=FakeClient())
     sec = Security(fake)
     await sec.allow_devices("@u")
-    # Should attempt to verify only unverified (D1)
-    assert ("@u", "D1") in fake.client.verified
+    assert fake.client.keys_queried == 1
+    assert fake.client.verified == ["D1"]
+
+
+@pytest.mark.asyncio
+async def test_security_allow_devices_supports_legacy_devices_mapping():
+    fake = SimpleNamespace(client=FakeClient())
+    fake.client.device_store = SimpleNamespace(
+        devices={"@u": {"D1": FakeDevice("D1", False), "D2": FakeDevice("D2", True)}}
+    )
+    sec = Security(fake)
+    await sec.allow_devices("@u")
+    assert fake.client.verified == ["D1"]
 
 
 @pytest.mark.asyncio
@@ -82,7 +107,7 @@ async def test_emoji_verification_callback_flow():
     start = KeyVerificationStart({}, "@u", "t1", "DEVX", "m.sas.v1", [], [], [], ["emoji"])  # type: ignore[arg-type]
     await sec.emoji_verification_callback(start)
     assert fake.client.accepted == ["t1"]
-    assert fake.client.sent  # share_key message sent
+    assert fake.client.sent
 
     key = KeyVerificationKey({}, "@u", "t1", "key")  # type: ignore[arg-type]
     await sec.emoji_verification_callback(key)

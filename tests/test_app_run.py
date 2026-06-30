@@ -10,13 +10,15 @@ from ollamarama.config import AppConfig, MatrixConfig, OllamaConfig
 
 class FakeMatrixWrapper:
     def __init__(self, server, username, password, device_id, store_path, encryption_enabled=True):
-        # mimic underlying client attributes accessed by app
         self.client = SimpleNamespace(device_id="DEV", should_upload_keys=False)
         self.username = username
         self.calls = []
         self.joined = []
+        self.left = []
         self._to_device = []
         self._text_handlers = []
+        self._invite_handlers = []
+        self._megolm_handlers = []
 
     async def load_store(self):
         self.calls.append("load_store")
@@ -34,6 +36,12 @@ class FakeMatrixWrapper:
     async def join(self, room_id: str):
         self.joined.append(room_id)
 
+    async def leave(self, room_id: str):
+        self.left.append(room_id)
+
+    async def request_room_key(self, event):
+        self.calls.append(("request_room_key", event))
+
     async def send_text(self, room_id: str, body: str, html=None):
         self.calls.append(("send_text", room_id, body))
 
@@ -43,17 +51,21 @@ class FakeMatrixWrapper:
     def add_text_handler(self, handler):
         self._text_handlers.append(handler)
 
+    def add_invite_handler(self, handler):
+        self._invite_handlers.append(handler)
+
+    def add_megolm_handler(self, handler):
+        self._megolm_handlers.append(handler)
+
     def add_to_device_callback(self, cb, event_types=None):
         self._to_device.append((cb, event_types))
 
     async def sync_forever(self, timeout_ms: int = 30000):
-        # end immediately so app.run returns
         self.calls.append("sync_forever")
 
 
 @pytest.mark.asyncio
 async def test_app_run_orchestrates_and_persists_device_id(tmp_path, monkeypatch):
-    # Patch MatrixClientWrapper used by AppContext to our fake
     monkeypatch.setattr(app_context, "MatrixClientWrapper", FakeMatrixWrapper)
 
     cfg = AppConfig(
@@ -78,7 +90,6 @@ async def test_app_run_orchestrates_and_persists_device_id(tmp_path, monkeypatch
         ),
         markdown=False,
     )
-    # Prepare config file for device_id persistence
     cfg_path = tmp_path / "config.json"
     cfg_path.write_text(
         json.dumps(
@@ -109,6 +120,5 @@ async def test_app_run_orchestrates_and_persists_device_id(tmp_path, monkeypatch
 
     await appmod.run(cfg, config_path=str(cfg_path))
 
-    # Our fake stores calls on the instance accessible only within run, but we can assert persistence and side effects
     data = json.loads(cfg_path.read_text())
     assert data["matrix"]["device_id"] == "DEV"

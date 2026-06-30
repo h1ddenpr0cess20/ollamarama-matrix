@@ -24,7 +24,6 @@ class FakeAsyncClient:
         self.keys_uploaded = True
 
     def load_store(self):
-        # can be sync function
         self.store_loaded = True
 
     async def join(self, room_id):
@@ -57,7 +56,6 @@ class FakeAsyncClientConfig:
 
 @pytest.mark.asyncio
 async def test_matrix_client_wrapper_basic(monkeypatch):
-    # Patch AsyncClient and config to fakes
     monkeypatch.setattr(mc, "AsyncClient", FakeAsyncClient)
     monkeypatch.setattr(mc, "AsyncClientConfig", FakeAsyncClientConfig)
 
@@ -70,43 +68,61 @@ async def test_matrix_client_wrapper_basic(monkeypatch):
         encryption_enabled=True,
     )
 
-    # login and ensure keys
     await w.login()
     await w.ensure_keys()
     assert getattr(w.client, "keys_uploaded", False) is True
 
-    # load store handles sync function
     await w.load_store()
     assert getattr(w.client, "store_loaded", False) is True
 
-    # join and send
     await w.join("!r")
     await w.send_text("!r", "hello")
     assert w.client.last_send.content["body"] == "hello"
 
-    # html formatting when provided
     await w.send_text("!r", "hello", html="<p>hello</p>")
     content = w.client.last_send.content
     assert content["formatted_body"] == "<p>hello</p>"
     assert content["format"] == "org.matrix.custom.html"
 
-    # display name fallback path
     dn = await w.display_name("@user:example.org")
     assert dn.startswith("DN:@user")
 
-    # event callbacks registration
     seen = {}
 
     async def handler(room, event):
         seen["ok"] = True
 
     w.add_text_handler(handler)
-    # Trigger stored callback
     cb, _ = w.client._callbacks[-1]
     await cb(SimpleNamespace(room_id="!r"), SimpleNamespace(body="hi", sender="@u", server_timestamp=0))
     assert seen.get("ok") is True
 
-    # to-device callback registration
     w.add_to_device_callback(lambda *a, **k: None, None)
     assert w.client._to_device_callbacks, "to-device callback not registered"
+
+
+@pytest.mark.asyncio
+async def test_display_name_falls_back_to_user_id_when_none(monkeypatch):
+    monkeypatch.setattr(mc, "AsyncClient", FakeAsyncClient)
+    monkeypatch.setattr(mc, "AsyncClientConfig", FakeAsyncClientConfig)
+    w = mc.MatrixClientWrapper(server="https://e.org", username="@bot:e.org", password="pw")
+
+    async def no_name(user_id):
+        return SimpleNamespace(displayname=None)
+
+    w.client.get_displayname = no_name
+    assert await w.display_name("@u:e.org") == "@u:e.org"
+
+
+@pytest.mark.asyncio
+async def test_display_name_falls_back_on_error_response(monkeypatch):
+    monkeypatch.setattr(mc, "AsyncClient", FakeAsyncClient)
+    monkeypatch.setattr(mc, "AsyncClientConfig", FakeAsyncClientConfig)
+    w = mc.MatrixClientWrapper(server="https://e.org", username="@bot:e.org", password="pw")
+
+    async def err(user_id):
+        return SimpleNamespace(message="not found")
+
+    w.client.get_displayname = err
+    assert await w.display_name("@u:e.org") == "@u:e.org"
 

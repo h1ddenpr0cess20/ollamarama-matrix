@@ -38,7 +38,6 @@ def _normalize_list_spacing(body: str) -> str:
     """
     lines = body.splitlines()
 
-    # Pass 1: ensure blank line before list that follows paragraph text
     step1: list[str] = []
     for i, line in enumerate(lines):
         if i > 0 and _LIST_ITEM_RE.match(line):
@@ -47,7 +46,6 @@ def _normalize_list_spacing(body: str) -> str:
                 step1.append("")
         step1.append(line)
 
-    # Pass 2: collapse blank lines between items of the same list
     n = len(step1)
     out: list[str] = []
     for i, line in enumerate(step1):

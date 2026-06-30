@@ -24,7 +24,6 @@ class FailingOllama:
 
 
 async def _to_thread(fn, *a, **kw):
-    # Simulate asyncio.to_thread by directly executing
     return fn(*a, **kw)
 
 
@@ -67,7 +66,6 @@ async def test_handle_x_error_path_sends_message():
         log=lambda *a, **k: None,
     )
     ctx.send_response = _make_send_response(ctx.matrix)
-    # Seed a target with history so handler proceeds
     ctx.history.add("!r", "@t", "user", "hi")
     await handle_x(ctx, "!r", "@s", "Sender", "@t hello")
     assert ctx.matrix.sent, "should send error message"

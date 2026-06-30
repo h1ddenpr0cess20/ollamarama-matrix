@@ -21,7 +21,6 @@ def test_render_html_success(monkeypatch):
     import ollamarama.markdown_utils as mu
 
     monkeypatch.setattr(mu, "render_markdown", lambda body: "<p>" + body + "</p>")
-    # Patch matrix client deps so AppContext can construct without nio
     class _FakeCfg:
         def __init__(self, **kw):
             pass
@@ -38,7 +37,6 @@ def test_render_html_success(monkeypatch):
 
 
 def test_render_disabled_returns_none(monkeypatch):
-    # Patch matrix client deps so AppContext can construct without nio
     class _FakeCfg:
         def __init__(self, **kw):
             pass

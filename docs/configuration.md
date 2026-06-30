@@ -12,6 +12,7 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
   - device_id: optional; persisted after first login
   - store_path: directory for Matrix store (default: `store`)
   - e2e: boolean, enable end‑to‑end encryption (default: true)
+  - invite_reply: message sent to anyone who invites the bot to a room before it leaves; the bot does not stay in rooms it is invited to. Supports a `{name}` placeholder for the inviter's display name.
 - ollama:
   - api_url: Chat endpoint (default: `http://localhost:11434/api/chat`)
   - models: mapping of friendly names to model IDs (e.g., `{ "qwen3": "qwen3" }`)
@@ -19,6 +20,7 @@ Ollamarama reads a JSON configuration file (default `./config.json`). You can ov
   - prompt: two strings `[prefix, suffix]` used around personality; optionally a third string for a brevity clause `[prefix, suffix, brevity]`
   - personality: non‑empty default personality text
   - history_tokens: token budget for retained history per user per room (default: 8192, range: 256–131072); uses a chars÷4 heuristic
+  - timeout: per‑request timeout in seconds for Ollama chat calls (default: 180)
   - history_encryption_key: optional Fernet key for encrypted history persistence; when set, history is saved to `store/history.enc` and restored on startup; generate with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
   - options: advanced generation options (e.g., `temperature`, `top_p`, `repeat_penalty`)
   - verbose: boolean, when true omit the optional brevity clause for new conversations

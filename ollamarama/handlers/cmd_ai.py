@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..thinking import split_thinking
+
 
 async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str, args: str) -> None:
     """Handle `.ai` command or bot mention.
@@ -34,7 +36,7 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
             response_text = await ctx.to_thread(ctx.respond_with_tools, messages)
         else:
             data = await ctx.to_thread(ollama.chat, messages=messages, model=ctx.model, options=ctx.options, timeout=ctx.timeout)
-            response_text = data.get("message", {}).get("content", "")
+            response_text = data.get("message", {}).get("content") or ""
     except Exception as e:
         try:
             await ctx.send_response(room_id, "Something went wrong", html=ctx.render("Something went wrong"))
@@ -42,31 +44,9 @@ async def handle_ai(ctx: Any, room_id: str, sender_id: str, sender_display: str,
         except Exception:
             pass
         return
-    # Strip think tags if present
-    if "</think>" in response_text and "<think>" in response_text:
-        try:
-            thinking, rest = response_text.split("</think>", 1)
-            thinking = thinking.replace("<think>", "").strip()
-            ctx.log(f"Model thinking for {sender_display} ({sender_id}): {thinking}")
-            response_text = rest
-        except Exception:
-            pass
-    if "<|begin_of_thought|>" in response_text and "<|end_of_thought|>" in response_text:
-        try:
-            parts = response_text.split("<|end_of_thought|>")
-            if len(parts) > 1:
-                thinking = parts[0].replace("<|begin_of_thought|>", "").replace("<|end_of_thought|>", "").strip()
-                ctx.log(f"Model thinking for {sender_display} ({sender_id}): {thinking}")
-                response_text = parts[1]
-        except Exception:
-            pass
-    if "<|begin_of_solution|>" in response_text and "<|end_of_solution|>" in response_text:
-        try:
-            response_text = response_text.split("<|begin_of_solution|>", 1)[1].split("<|end_of_solution|>", 1)[0].strip()
-        except Exception:
-            pass
-
-    response_text = response_text.strip()
+    response_text, thinking = split_thinking(response_text)
+    if thinking:
+        ctx.log(f"Model thinking for {sender_display} ({sender_id}): {thinking}")
     history.add(room_id, sender_id, "assistant", response_text)
     body = f"**{sender_display}**:\n{response_text}"
     html = ctx.render(body)

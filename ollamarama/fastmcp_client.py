@@ -15,11 +15,23 @@ logger = logging.getLogger(__name__)
 
 
 class FastMCPClient:
+    """Adapter around ``fastmcp`` for listing and calling MCP server tools.
+
+    Normalizes a variety of server spec formats (URL strings, shell strings,
+    argv lists, and dicts) into fastmcp client configs, and bridges fastmcp's
+    async API into synchronous calls usable from the rest of the app.
+    """
+
     def __init__(self, servers: Dict[str, Any]) -> None:
+        """Normalize and store MCP server specifications.
+
+        Args:
+            servers: Mapping of server name to spec (URL string, shell string,
+                argv list, or config dict).
+        """
         self._servers: Dict[str, Any] = {}
         logger.debug("FastMCPClient init with servers: %s", list(servers.keys()))
         for name, spec in servers.items():
-            # Accept strings, dicts, or list[cmd, args...]
             if spec is None:
                 continue
             if isinstance(spec, (list, tuple)):
@@ -36,7 +48,6 @@ class FastMCPClient:
                 target = spec.strip()
                 if not target:
                     continue
-                # If the string looks like a URL, leave it; otherwise treat as command line
                 if "://" in target:
                     self._servers[name] = target
                     logger.debug("Using server '%s' URL: %s", name, target)
@@ -50,17 +61,14 @@ class FastMCPClient:
                 continue
             if isinstance(spec, dict):
                 cfg = dict(spec)
-                # Support command with embedded args
                 cmd = cfg.get("command")
                 if isinstance(cmd, str) and ("args" not in cfg or isinstance(cfg.get("args"), str)) and " " in cmd:
                     parts = shlex.split(cmd)
                     cfg["command"] = parts[0]
                     if len(parts) > 1:
                         cfg["args"] = parts[1:]
-                # If args provided as a single string, split
                 if isinstance(cfg.get("args"), str):
                     cfg["args"] = shlex.split(cfg["args"])  # type: ignore[index]
-                # Allow minimal {"url": "..."} or {"target": "..."}
                 if "url" in cfg and "target" not in cfg:
                     cfg["target"] = cfg["url"]
                 self._servers[name] = cfg
@@ -68,8 +76,6 @@ class FastMCPClient:
                 continue
         self._tool_servers: Dict[str, str] = {}
 
-        # Final pass: wrap local command specs to silence their stdout/stderr
-        # We keep URLs unchanged. For command specs, we wrap with a shell redirect.
         for name, spec in list(self._servers.items()):
             if isinstance(spec, str) and "://" in spec:
                 continue
@@ -79,7 +85,6 @@ class FastMCPClient:
                 if isinstance(cmd, str):
                     argv = [cmd] + ([str(a) for a in args] if isinstance(args, (list, tuple)) else [])
                     cmdline = " ".join(shlex.quote(p) for p in argv)
-                    # Important: preserve stdout for MCP stdio transport; only silence stderr
                     wrapped = {
                         "command": "bash",
                         "args": ["-lc", f"{cmdline} 2>/dev/null"],
@@ -125,10 +130,16 @@ class FastMCPClient:
                 pass
 
     async def _list_tools_async(self) -> List[Dict[str, Any]]:
+        """Connect to each configured server and collect tool schemas.
+
+        Offline or misconfigured servers are logged and skipped.
+
+        Returns:
+            A list of OpenAI-style function tool definitions.
+        """
         schema: List[Dict[str, Any]] = []
         for name, cfg in self._servers.items():
             logger.debug("Listing tools from MCP server '%s'", name)
-            # Always pass a mapping {name: spec} for consistency
             spec = cfg
             client = Client({name: spec})
             self._configure_transport(client.transport)
@@ -137,7 +148,6 @@ class FastMCPClient:
                     tools = await client.list_tools()
                 logger.debug("Server '%s' returned %d tool(s)", name, len(tools))
             except Exception as e:
-                # Offline/misconfigured servers should not crash startup; skip them.
                 logger.error("Failed to list tools from MCP server '%s': %s", name, e)
                 continue
             finally:
@@ -162,6 +172,21 @@ class FastMCPClient:
         return schema
 
     def _run(self, coro):
+        """Run a coroutine to completion from synchronous code.
+
+        Uses ``asyncio.run`` when no loop is running; otherwise runs the
+        coroutine on a fresh loop in a dedicated thread so it does not clash
+        with an already-running event loop.
+
+        Args:
+            coro: The coroutine to execute.
+
+        Returns:
+            The coroutine's result.
+
+        Raises:
+            Exception: Re-raises any exception raised by the coroutine.
+        """
         try:
             asyncio.get_running_loop()
         except RuntimeError:
@@ -170,12 +195,12 @@ class FastMCPClient:
         result: Dict[str, Any] = {}
 
         def runner() -> None:
+            """Run the coroutine on a new event loop in this thread."""
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
                 result["value"] = loop.run_until_complete(coro)
             except Exception as e:
-                # Capture exception to re-raise on the caller thread
                 result["exc"] = e
             finally:
                 loop.close()
@@ -190,9 +215,21 @@ class FastMCPClient:
         return result.get("value")
 
     def list_tools(self) -> List[Dict[str, Any]]:
+        """Return tool schemas from all configured MCP servers (synchronous)."""
         return self._run(self._list_tools_async())
 
     async def _call_tool_async(self, client: Client, name: str, arguments: Dict[str, Any]) -> Any:
+        """Call a tool on a server and normalize its result.
+
+        Args:
+            client: The fastmcp client connected to the target server.
+            name: The tool name to call.
+            arguments: Arguments to pass to the tool.
+
+        Returns:
+            The tool's structured data, structured content, or aggregated
+            text wrapped as ``{"result": str}``.
+        """
         logger.debug("Calling MCP tool '%s' on client", name)
         self._configure_transport(client.transport)
         try:
@@ -215,12 +252,21 @@ class FastMCPClient:
         return {"result": aggregated}
 
     def call_tool(self, name: str, arguments: Dict[str, Any]) -> str:
+        """Call an MCP tool by name and return a JSON string result.
+
+        Args:
+            name: The tool name (resolved to its owning server).
+            arguments: Arguments to pass to the tool.
+
+        Returns:
+            A JSON string with the tool result, or a JSON error object if the
+            tool is unknown or execution fails.
+        """
         server_name = self._tool_servers.get(name)
         if server_name is None:
             logger.warning("Attempted to call unknown MCP tool '%s'", name)
             return json.dumps({"error": f"Unknown tool: {name}"}, ensure_ascii=False)
         cfg = self._servers.get(server_name)
-        # Always pass mapping form
         client = Client({server_name: cfg})
         try:
             logger.debug("Dispatching tool '%s' to server '%s' with args: %s", name, server_name, arguments)

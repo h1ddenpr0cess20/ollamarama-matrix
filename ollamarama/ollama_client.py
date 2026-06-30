@@ -20,11 +20,17 @@ class OllamaClient:
         timeout: int = 180,
         session: Optional[requests.Session] = None,
     ) -> None:
+        """Initialize the Ollama HTTP client.
+
+        Args:
+            base_url: Base URL of the Ollama API (without a trailing slash).
+            timeout: Default request timeout in seconds.
+            session: Optional ``requests.Session`` to reuse for connections.
+        """
         self.base_url = base_url.rstrip("/")
         self.timeout = int(timeout)
         self._session = session or requests.Session()
 
-    # ---- Public API ----
     def chat(
         self,
         messages: List[Dict[str, str]],
@@ -40,7 +46,9 @@ class OllamaClient:
             model: Model name or ID to use.
             options: Optional model-specific parameters.
             timeout: Optional request timeout override in seconds.
-            stream: Whether to request a streaming response (kept for API compatibility).
+            stream: Forwarded to the server. The response is always parsed as a
+                single JSON object, so streaming (``True``) is not supported and
+                will fail to parse; leave it ``False``.
 
         Returns:
             Parsed JSON response from the Ollama server.
@@ -57,7 +65,6 @@ class OllamaClient:
         }
         if options is not None:
             payload["options"] = options
-        # Some servers accept a 'timeout' field in the body; preserve compatibility
         if timeout is not None:
             payload["timeout"] = int(timeout)
         try:
@@ -82,6 +89,23 @@ class OllamaClient:
         tool_choice: Optional[str] = "auto",
         timeout: Optional[int] = None,
     ) -> Dict[str, Any]:
+        """Send a chat request with tool definitions and return the response.
+
+        Args:
+            messages: Conversation messages in ChatML-like format.
+            model: Model name or ID to use.
+            options: Optional model-specific parameters.
+            tools: Tool/function schema definitions to expose to the model.
+            tool_choice: Optional tool choice strategy (e.g., ``"auto"``).
+            timeout: Optional request timeout override in seconds.
+
+        Returns:
+            Parsed JSON response from the Ollama server.
+
+        Raises:
+            NetworkError: If the HTTP request fails.
+            RuntimeFailure: If the response body is not valid JSON.
+        """
         payload: Dict[str, Any] = {
             "model": model,
             "messages": messages,
@@ -119,7 +143,6 @@ class OllamaClient:
                 return True
         except requests.RequestException:
             pass
-        # Fallback
         try:
             r = self._session.head(f"{self.base_url}/chat", timeout=5)
             return r.ok

@@ -19,7 +19,6 @@ def _build_router() -> Router:
         Router configured with user and admin commands.
     """
     router = Router()
-    # user commands
     router.register(".ai", handle_ai)
     router.register(".x", handle_x)
     router.register(".persona", handle_persona)
@@ -28,7 +27,6 @@ def _build_router() -> Router:
     router.register(".stock", lambda c, r, s, d, a: handle_reset(c, r, s, d, "stock"))
     router.register(".history", handle_history)
     router.register(".help", handle_help)
-    # admin commands
     router.register(".model", handle_model, admin=True)
     router.register(".clear", handle_clear, admin=True)
     try:
