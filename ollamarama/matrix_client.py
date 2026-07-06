@@ -225,12 +225,15 @@ class MatrixClientWrapper:
         await self.client.sync_forever(timeout=timeout_ms, full_state=True)
 
     async def shutdown(self) -> None:
-        """Best-effort logout/close of the underlying client."""
-        try:
-            if hasattr(self.client, "logout"):
-                await self.client.logout()  # type: ignore[arg-type]
-        except Exception:
-            pass
+        """Best-effort close of the underlying client.
+
+        Deliberately does NOT call ``logout()``: logging out deletes the
+        device and its keys server-side, while the local store keeps the olm
+        account marked as shared, so nio never re-uploads identity keys and
+        the bot can no longer decrypt anything in encrypted rooms after a
+        restart (see issue #75). Closing the connection keeps the device and
+        access token valid so the encryption store stays usable.
+        """
         try:
             if hasattr(self.client, "close"):
                 await self.client.close()  # type: ignore[arg-type]
