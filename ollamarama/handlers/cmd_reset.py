@@ -27,6 +27,7 @@ async def handle_reset(ctx: Any, room_id: str, sender_id: str, sender_display: s
         try:
             ctx.log(f"Stock settings applied for {sender_display} in {room_id}")
         except Exception:
+            # Logging is best-effort; the confirmation below still goes out.
             pass
         await ctx.matrix.send_text(room_id, body, html=ctx.render(body))
     else:
@@ -34,6 +35,7 @@ async def handle_reset(ctx: Any, room_id: str, sender_id: str, sender_display: s
         try:
             ctx.log(f"{ctx.bot_id} reset to default for {sender_display} in {room_id}")
         except Exception:
+            # Logging is best-effort; the confirmation below still goes out.
             pass
         await ctx.matrix.send_text(room_id, body, html=ctx.render(body))
 
@@ -61,5 +63,6 @@ async def handle_clear(ctx: Any, room_id: str, sender_id: str, sender_display: s
     try:
         ctx.log("Bot has been reset for everyone")
     except Exception:
+        # Logging is best-effort; the confirmation below still goes out.
         pass
     await ctx.matrix.send_text(room_id, body, html=ctx.render(body))

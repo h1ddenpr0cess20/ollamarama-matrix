@@ -35,6 +35,7 @@ async def handle_thinking(ctx: Any, room_id: str, sender_id: str, sender_display
     try:
         ctx.log(body)
     except Exception:
+        # Logging is best-effort; the confirmation below still goes out.
         pass
     html = ctx.render(body)
     await ctx.matrix.send_text(room_id, body, html=html)

@@ -181,6 +181,8 @@ def load_config(
                 merged.update(raw["mcp_servers"])
                 raw["ollama"]["mcp_servers"] = merged
     except Exception:
+        # The legacy top-level mcp_servers block is optional and best-effort
+        # to migrate; a malformed one is simply not merged.
         pass
 
     matrix = raw.get("matrix", {})
@@ -266,6 +268,8 @@ def validate_config(cfg: AppConfig) -> Tuple[bool, List[str]]:
             ):
                 errors.append("ollama.default_model must match a key or id in ollama.models")
         except Exception:
+            # Unusual model config shapes are reported by the checks above; this
+            # extra cross-check is skipped rather than raising during validation.
             pass
     if (
         not isinstance(cfg.ollama.prompt, list)

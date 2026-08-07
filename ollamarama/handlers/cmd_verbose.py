@@ -37,12 +37,15 @@ async def handle_verbose(ctx: Any, room_id: str, sender_id: str, sender_display:
     try:
         ctx.history.set_verbose(ctx.verbose)
     except Exception:
+        # The history store's verbosity hook is optional; the in-memory flag
+        # above is the source of truth.
         pass
     state = "ON" if ctx.verbose else "OFF"
     body = f"Verbose mode set to **{state}**"
     try:
         ctx.log(body)
     except Exception:
+        # Logging is best-effort; the confirmation below still goes out.
         pass
     html = ctx.render(body)
     await ctx.matrix.send_text(room_id, body, html=html)

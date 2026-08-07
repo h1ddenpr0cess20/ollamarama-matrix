@@ -52,6 +52,7 @@ class AppContext:
             for logger_name in ("fastmcp", "mcp", "mcp.server", "mcp.client", "openai.mcp"):
                 logging.getLogger(logger_name).setLevel(logging.ERROR)
         except Exception:
+            # Quieting third-party loggers is cosmetic; never let it break start-up.
             pass
 
     def _build_matrix_client(self, cfg: AppConfig) -> MatrixClientWrapper:
@@ -129,6 +130,8 @@ class AppContext:
         try:
             self.history.set_verbose(self.verbose)
         except Exception:
+            # The history store's verbosity hook is optional; the in-memory flag
+            # set above is the source of truth.
             pass
         try:
             self.thinking = bool(getattr(cfg.ollama, "thinking", True))
@@ -289,6 +292,8 @@ class AppContext:
             try:
                 await task
             except asyncio.CancelledError:
+                # Expected: we just cancelled the task and are draining its
+                # CancelledError so it is not reported as never-retrieved.
                 pass
         placeholder = self.thinking_placeholder_event_id
         self.thinking_placeholder_event_id = None
@@ -396,6 +401,7 @@ class AppContext:
                 log.info("Model requested %d tool call(s)", len(tool_calls))
                 log.debug("Requested tools: %s", [(tc.get("function") or {}).get("name") for tc in tool_calls])
             except Exception:
+                # Tool-call logging is diagnostic only and must not interrupt the loop.
                 pass
 
             messages.append(msg)

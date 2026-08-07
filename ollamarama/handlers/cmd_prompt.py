@@ -29,6 +29,8 @@ async def handle_persona(ctx: Any, room_id: str, sender_id: str, sender_display:
         prompt = f"{ctx.history.prompt_prefix}{persona or ctx.history.personality}{ctx.history.prompt_suffix}"
         ctx.log(f"System prompt for {sender_display} ({sender_id}) set to '{prompt}'")
     except Exception:
+        # Echoing the assembled prompt is diagnostic only; the prompt itself
+        # was already stored by init_prompt above.
         pass
     ctx.history.add(room_id, sender_id, "user", "introduce yourself")
     await _respond(ctx, room_id, sender_id, sender_display)
@@ -58,6 +60,7 @@ async def handle_custom(ctx: Any, room_id: str, sender_id: str, sender_display: 
     try:
         ctx.log(f"System prompt for {sender_display} ({sender_id}) set to '{custom}'")
     except Exception:
+        # Logging is best-effort; the prompt was already stored above.
         pass
     ctx.history.add(room_id, sender_id, "user", "introduce yourself")
     await _respond(ctx, room_id, sender_id, sender_display)
@@ -90,6 +93,8 @@ async def _respond(ctx: Any, room_id: str, user_id: str, header_display: str) ->
             await ctx.send_response(room_id, "Something went wrong", html=ctx.render("Something went wrong"))
             ctx.log(e)
         except Exception:
+            # Best-effort cleanup on an already-failed request: if the error
+            # notice cannot be delivered either, there is nothing left to try.
             pass
         return
     response_text = data.get("message", {}).get("content") or ""
@@ -98,6 +103,7 @@ async def _respond(ctx: Any, room_id: str, user_id: str, header_display: str) ->
         try:
             ctx.log(f"Model thinking for {header_display} ({user_id}): {thinking}")
         except Exception:
+            # Logging the model's reasoning is diagnostic only.
             pass
     ctx.history.add(room_id, user_id, "assistant", response_text)
     body = f"**{header_display}**:\n{response_text}"
@@ -105,5 +111,6 @@ async def _respond(ctx: Any, room_id: str, user_id: str, header_display: str) ->
     try:
         ctx.log(f"Sending response to {header_display} in {room_id}: {body}")
     except Exception:
+        # Logging is best-effort and must never suppress the reply itself.
         pass
     await ctx.send_response(room_id, body, html=html)

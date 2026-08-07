@@ -128,5 +128,7 @@ async def test_handle_help_splits_admin_section():
     ctx.matrix.sent.clear()
     await handle_help(ctx, "!r", "@u", "Admin", "")
     assert len(ctx.matrix.sent) >= 1
-    if "~~~" in open("help.md").read():
+    with open("help.md") as handle:
+        help_text = handle.read()
+    if "~~~" in help_text:
         assert len(ctx.matrix.sent) == 2

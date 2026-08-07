@@ -29,6 +29,8 @@ async def handle_model(ctx: Any, room_id: str, sender_id: str, sender_display: s
         try:
             keys = sorted(list(ctx.models)) if isinstance(ctx.models, dict) else sorted(list(ctx.models))
         except Exception:
+            # An unexpected models container just yields an empty list, which the
+            # message below renders as "no models".
             pass
         body = f"**Current model**: {ctx.model}\n**Available models**: {', '.join(keys)}"
         html = ctx.render(body)
@@ -45,6 +47,8 @@ async def handle_model(ctx: Any, room_id: str, sender_id: str, sender_display: s
             else:
                 ctx.model = arg
         except Exception:
+            # A models container that cannot be indexed leaves the active model
+            # unchanged; the confirmation below still reports the real value.
             pass
 
     body = f"Model set to **{ctx.model}**"
