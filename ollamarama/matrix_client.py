@@ -75,8 +75,7 @@ class MatrixClientWrapper:
             maybe = result()
             if asyncio.iscoroutine(maybe):
                 # Awaited purely for its effect; the store loads into the client.
-                # codeql[py/ineffectual-statement]
-                await maybe
+                _ = await maybe
 
     async def join(self, room_id: str) -> None:
         """Join the specified Matrix room.

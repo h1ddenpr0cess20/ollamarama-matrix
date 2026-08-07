@@ -407,8 +407,7 @@ class ollamarama(VerificationMixin):
             result = self.client.load_store()
             if asyncio.iscoroutine(result):
                 # Awaited purely for its effect; the store loads into the client.
-                # codeql[py/ineffectual-statement]
-                await result
+                _ = await result
 
         login_resp = await self.client.login(self.password, device_name=self.device_id)
         self.log(login_resp)
