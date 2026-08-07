@@ -56,6 +56,8 @@ async def _persist_device_id_if_needed(ctx: AppContext, cfg: AppConfig, config_p
                 f.truncate()
             ctx.log(f"Persisted device_id to {config_path}")
     except Exception:
+        # Persisting the device id is an optimisation -- a fresh one is
+        # negotiated on the next login if this fails.
         pass
 
 
@@ -95,6 +97,8 @@ def _register_security_callbacks(ctx: AppContext) -> Security:
         )
         ctx.matrix.add_to_device_callback(security.log_to_device_event, None)
     except Exception:
+        # Verification callbacks are an E2EE nicety; nio builds without
+        # to-device callback support must not block startup.
         pass
     return security
 
@@ -114,8 +118,11 @@ def _setup_stop_event() -> asyncio.Event:
             try:
                 loop.add_signal_handler(sig, stop.set)
             except Exception:
+                # Signal handlers are unsupported on some platforms (notably
+                # Windows) and on non-main threads; fall back to default handling.
                 pass
     except Exception:
+        # No running loop yet, or the loop does not support signal handlers.
         pass
     return stop
 
@@ -132,6 +139,8 @@ async def _run_until_stopped(ctx: AppContext, stop: asyncio.Event) -> None:
     try:
         await asyncio.wait({sync_task, stop_task}, return_when=asyncio.FIRST_COMPLETED)
     except KeyboardInterrupt:
+        # Ctrl-C during the wait is a normal shutdown path; the finally
+        # block below performs the cleanup.
         pass
     finally:
         for t in (sync_task, stop_task):
@@ -196,10 +205,14 @@ def _make_text_handler(
             try:
                 ctx.log(f"{sender_display} ({sender}) sent {text} in {room.room_id}")  # type: ignore
             except Exception:
+                # Logging the inbound message is diagnostic only and must not stop
+                # the handler from running.
                 pass
             try:
                 await security.allow_devices(sender)
             except Exception:
+                # Device trust is best-effort; an undecryptable reply is better
+                # than dropping the message entirely.
                 pass
             user_event_id = getattr(event, "event_id", None)
             if handler in _GENERATING_HANDLERS and user_event_id and getattr(ctx, "thinking", True):
@@ -324,6 +337,7 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
     try:
         ctx.log(login_resp)
     except Exception:
+        # Logging the login response is diagnostic only.
         pass
     await ctx.matrix.ensure_keys()
     await ctx.matrix.initial_sync()
@@ -352,10 +366,13 @@ async def run(cfg: AppConfig, config_path: Optional[str] = None) -> None:
             if hasattr(ctx.matrix, "shutdown"):
                 await ctx.matrix.shutdown()
         except Exception:
+            # Shutdown cleanup: the client may already be torn down, and the
+            # executor below must still be stopped.
             pass
         try:
             ctx.executor.shutdown(wait=False, cancel_futures=True)
         except Exception:
+            # Shutdown cleanup: the executor may already be shut down.
             pass
 
 

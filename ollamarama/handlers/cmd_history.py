@@ -47,6 +47,7 @@ async def handle_history(ctx: Any, room_id: str, sender_id: str, sender_display:
         try:
             ctx.log(f"Global history set to {state} by {sender_display} ({sender_id}) in {room_id}")
         except Exception:
+            # Logging is best-effort; the confirmation below still goes out.
             pass
         await ctx.matrix.send_text(room_id, body, html=ctx.render(body))
         return
@@ -80,5 +81,6 @@ async def handle_history(ctx: Any, room_id: str, sender_id: str, sender_display:
     try:
         ctx.log(f"History set to {state} for {sender_display} ({sender_id}) in {room_id}")
     except Exception:
+        # Logging is best-effort; the confirmation below still goes out.
         pass
     await ctx.matrix.send_text(room_id, body, html=ctx.render(body))

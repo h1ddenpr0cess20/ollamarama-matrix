@@ -34,12 +34,16 @@ def _build_router() -> Router:
 
         router.register(".verbose", handle_verbose, admin=True)
     except Exception:
+        # The .verbose command is optional; an older install without the
+        # handler module simply does not expose it.
         pass
     try:
         from .handlers.cmd_thinking import handle_thinking
 
         router.register(".thinking", handle_thinking, admin=True)
     except Exception:
+        # The .thinking command is optional; an older install without the
+        # handler module simply does not expose it.
         pass
     return router
 

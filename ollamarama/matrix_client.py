@@ -54,6 +54,8 @@ class MatrixClientWrapper:
         try:
             self.client.user_id = username  # type: ignore[attr-defined]
         except Exception:
+            # Some nio versions expose ``user_id`` as a read-only property; the
+            # client derives it from the login response either way.
             pass
         self.password = password
 
@@ -72,6 +74,8 @@ class MatrixClientWrapper:
         if callable(result):
             maybe = result()
             if asyncio.iscoroutine(maybe):
+                # Awaited purely for its effect; the store loads into the client.
+                # codeql[py/ineffectual-statement]
                 await maybe
 
     async def join(self, room_id: str) -> None:
@@ -104,6 +108,8 @@ class MatrixClientWrapper:
         try:
             await request(event)
         except Exception:
+            # Best-effort key request; the message stays undecryptable and the
+            # caller has already surfaced that to the user.
             pass
 
     async def send_text(self, room_id: str, body: str, html: Optional[str] = None) -> Optional[str]:
@@ -148,6 +154,8 @@ class MatrixClientWrapper:
                 room_id=room_id, message_type="m.room.message", content=content, ignore_unverified_devices=True
             )
         except Exception:
+            # An edit that cannot be delivered is not worth failing the whole
+            # response over -- the original message is already in the room.
             pass
 
     async def display_name(self, user_id: str) -> str:
@@ -206,6 +214,8 @@ class MatrixClientWrapper:
         try:
             self.client.add_to_device_callback(callback, event_types)
         except Exception:
+            # Older nio builds do not accept an event-type filter (or lack the
+            # callback entirely); to-device handling is optional.
             pass
 
     async def initial_sync(self, timeout_ms: int = 3000) -> None:
@@ -238,4 +248,5 @@ class MatrixClientWrapper:
             if hasattr(self.client, "close"):
                 await self.client.close()  # type: ignore[arg-type]
         except Exception:
+            # Shutdown cleanup: the transport may already be torn down.
             pass

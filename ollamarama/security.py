@@ -6,7 +6,6 @@ from typing import Any, Optional
 
 try:
     from nio import (
-        KeyVerificationEvent,
         KeyVerificationStart,
         KeyVerificationKey,
         KeyVerificationMac,
@@ -14,7 +13,6 @@ try:
         ToDeviceMessage,
     )
 except Exception:  # pragma: no cover
-    KeyVerificationEvent = object  # type: ignore
     KeyVerificationStart = object  # type: ignore
     KeyVerificationKey = object  # type: ignore
     KeyVerificationMac = object  # type: ignore
@@ -116,6 +114,8 @@ class Security:
                     elif hasattr(client, "send_sas_mac"):
                         await client.send_sas_mac(event.transaction_id)  # type: ignore[attr-defined]
                 except Exception:
+                    # Nio spells the MAC step differently across versions; if none of the
+                    # three shapes is available there is no MAC to send.
                     pass
 
                 try:
@@ -127,6 +127,8 @@ class Security:
                     )
                     await client.to_device(done)
                 except Exception:
+                    # The peer may have already completed or cancelled the exchange, in
+                    # which case the done message has nowhere to go.
                     pass
                 self.logger.info("Emoji verification was successful.")
             elif isinstance(event, KeyVerificationCancel):
@@ -155,6 +157,8 @@ class Security:
             if hasattr(c, "keys_query"):
                 await c.keys_query()  # type: ignore[func-returns-value]
         except Exception:
+            # Key querying is optional; the device store may already be populated
+            # from a previous sync.
             pass
         try:
             for device in self._user_devices(c, user_id):
@@ -170,8 +174,11 @@ class Security:
                     dev_id = getattr(device, "device_id", None) or getattr(device, "id", "?")
                     self.logger.info("verified device %s for %s", dev_id, user_id)
                 except Exception:
+                    # One device failing to verify must not stop the remaining devices
+                    # from being processed.
                     pass
         except Exception:
+            # No usable device store on this client build; nothing to verify.
             pass
 
     @staticmethod
@@ -189,6 +196,7 @@ class Security:
             try:
                 return list(active(user_id))
             except Exception:
+                # Fall through to reading the device store directly below.
                 pass
         devices = getattr(store, "devices", {})
         try:

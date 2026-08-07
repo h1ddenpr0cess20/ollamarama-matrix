@@ -97,7 +97,7 @@ class ollamarama(VerificationMixin):
         try:
             name = await self.client.get_displayname(user)
             return name.displayname
-        except:
+        except Exception:
             return user
 
     async def send_message(self, channel, message):
@@ -215,8 +215,10 @@ class ollamarama(VerificationMixin):
         """
         try:
             self.messages[channel][sender].clear()
-        except:
+        except Exception:
+            # No history recorded for this user yet, so there is nothing to clear.
             pass
+        prompt = self.prompt[0] + self.personality + self.prompt[1]
         if persona != None and persona != "":
             prompt = self.prompt[0] + persona + self.prompt[1]
         if custom != None  and custom != "":
@@ -247,7 +249,9 @@ class ollamarama(VerificationMixin):
                         username = await self.display_name(user)
                         if target == username:
                             target = user
-                    except:
+                    except Exception:
+                        # A display name that cannot be resolved simply does not match the
+                        # requested target.
                         pass
                 if target in self.messages[channel]:
                     await self.add_history("user", channel, target, message)
@@ -313,7 +317,9 @@ class ollamarama(VerificationMixin):
                     self.model = self.default_model
                 self.log(f"Model set to {self.model}")
                 await self.send_message(channel, f"Model set to **{self.model}**")
-            except:
+            except Exception:
+                # A failure here leaves the previous model selected; the user sees no
+                # confirmation, which is the signal that it did not take.
                 pass
         else:
             current_model = f"**Current model**: {self.model}\n**Available models**: {', '.join(sorted(list(self.models)))}"
@@ -386,7 +392,9 @@ class ollamarama(VerificationMixin):
                 try:
                     await self.allow_devices(sender)
                     await self.handle_message(message, sender, sender_display, channel)
-                except:
+                except Exception:
+                    # One bad message must not kill the sync loop; the next event is
+                    # still processed.
                     pass
 
 
@@ -398,6 +406,8 @@ class ollamarama(VerificationMixin):
         if self.device_id and hasattr(self.client, 'load_store') and callable(self.client.load_store):
             result = self.client.load_store()
             if asyncio.iscoroutine(result):
+                # Awaited purely for its effect; the store loads into the client.
+                # codeql[py/ineffectual-statement]
                 await result
 
         login_resp = await self.client.login(self.password, device_name=self.device_id)
@@ -415,6 +425,8 @@ class ollamarama(VerificationMixin):
                     json.dump(config, f, indent=4)
                     f.truncate()
             except Exception:
+                # Persisting the device id is an optimisation -- a fresh one is
+                # negotiated on the next login if this fails.
                 pass
 
         self.bot_id = await self.display_name(self.username)
@@ -424,7 +436,7 @@ class ollamarama(VerificationMixin):
                 await self.client.join(channel)
                 self.log(f"{self.bot_id} joined {channel}")
                 
-            except:
+            except Exception:
                 self.log(f"Couldn't join {channel}")
         
         self.client.add_event_callback(self.message_callback, RoomMessageText)

@@ -75,6 +75,8 @@ async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, 
             await ctx.send_response(room_id, "Something went wrong", html=ctx.render("Something went wrong"))
             ctx.log(e)
         except Exception:
+            # Best-effort cleanup on an already-failed request: if the error
+            # notice cannot be delivered either, there is nothing left to try.
             pass
         return
     response_text = data.get("message", {}).get("content") or ""
@@ -87,5 +89,6 @@ async def handle_x(ctx: Any, room_id: str, sender_id: str, sender_display: str, 
     try:
         ctx.log(f"Sending response to {sender_display} in {room_id}: {body}")
     except Exception:
+        # Logging is best-effort and must never suppress the reply itself.
         pass
     await ctx.send_response(room_id, body, html=html)

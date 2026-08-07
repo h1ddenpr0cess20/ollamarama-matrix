@@ -30,6 +30,7 @@ def split_thinking(text: str) -> Tuple[str, str]:
             thinking_parts.append(thinking.replace("<think>", "").strip())
             text = rest
         except Exception:
+            # Malformed reasoning markers just mean the text is left as-is.
             pass
 
     if "<|begin_of_thought|>" in text and "<|end_of_thought|>" in text:
@@ -41,12 +42,14 @@ def split_thinking(text: str) -> Tuple[str, str]:
                 )
                 text = parts[1]
         except Exception:
+            # Malformed reasoning markers just mean the text is left as-is.
             pass
 
     if "<|begin_of_solution|>" in text and "<|end_of_solution|>" in text:
         try:
             text = text.split("<|begin_of_solution|>", 1)[1].split("<|end_of_solution|>", 1)[0]
         except Exception:
+            # Malformed solution markers just mean the text is left as-is.
             pass
 
     return text.strip(), "\n".join(t for t in thinking_parts if t)

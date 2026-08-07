@@ -142,6 +142,8 @@ class OllamaClient:
             if r.ok:
                 return True
         except requests.RequestException:
+            # This endpoint is one of several probed in turn; a connection
+            # failure just means trying the next one below.
             pass
         try:
             r = self._session.head(f"{self.base_url}/chat", timeout=5)
@@ -182,6 +184,8 @@ class OllamaClient:
                 if isinstance(name, str) and name:
                     models[name] = name
         except Exception:
+            # An unexpected payload shape yields no models, which the caller
+            # below already treats as "nothing discovered".
             pass
         if not models:
             raise RuntimeFailure("No models found in Ollama /tags response")

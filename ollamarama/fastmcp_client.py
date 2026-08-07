@@ -116,6 +116,8 @@ class FastMCPClient:
                 try:
                     current.keep_alive = False
                 except Exception:
+                    # keep_alive is read-only on some transports; the default behaviour
+                    # is acceptable there.
                     pass
 
     def _mark_transport_stopped(self, transport: Any) -> None:
@@ -127,6 +129,8 @@ class FastMCPClient:
             try:
                 stop_event.set()
             except Exception:
+                # The event may already be set or belong to a closed loop; either way
+                # the transport is on its way down.
                 pass
 
     async def _list_tools_async(self) -> List[Dict[str, Any]]:
