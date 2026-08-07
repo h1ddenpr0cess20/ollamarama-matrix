@@ -6,15 +6,23 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: dockerhub-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/ollamarama-matrix
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
