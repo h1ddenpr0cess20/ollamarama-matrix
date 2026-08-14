@@ -2,7 +2,7 @@
 # - Includes libolm runtime for E2E support (matrix-nio[e2e])
 # - Runs as non-root and persists sensitive state under /data
 
-FROM python:3.11-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
