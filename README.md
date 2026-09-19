@@ -73,7 +73,7 @@ For deeper setup and verification steps, see [Ollama Setup](docs/ollama.md).
 ### 1) Install dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ### 2) Configure
